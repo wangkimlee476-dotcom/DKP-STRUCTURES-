@@ -2,7 +2,7 @@ name: Platform checks
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feature/postgresql-migration]
   push:
     branches:
       - main
