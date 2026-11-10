@@ -77,6 +77,7 @@ export default {
     try {
       await appReady;
       // Route this Worker request directly to the Node HTTP server.
+      // Preview secrets are read from the active deployment environment.
       return await handleAsNodeRequest(8787, request);
     } catch (error) {
       const serialize = (value) => ({
