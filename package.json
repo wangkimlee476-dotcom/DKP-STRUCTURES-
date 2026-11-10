@@ -9,7 +9,8 @@
     "dev": "node --watch server.mjs",
     "check": "node --check server.mjs && node --check worker.mjs && node --check scripts/promote-admin.js && node scripts/check-inline-js.js",
     "admin:promote": "node scripts/promote-admin.js",
-    "preinstall": "node -e \"console.log('DKP Cloudflare PostgreSQL branch selected')\""
+    "preinstall": "node -e \"console.log('DKP Cloudflare PostgreSQL branch selected')\"",
+    "postinstall": "node scripts/patch-cloudflare-deps.js"
   },
   "engines": {
     "node": ">=20"
@@ -23,5 +24,8 @@
     "dotenv": "^16.4.7",
     "connect-pg-simple": "^10.0.0",
     "pg": "^8.16.3"
+  },
+  "overrides": {
+    "iconv-lite": "0.7.0"
   }
 }
