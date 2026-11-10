@@ -1,44 +1,245 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#073b2b"><title>DKP Structures | Building a Vision</title>
-<style>
-:root{--g:#073b2b;--ink:#14221c;--gold:#d6ad52;--paper:#f4f6f3;--muted:#64736b;--line:#dfe7e1}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 system-ui,Arial}a{color:inherit}button{border:0;border-radius:30px;padding:12px 18px;font-weight:700;cursor:pointer}.wrap{max-width:1100px;margin:auto;padding:22px}.top{background:#101c18;color:white;position:sticky;top:0}.nav{display:flex;justify-content:space-between;align-items:center;gap:15px}.brand{font-weight:900;letter-spacing:.07em}.links{display:flex;gap:18px;flex-wrap:wrap}.links a{color:white;text-decoration:none;font-size:14px}.hero{margin:20px auto;border-radius:24px;padding:70px 35px;color:white;background:linear-gradient(90deg,#061b14ed,#073b2b99),url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=80') center/cover}.hero h1{font-size:clamp(38px,6vw,66px);line-height:1.08;max-width:750px}.hero p{max-width:700px;color:#e4eee8;font-size:18px}.section{padding:48px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.card{background:white;border:1px solid var(--line);border-radius:17px;padding:22px}.btn{background:var(--gold);color:#17231c}.ghost{background:#eaf0ec;color:var(--g)}.muted{color:var(--muted)}input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit;margin:5px 0 12px}label{font-weight:650;font-size:14px}.hidden{display:none!important}.notice{background:#fff8e8;border:1px solid #ead9ae;padding:15px;border-radius:12px;color:#665222}.metric{font-size:30px;color:var(--g);font-weight:850}.status{padding:8px 12px;border-radius:20px;background:#edf4ef;display:inline-block;font-size:12px}.chatfloat{position:fixed;right:18px;bottom:18px;background:#168de2;color:white;z-index:100;box-shadow:0 8px 25px #0004}.error{color:#a32727}.success{color:#176b3a}footer{background:#101c18;color:white;text-align:center;padding:30px}@media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}.hero{padding:45px 22px}.links{gap:10px}}
-</style></head><body>
-<header class="top"><div class="wrap nav"><div class="brand">DKP STRUCTURES</div><nav class="links"><a href="#about">About</a><a href="#campaign">Development</a><a href="#levels">Supporter levels</a><a href="#account">Account</a><a href="#dashboard">Dashboard</a><a href="#support">Customer support</a></nav></div></header>
-<main class="wrap">
-<section class="hero"><span style="color:#f0d58e;font-weight:800;letter-spacing:.18em">CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span><h1>Building a vision. Creating opportunities.</h1><p>DKP Structures is focused on developing a construction business grounded in responsible planning, quality workmanship and transparency.</p><a href="#about"><button class="btn">Discover DKP Structures</button></a></section>
-<section id="about" class="section"><h2>About DKP Structures</h2><p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified.</p></section>
-<section id="campaign" class="section"><h2>Development initiative</h2><div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div><div class="card" style="margin-top:16px"><h3>Interested in making a contribution?</h3><p class="muted">Select the button below. We'll take you straight to the customer-support request form so you can ask which payment methods are currently available in your country. No deposit is taken on this website.</p><button class="btn" id="depositOptionsBtn" type="button">Make a deposit · Request payment options</button></div><h3>Proposed planning target: USD $1,000,000</h3><p class="muted">Planning figure only — not funds raised.</p></section>
-<section id="levels" class="section"><h2>Supporter recognition levels</h2><p class="muted">Based on cumulative verified contributions. Recognition only; no ownership or investment rights.</p><div class="grid" id="levelCards"></div></section>
-<section id="account" class="section"><h2>Supporter account</h2><div class="grid">
-<div class="card"><h3>Create account</h3><form id="registerForm"><label>Full name</label><input name="name" required maxlength="100"><label>Email</label><input name="email" type="email" required><label>Country</label><input name="country" required maxlength="80"><label>Password (12+ characters)</label><input name="password" type="password" minlength="12" required><label><input type="checkbox" id="terms" style="width:auto" required> I accept the current Terms & Conditions</label><p class="muted">By registering, you acknowledge the privacy and fundraising disclosures. The current terms version and acceptance time are recorded.</p><button class="btn">Create account</button></form></div>
-<div class="card"><h3>Login</h3><form id="loginForm"><label>Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required><button class="btn">Login</button></form><p id="authMessage" aria-live="polite"></p></div></div></section>
-<section id="dashboard" class="section"><h2>My supporter dashboard</h2><div id="signedOut" class="notice">Sign in to view your supporter dashboard.</div><div id="dash" class="hidden"><div class="card"><h3 id="welcome"></h3><p id="supporterId" class="muted"></p><div class="grid"><div><div class="muted">Verified contribution total</div><div class="metric" id="total">$0</div></div><div><div class="muted">Recognition level</div><div class="metric" id="level">Basic</div></div><div><div class="muted">Progress to personal target</div><div class="metric" id="progress">0%</div></div></div><form id="targetForm"><label>Personal target (USD)</label><input name="target" type="number" min="100" required><button class="ghost">Save target</button></form><h3>Contribution history</h3><p class="muted">This total records contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p><div id="history" class="muted">No contributions recorded.</div><p class="muted">Ready to contribute? Request the payment options available in your country first.</p><button id="dashboardDepositBtn" class="btn" type="button">Make a deposit · Ask customer support</button><button id="logout" class="ghost" type="button">Log out</button></div></section>
-<section id="support" class="section"><h2>Customer support</h2><p class="muted">Ask about payment methods available in your country before making any contribution. Do not send card details, passwords or bank login information.</p><div class="grid"><div class="card"><h3>Request payment-method information</h3><form id="supportForm"><label>Your name</label><input name="name" required><label>Email</label><input name="email" type="email" required><label>Country</label><input name="country" required><label>Request type</label><select name="type"><option value="payment_methods">Available payment methods</option><option value="account">Account help</option><option value="general">General question</option></select><label>Message</label><textarea name="message" required minlength="10" maxlength="3000"></textarea><button class="btn">Send support request</button></form><p id="supportMessage" aria-live="polite"></p></div><div class="card"><h3>Live chat with Smartsupp</h3><p>Use the blue chat button at the bottom-right once DKP Structures connects its Smartsupp website key.</p><p class="muted">Support hours and response times should be published once staffed.</p><p><strong>Email customer support:</strong> <a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20enquiry">dkpstructures@gmail.com</a></p><p><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20payment%20options%20request">Email us to request available payment options</a></p></div></div></section>
-</main><footer>DKP STRUCTURES · Informational company-development website · No online payments accepted<br>Customer support: <a style="color:#d6ad52" href="mailto:dkpstructures@gmail.com">dkpstructures@gmail.com</a></footer><button class="chatfloat" id="chatButton">💬 Chat with support</button>
-<script>
-const $=id=>document.getElementById(id);
-const levels=[["Basic","$100–$499"],["Bronze","$500–$1,249"],["Silver","$1,250–$2,999"],["Gold","$3,000–$6,999"],["Platinum","$7,000–$14,999"],["Diamond","$15,000–$29,999"],["Founding","$30,000+"]];$("levelCards").innerHTML=levels.map(x=>`<article class="card"><h3>${x[0]}</h3><b>${x[1]}</b></article>`).join("");
-async function api(url,opts={}){const r=await fetch(url,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(opts.headers||{})},...opts});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"Request failed");return d}
-function message(id,text,ok=false){$(id).textContent=text;$(id).className=ok?"success":"error"}
-async function loadDashboard(){try{const d=await api("/api/dashboard");$("signedOut").classList.add("hidden");$("dash").classList.remove("hidden");$("welcome").textContent="Welcome, "+d.user.name;$("supporterId").textContent="Supporter ID: "+d.user.supporterId+" · "+d.user.country;$("total").textContent="$"+Number(d.verifiedTotal).toLocaleString();$("level").textContent=d.level;$("progress").textContent=d.progress+"%";$("targetForm").target.value=d.user.personalTarget||"";$("history").innerHTML=d.history.length?d.history.map(h=>`<p>${h.date} · $${h.amount} · ${h.status}</p>`).join(""):"No contribution records yet."}catch(e){$("dash").classList.add("hidden");$("signedOut").classList.remove("hidden")}}
-$("registerForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.target);try{await api("/api/register",{method:"POST",body:JSON.stringify({name:f.get("name"),email:f.get("email"),country:f.get("country"),password:f.get("password"),acceptTerms:$("terms").checked,termsVersion:(await api("/api/config")).termsVersion})});message("authMessage","Account created successfully.",true);await loadDashboard()}catch(x){message("authMessage",x.message)}});
-$("loginForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.target);try{await api("/api/login",{method:"POST",body:JSON.stringify({email:f.get("email"),password:f.get("password")})});message("authMessage","Signed in.",true);await loadDashboard()}catch(x){message("authMessage",x.message)}});
-$("targetForm").addEventListener("submit",async e=>{e.preventDefault();try{const f=new FormData(e.target);await api("/api/profile/target",{method:"PATCH",body:JSON.stringify({target:Number(f.get("target"))})});await loadDashboard()}catch(x){alert(x.message)}});
-$("logout").addEventListener("click",async()=>{await api("/api/logout",{method:"POST"});await loadDashboard()});
-function openPaymentOptionsRequest(){location.hash="support";const type=$("supportForm").querySelector('[name="type"]');if(type)type.value="payment_methods";const msg=$("supportForm").querySelector('[name="message"]');if(msg)msg.value="I would like to make a contribution. Please tell me which payment methods are currently available in my country and provide the official payment instructions. I understand that the minimum contribution is USD $100 and that no payment is made through this website.";const nameField=$("supportForm").querySelector('[name="name"]');if(nameField&&!nameField.value){const n=document.querySelector('#registerForm [name="name"]');if(n&&n.value)nameField.value=n.value;}const emailField=$("supportForm").querySelector('[name="email"]');if(emailField&&!emailField.value){const e=document.querySelector('#registerForm [name="email"]');if(e&&e.value)emailField.value=e.value;}const countryField=$("supportForm").querySelector('[name="country"]');if(countryField&&!countryField.value){const c=document.querySelector('#registerForm [name="country"]');if(c&&c.value)countryField.value=c.value;}if(msg)msg.focus();}
-const depositBtn=$("depositOptionsBtn");if(depositBtn)depositBtn.addEventListener("click",openPaymentOptionsRequest);
-const dashDeposit=$("dashboardDepositBtn");if(dashDeposit)dashDeposit.addEventListener("click",openPaymentOptionsRequest);
 
-$("supportForm").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.target);try{const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(Object.fromEntries(f.entries()))});message("supportMessage",d.message+" Reference: "+d.requestId,true);e.target.reset()}catch(x){message("supportMessage",x.message)}});
-$("chatButton").addEventListener("click",()=>{
- if(window.smartsupp&&typeof window.smartsupp==="function"){window.smartsupp("chat:open");}
- else{
-  const subject=encodeURIComponent("DKP Structures customer support enquiry");
-  const body=encodeURIComponent("Hello DKP Structures Customer Support,\\n\\nI would like help with: ");
-  window.location.href="mailto:dkpstructures@gmail.com?subject="+subject+"&body="+body;
- }
-});
-api("/api/config").then(c=>{if(c.smartsuppKey){window._smartsupp=window._smartsupp||{};window._smartsupp.key=c.smartsuppKey;window.smartsupp||(function(d){var s,c2,o=smartsupp=function(){o._.push(arguments)};o._=[];s=d.getElementsByTagName("script")[0];c2=d.createElement("script");c2.type="text/javascript";c2.charset="utf-8";c2.async=true;c2.src="https://www.smartsuppchat.com/loader.js?";s.parentNode.insertBefore(c2,s)})(document)}}).catch(()=>{});
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#073b2b">
+<title>DKP Structures | Building a Vision</title>
+<style>
+:root{--g:#073b2b;--ink:#14221c;--gold:#d6ad52;--paper:#f4f6f3;--muted:#64736b;--line:#dfe7e1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 system-ui,Arial}
+a{color:inherit}
+button{border:0;border-radius:30px;padding:12px 18px;font-weight:700;cursor:pointer}
+.wrap{max-width:1100px;margin:auto;padding:22px}
+.top{background:#101c18;color:white;position:sticky;top:0;z-index:10}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:15px}
+.brand{font-weight:900;letter-spacing:.07em}
+.links{display:flex;gap:18px;flex-wrap:wrap}
+.links a{color:white;text-decoration:none;font-size:14px}
+.hero{margin:20px auto;border-radius:24px;padding:70px 35px;color:white;background:linear-gradient(90deg,#061b14ed,#073b2b99),url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=80') center/cover}
+.hero h1{font-size:clamp(38px,6vw,66px);line-height:1.08;max-width:750px}
+.hero p{max-width:700px;color:#e4eee8;font-size:18px}
+.section{padding:48px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.card{background:white;border:1px solid var(--line);border-radius:17px;padding:22px}
+.btn{background:var(--gold);color:#17231c}
+.ghost{background:#eaf0ec;color:var(--g)}
+.muted{color:var(--muted)}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit;margin:5px 0 12px}
+label{font-weight:650;font-size:14px}
+.hidden{display:none!important}
+.notice{background:#fff8e8;border:1px solid #ead9ae;padding:15px;border-radius:12px;color:#665222}
+.metric{font-size:30px;color:var(--g);font-weight:850}
+.status{padding:8px 12px;border-radius:20px;background:#edf4ef;display:inline-block;font-size:12px}
+.chatfloat{position:fixed;right:18px;bottom:18px;background:#168de2;color:white;z-index:100;box-shadow:0 8px 25px #0004}
+.error{color:#a32727}
+.success{color:#176b3a}
+footer{background:#101c18;color:white;text-align:center;padding:30px}
+@media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}.hero{padding:45px 22px}.links{gap:10px}}
+</style>
+</head>
+<body>
+<header class="top">
+<div class="wrap nav">
+<div class="brand">DKP STRUCTURES</div>
+<nav class="links">
+<a href="#about">About</a>
+<a href="#campaign">Development</a>
+<a href="#levels">Supporter levels</a>
+<a href="#account">Account</a>
+<a href="#dashboard">Dashboard</a>
+<a href="#support">Customer support</a>
+</nav>
+</div>
+</header>
+
+<main class="wrap">
+<section class="hero">
+<span style="color:#f0d58e;font-weight:800;letter-spacing:.18em">CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span>
+<h1>Building a vision. Creating opportunities.</h1>
+<p>DKP Structures is focused on developing a construction business grounded in responsible planning, quality workmanship and transparency.</p>
+<a href="#about"><button class="btn">Discover DKP Structures</button></a>
+</section>
+
+<section id="about" class="section">
+<h2>About DKP Structures</h2>
+<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified.</p>
+</section>
+
+<section id="campaign" class="section">
+<h2>Development initiative</h2>
+<div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div>
+<div class="card" style="margin-top:16px">
+<h3>Interested in making a contribution?</h3>
+<p class="muted">Select the button below to request available payment methods from customer support. No deposit is taken on this website.</p>
+<button class="btn" id="depositOptionsBtn" type="button">Make a deposit · Request payment options</button>
+</div>
+<h3>Proposed planning target: USD $1,000,000</h3>
+<p class="muted">Planning figure only — not funds raised.</p>
+</section>
+
+<section id="levels" class="section">
+<h2>Supporter recognition levels</h2>
+<p class="muted">Based on cumulative verified contributions. Recognition only; no ownership or investment rights.</p>
+<div class="grid" id="levelCards"></div>
+</section>
+
+<section id="account" class="section">
+<h2>Supporter account</h2>
+<div class="grid">
+<div class="card">
+<h3>Create account</h3>
+<form id="registerForm">
+<label>Full name</label>
+<input name="name" required maxlength="100">
+<label>Email</label>
+<input name="email" type="email" required>
+<label>Country</label>
+<input name="country" required maxlength="80">
+<label>Password (12+ characters)</label>
+<input name="password" type="password" minlength="12" required>
+<label><input type="checkbox" id="terms" style="width:auto" required> I accept the current Terms & Conditions</label>
+<p class="muted">By registering, you acknowledge the privacy and fundraising disclosures. The current terms version and acceptance time are recorded.</p>
+<button class="btn" type="submit">Create account</button>
+</form>
+</div>
+
+<div class="card">
+<h3>Login</h3>
+<form id="loginForm">
+<label>Email</label>
+<input name="email" type="email" required>
+<label>Password</label>
+<input name="password" type="password" required>
+<button class="btn" type="submit">Login</button>
+</form>
+<p id="authMessage" aria-live="polite"></p>
+</div>
+</div>
+</section>
+
+<section id="dashboard" class="section">
+<h2>My supporter dashboard</h2>
+<div id="signedOut" class="notice">Sign in to view your supporter dashboard.</div>
+<div id="dash" class="hidden">
+<div class="card">
+<h3 id="welcome"></h3>
+<p id="supporterId" class="muted"></p>
+<div class="grid">
+<div>
+<div class="muted">Verified contribution total</div>
+<div class="metric" id="total">$0</div>
+</div>
+<div>
+<div class="muted">Recognition level</div>
+<div class="metric" id="level">Basic</div>
+</div>
+<div>
+<div class="muted">Progress to personal target</div>
+<div class="metric" id="progress">0%</div>
+</div>
+</div>
+<form id="targetForm">
+<label>Personal target (USD)</label>
+<input name="target" type="number" min="100" required>
+<button class="ghost" type="submit">Save target</button>
+</form>
+<h3>Contribution history</h3>
+<p class="muted">This total records contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p>
+<div id="history" class="muted">No contributions recorded.</div>
+<p class="muted">Ready to contribute? Request the payment options available in your country first.</p>
+<button id="dashboardDepositBtn" class="btn" type="button">Make a deposit · Ask customer support</button>
+<button id="logout" class="ghost" type="button">Log out</button>
+</div>
+</div>
+</section>
+
+<section id="support" class="section">
+<h2>Customer support</h2>
+<p class="muted">Ask about payment methods available in your country before making any contribution. Do not send card details, passwords or bank login information.</p>
+<div class="grid">
+<div class="card">
+<h3>Request payment-method information</h3>
+<form id="supportForm">
+<label>Your name</label>
+<input name="name" required>
+<label>Email</label>
+<input name="email" type="email" required>
+<label>Country</label>
+<input name="country" required>
+<label>Request type</label>
+<select name="type">
+<option value="payment_methods">Available payment methods</option>
+<option value="account">Account help</option>
+<option value="general">General question</option>
+</select>
+<label>Message</label>
+<textarea name="message" required minlength="10" maxlength="3000"></textarea>
+<button class="btn" type="submit">Send support request</button>
+</form>
+<p id="supportMessage" aria-live="polite"></p>
+</div>
+
+<div class="card">
+<h3>Live chat with Smartsupp</h3>
+<p>Use the blue chat button at the bottom-right once DKP Structures connects its Smartsupp website key.</p>
+<p class="muted">Support hours and response times should be published once staffed.</p>
+<p><strong>Email customer support:</strong> <a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20enquiry">dkpstructures@gmail.com</a></p>
+<p><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20payment%20options%20request">Email us to request available payment options</a></p>
+</div>
+</div>
+</section>
+</main>
+
+<footer>
+DKP STRUCTURES · Informational company-development website · No online payments accepted<br>
+Customer support: <a style="color:#d6ad52" href="mailto:dkpstructures@gmail.com">dkpstructures@gmail.com</a>
+</footer>
+
+<button class="chatfloat" id="chatButton" type="button">💬 Chat with support</button>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const levels = [
+["Basic","$100–$499"],
+["Bronze","$500–$1,249"],
+["Silver","$1,250–$2,999"],
+["Gold","$3,000–$6,999"],
+["Platinum","$7,000–$14,999"],
+["Diamond","$15,000–$29,999"],
+["Founding","$30,000+"]
+];
+
+$("levelCards").innerHTML = levels.map(x =>
+`<article class="card"><h3>${x[0]}</h3><b>${x[1]}</b></article>`
+).join("");
+
+async function api(url, opts = {}) {
+  const r = await fetch(url, {
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      ...(opts.headers || {})
+    },
+    ...opts
+  });
+
+  const d = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    throw new Error(d.error || `Request failed (${r.status})`);
+  }
+
+  return d;
+}
+
+function message(id, text, ok = false) {
+  $(id).textContent = text;
+  $(id).className = ok ? "success" : "error";
+}
 
 async function loadDashboard() {
   try {
@@ -48,20 +249,221 @@ async function loadDashboard() {
     $("dash").classList.remove("hidden");
 
     $("welcome").textContent = "Welcome, " + d.user.name;
-    $("supporterId").textContent = "Supporter ID: " + d.user.supporterId + " · " + d.user.country;
-    $("total").textContent = "$" + Number(d.verifiedTotal).toLocaleString();
+    $("supporterId").textContent =
+      "Supporter ID: " + d.user.supporterId + " · " + d.user.country;
+
+    $("total").textContent =
+      "$" + Number(d.verifiedTotal).toLocaleString();
+
     $("level").textContent = d.level;
     $("progress").textContent = d.progress + "%";
-    $("targetForm").target.value = d.user.personalTarget || "";
+    $("targetForm").elements.target.value = d.user.personalTarget || "";
 
-    $("history").innerHTML = d.history.length
-      ? d.history.map(h => `<p>${h.date} · $${h.amount} · ${h.status}</p>`).join("")
-      : "No contribution records yet.";
+    $("history").textContent = "";
+
+    if (d.history.length) {
+      $("history").innerHTML = d.history.map(h =>
+        `<p>${h.date} · $${h.amount} · ${h.status}</p>`
+      ).join("");
+    } else {
+      $("history").textContent = "No contribution records yet.";
+    }
 
   } catch (e) {
     $("dash").classList.add("hidden");
     $("signedOut").classList.remove("hidden");
-    $("signedOut").textContent = "Dashboard error: " + e.message;
+
+    $("signedOut").textContent =
+      e.message === "Please sign in first."
+        ? "Sign in to view your supporter dashboard."
+        : "Dashboard error: " + e.message;
   }
 }
- 
+
+$("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const f = new FormData(e.target);
+
+  try {
+    const config = await api("/api/config");
+
+    await api("/api/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name: f.get("name"),
+        email: f.get("email"),
+        country: f.get("country"),
+        password: f.get("password"),
+        acceptTerms: $("terms").checked,
+        termsVersion: config.termsVersion
+      })
+    });
+
+    message("authMessage", "Account created successfully.", true);
+    await loadDashboard();
+
+  } catch (x) {
+    message("authMessage", x.message);
+  }
+});
+
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const f = new FormData(e.target);
+
+  try {
+    await api("/api/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: f.get("email"),
+        password: f.get("password")
+      })
+    });
+
+    message("authMessage", "Signed in.", true);
+    await loadDashboard();
+
+  } catch (x) {
+    message("authMessage", x.message);
+  }
+});
+
+$("targetForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  try {
+    const f = new FormData(e.target);
+
+    await api("/api/profile/target", {
+      method: "PATCH",
+      body: JSON.stringify({
+        target: Number(f.get("target"))
+      })
+    });
+
+    await loadDashboard();
+
+  } catch (x) {
+    alert(x.message);
+  }
+});
+
+$("logout").addEventListener("click", async () => {
+  try {
+    await api("/api/logout", { method: "POST" });
+    $("dash").classList.add("hidden");
+    $("signedOut").classList.remove("hidden");
+    $("signedOut").textContent = "You have been signed out.";
+    message("authMessage", "Signed out successfully.", true);
+  } catch (e) {
+    message("authMessage", e.message);
+  }
+});
+
+function openPaymentOptionsRequest() {
+  location.hash = "support";
+
+  const form = $("supportForm");
+  const type = form.querySelector('[name="type"]');
+  const msg = form.querySelector('[name="message"]');
+
+  if (type) type.value = "payment_methods";
+
+  if (msg) {
+    msg.value =
+      "I would like to make a contribution. Please tell me which payment methods are currently available in my country and provide the official payment instructions. I understand that the minimum contribution is USD $100 and that no payment is made through this website.";
+  }
+
+  for (const field of ["name", "email", "country"]) {
+    const supportField = form.querySelector(`[name="${field}"]`);
+    const registerField = document.querySelector(`#registerForm [name="${field}"]`);
+
+    if (supportField && !supportField.value && registerField) {
+      supportField.value = registerField.value;
+    }
+  }
+
+  if (msg) msg.focus();
+}
+
+$("depositOptionsBtn").addEventListener("click", openPaymentOptionsRequest);
+$("dashboardDepositBtn").addEventListener("click", openPaymentOptionsRequest);
+
+$("supportForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const f = new FormData(e.target);
+
+  try {
+    const d = await api("/api/support-requests", {
+      method: "POST",
+      body: JSON.stringify(Object.fromEntries(f.entries()))
+    });
+
+    message(
+      "supportMessage",
+      d.message + " Reference: " + d.requestId,
+      true
+    );
+
+    e.target.reset();
+
+  } catch (x) {
+    message("supportMessage", x.message);
+  }
+});
+
+$("chatButton").addEventListener("click", () => {
+  if (window.smartsupp && typeof window.smartsupp === "function") {
+    window.smartsupp("chat:open");
+  } else {
+    const subject = encodeURIComponent("DKP Structures customer support enquiry");
+    const body = encodeURIComponent(
+      "Hello DKP Structures Customer Support,\n\nI would like help with: "
+    );
+
+    window.location.href =
+      "mailto:dkpstructures@gmail.com?subject=" +
+      subject + "&body=" + body;
+  }
+});
+
+async function loadSmartsupp() {
+  try {
+    const config = await api("/api/config");
+
+    if (!config.smartsuppKey) return;
+
+    window._smartsupp = window._smartsupp || {};
+    window._smartsupp.key = config.smartsuppKey;
+
+    if (!window.smartsupp) {
+      (function(d) {
+        let s;
+        let c;
+        const o = window.smartsupp = function() {
+          o._.push(arguments);
+        };
+
+        o._ = [];
+        s = d.getElementsByTagName("script")[0];
+        c = d.createElement("script");
+        c.type = "text/javascript";
+        c.charset = "utf-8";
+        c.async = true;
+        c.src = "https://www.smartsuppchat.com/loader.js?";
+        s.parentNode.insertBefore(c, s);
+      })(document);
+    }
+  } catch (e) {
+    console.warn("Smartsupp configuration unavailable:", e.message);
+  }
+}
+
+loadSmartsupp();
+loadDashboard();
+</script>
+</body>
+</html>
