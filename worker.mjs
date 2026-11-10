@@ -15,8 +15,14 @@ export default {
     const url = new URL(request.url);
     const isApi = url.pathname === "/api" || url.pathname.startsWith("/api/");
 
-    // Cloudflare's Assets binding serves the existing public/ website files.
-    if (!isApi && (request.method === "GET" || request.method === "HEAD")) return serveAsset(request, env);
+    if (!isApi && (request.method === "GET" || request.method === "HEAD")) {
+      try {
+        return await serveAsset(request, env);
+      } catch (error) {
+        console.error("DKP asset serving failed:", error);
+        return Response.json({ error: "Website assets could not be served." }, { status: 500 });
+      }
+    }
     if (!isApi) return new Response("Not found", { status: 404 });
 
     if (!env.HYPERDRIVE?.connectionString) {
@@ -44,19 +50,38 @@ export default {
         PGPOOL_MAX: "5"
       };
 
+      let startupStage = "import";
       appReady = (async () => {
         const { app, init } = await import("./server.mjs");
+        startupStage = "database_initialization";
         await init();
+        startupStage = "http_adapter_start";
         app.listen(8787);
+        startupStage = "http_adapter_ready";
         return httpServerHandler({ port: 8787 });
       })().catch((error) => {
         appReady = undefined;
-        console.error("DKP Structures Worker startup failed:", error);
-        throw error;
+        console.error("DKP Structures Worker startup failed at " + startupStage + ":", error);
+        const diagnostic = new Error("DKP Worker startup failed at " + startupStage);
+        diagnostic.cause = error;
+        throw diagnostic;
       });
     }
 
-    const handler = await appReady;
-    return handler(request, env, ctx);
+    try {
+      const handler = await appReady;
+      return await handler(request, env, ctx);
+    } catch (error) {
+      console.error("DKP Structures Worker request failed:", error);
+      const message = String(error?.message || "");
+      const stageMatch = message.match(/DKP Worker startup failed at ([a-z_]+)/);
+      return Response.json(
+        {
+          error: "The application could not complete this request.",
+          stage: stageMatch?.[1] || "request_handling"
+        },
+        { status: 500 }
+      );
+    }
   }
 };
