@@ -18,7 +18,8 @@ export default {
     const isApi = url.pathname === "/api" || url.pathname.startsWith("/api/");
 
     // Cloudflare's Assets binding serves the existing public/ website files.
-    if (!isApi) return serveAsset(request, env);
+    if (!isApi && (request.method === "GET" || request.method === "HEAD")) return serveAsset(request, env);
+    if (!isApi) return new Response("Not found", { status: 404 });
 
     if (!env.HYPERDRIVE?.connectionString) {
       return Response.json(
