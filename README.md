@@ -1,82 +1,60 @@
-# DKP STRUCTURES — Full platform starter (v4)
+# DKP STRUCTURES — Full-stack platform (PostgreSQL migration)
 
-This is the full Node.js + Express platform, not the static Netlify page.
+Node.js + Express application with PostgreSQL-backed supporter accounts, contributions, support requests, audit history and login sessions.
 
-## Included
-- Public DKP Structures website and campaign information.
-- Supporter registration and login.
-- Server-backed supporter dashboard and personal target.
-- Supporter recognition levels based on verified contribution totals.
-- Support request form saved to the application database.
-- Deposit/payment-options buttons that direct visitors to the customer-support request form.
-- Admin board at `/admin.html`.
-- Admin workflow to create pending contribution records, verify cleared payments manually, credit verified contribution totals once, reject records, and inspect audit logs.
-- Smartsupp website chat integration configured through `SMARTSUPP_KEY`.
-- Direct email support links to **dkpstructures@gmail.com**; if Smartsupp is not connected, the chat button opens an email draft instead.
+## Features
+- Public company-development website and campaign information.
+- Supporter registration, login, logout and dashboard.
+- Personal targets and recognition levels based on independently verified contributions.
+- Customer-support request submission and admin review.
+- Admin board at `/admin.html` for pending contribution records, one-time verification/rejection and audit logs.
+- Smartsupp integration through `SMARTSUPP_KEY`.
+- PostgreSQL stores application data; PostgreSQL also stores login sessions in `user_sessions`.
 
-## Important: this is a full-stack starter, not a production-certified financial platform
-Do not accept real contributions or sensitive personal information until legal review, payment-provider approval, security hardening, email verification, password recovery, controlled admin provisioning, persistent production database, backups and restore tests are complete.
+## Important safety and migration notes
+- The application does not process payments. The dashboard total is a record of verified contributions, not a wallet, deposit, investment or withdrawable balance.
+- Do not accept real contributions or sensitive personal information until legal review, payment-provider approval, email verification, password recovery, CSRF/security review, backups and restore testing are complete.
+- The app creates its PostgreSQL tables automatically on startup. Use a private managed PostgreSQL database and keep `DATABASE_URL` secret.
+- This code migration does not copy records from an existing SQLite database. If any real SQLite records exist, export and reconcile them before switching the production service. Do not delete the old database until the import has been checked and backed up.
+- Public registration always creates a supporter. It cannot grant administrator privileges.
+- A free web host may sleep or restart; the database must be external and persistent. Do not use an expiring trial database for long-term supporter records.
 
-The dashboard displays a **verified contribution total**, not a cash wallet, bank deposit, withdrawable balance, savings account or investment account. The website does not process payments. Supporters must contact customer service first for available payment methods.
+## Local setup
+1. Install Node.js 20 or newer and PostgreSQL.
+2. Copy `.env.example` to `.env`.
+3. Set `DATABASE_URL` to your PostgreSQL connection string.
+4. Set a random `SESSION_SECRET` of at least 32 characters.
+5. Run `npm install`, then `npm start`.
+6. Open `http://localhost:3000`. The health endpoint is `/api/health`.
 
-## Run locally
-Requirements: Node.js 20+.
+## Create the first administrator safely
+1. Register your owner account through the website.
+2. From a private server shell with `DATABASE_URL` configured, run:
+   `npm run admin:promote -- owner@example.com`
+3. Use the exact email address of the account you own. This script changes only that existing account's role. Never add a public admin-registration route or expose database credentials.
 
-1. Copy `.env.example` to `.env`.
-2. Set a unique random `SESSION_SECRET` of at least 32 characters.
-3. Public registration always creates a supporter account. It never grants administrator privileges based on an email address. Provision the owner/admin role only through a private, authenticated database administration process; never expose that process as a public route.
-4. Set `SMARTSUPP_KEY` to your real Smartsupp website chat key after creating the Smartsupp account.
-5. Run `npm install`.
-6. Run `npm start`.
-7. Open `http://localhost:3000`.
+## Render deployment
+Create a Node web service from this repository:
+- Build command: `npm install`
+- Start command: `npm start`
+- Runtime: Node 20+
+- Set `NODE_ENV=production`
+- Set `DATABASE_URL` to a managed PostgreSQL connection string.
+- Set `SESSION_SECRET` to a unique random value of at least 32 characters.
+- Optional: `SUPPORT_EMAIL=dkpstructures@gmail.com`, `SMARTSUPP_KEY` and `PGSSL=true` if required by your database provider.
 
-## Smartsupp setup
-1. Create/sign in to Smartsupp: https://www.smartsupp.com/
-2. Verify your email and add the deployed website domain to your Smartsupp workspace if prompted.
-3. Open Smartsupp settings and find **Chat box → Chat code** (the exact menu wording may change).
-4. Copy the website chat key only. Do not share your Smartsupp password or private API token.
-5. In your hosting provider's environment settings, set `SMARTSUPP_KEY` to that key.
-6. Set `SUPPORT_EMAIL=dkpstructures@gmail.com`.
-7. Redeploy/restart the app and test the blue chat button from a separate browser/device.
-8. Add actual support agents, set staffed hours, and configure the welcome/offline messages in Smartsupp.
+Do not use a local SQLite file or depend on the Render web service filesystem for durable records. If using a Render-managed free PostgreSQL instance, check its current expiry/retention terms before putting any records there. An external managed PostgreSQL provider can be connected by storing its connection string in Render's secret environment variables.
 
-## Customer support
-- Public support email: **dkpstructures@gmail.com**
-- Email link: `mailto:dkpstructures@gmail.com`
-- Live chat: Smartsupp widget after `SMARTSUPP_KEY` is configured.
-- If chat is not configured or unavailable, the floating chat button opens a pre-addressed email draft.
+## Checks
+- `npm run check` validates server and inline browser JavaScript syntax.
+- `npm run admin:promote -- email@example.com` privately promotes an existing account to administrator.
+- `/api/health` checks the API and PostgreSQL connection.
 
-## Deploy the full application
-Deploy as a Node.js web service, not a static-site upload. The app needs a persistent writable data directory for SQLite and the SQLite session store. The default filesystem on many cloud hosts is ephemeral. For production, migrate the database/session store to a managed PostgreSQL database and persistent session store, or use a host with a properly configured persistent disk. Verify backup and restore before use.
-
-Typical Node service commands:
-- Build: `npm install`
-- Start: `npm start`
-
-Set production environment variables in the hosting dashboard:
-- `NODE_ENV=production`
-- `SESSION_SECRET` (strong random secret, 32+ characters)
-- Admin role provisioning (perform privately in the database; there is intentionally no public email-based admin bootstrap)
-- `SUPPORT_EMAIL=dkpstructures@gmail.com`
-- `SMARTSUPP_KEY` (real website chat key)
-- `DB_PATH` (persistent storage path if retaining SQLite)
-
-## Known launch blockers to resolve before public account registration
-- Replace email-based first-registration admin assignment with a private owner invitation/provisioning process.
-- Add email verification and password reset.
-- Keep the API same-origin write checks, and complete a full CSRF/security review, rate-limit review, session-cookie review and output-handling review.
-- Add notifications for support requests; currently requests are saved in the database and visible in the admin board, but this code does not send notification emails.
-- Migrate SQLite and SQLite sessions to production-grade persistent storage.
-- Add scheduled backups and prove a restore works.
-- Complete privacy notice, terms, fundraising disclosures and legal review for the actual recipient and jurisdiction.
-- Only use payment methods approved for the actual fundraising arrangement. Do not imply the site itself accepts or processes payments.
-
-## Manual contribution verification workflow
-1. Supporter contacts customer support at **dkpstructures@gmail.com** or through Smartsupp to request currently available payment methods.
-2. Customer service independently checks the receiving payment provider/account and confirms funds have cleared.
-3. Admin opens `/admin.html`, finds the supporter and creates a pending contribution record with amount, payment method, unique reference and customer-service confirmation note.
-4. Admin independently checks the receiving account/provider record, then records a verification note and selects **Verify & credit supporter**.
-5. The database transaction changes the record to verified and adds the amount to the supporter’s verified contribution total once. Repeated verification is blocked.
-6. Pending and rejected records do not increase the verified contribution total.
-
-Never mark a payment verified based only on a screenshot, an email supplied by the payer, or an unconfirmed claim. Confirm in the actual receiving account/provider dashboard.
+## Remaining launch requirements
+- Email verification and password recovery.
+- Full CSRF, session and security review.
+- Support-request email notifications.
+- Automated database backups and tested restore.
+- Privacy notice, accurate terms and fundraising/legal review for the actual recipient and jurisdictions.
+- Independent end-to-end testing on Android and desktop.
+- Confirm payment records against cleared funds in the receiving provider; never trust screenshots alone.
