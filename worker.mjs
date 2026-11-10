@@ -78,19 +78,23 @@ export default {
       const handler = await appReady;
       return await handler(request, env, ctx);
     } catch (error) {
-      console.error("DKP Structures Worker request failed:", error);
-      const message = String(error?.message || "");
-      const causeMessage = String(error?.cause?.message || "");
-      const stageMatch = message.match(/DKP Worker startup failed at ([a-z_]+)/);
-      return Response.json(
-        {
-          error: "The application could not complete this request.",
-          stage: stageMatch?.[1] || "request_handling",
-          diagnostic: causeMessage.slice(0, 240) || lastStartupDiagnostic?.name + ": " + lastStartupDiagnostic?.message,
-          diagnosticStack: lastStartupDiagnostic?.stack || undefined
-        },
-        { status: 500 }
-      );
+      const serialize = (value) => ({
+        type: typeof value,
+        name: value && typeof value === "object" ? String(value.name || value.constructor?.name || "Error") : undefined,
+        message: value && typeof value === "object" ? String(value.message || "") : String(value),
+        stack: value && typeof value === "object" ? String(value.stack || "").slice(0, 1800) : undefined,
+        cause: value && typeof value === "object" && value.cause ? String(value.cause.message || value.cause) : undefined
+      });
+      const detail = serialize(error);
+      console.error("DKP Structures Worker request failed:", detail, error);
+      const stageMatch = detail.message.match(/DKP Worker startup failed at ([a-z_]+)/);
+      return Response.json({
+        error: "The application could not complete this request.",
+        stage: stageMatch?.[1] || "request_handling",
+        diagnostic: detail.message || detail.name || "Unknown request error",
+        diagnosticStack: detail.stack || undefined,
+        diagnosticCause: detail.cause || undefined
+      }, { status: 500 });
     }
   }
 };
