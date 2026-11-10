@@ -9,7 +9,7 @@ if(!runtimeEnv.DATABASE_URL)throw new Error("DATABASE_URL is required.");
 if(prod&&(!runtimeEnv.SESSION_SECRET||runtimeEnv.SESSION_SECRET.length<32))throw new Error("SESSION_SECRET must contain at least 32 characters.");
 const parsed=new URL(runtimeEnv.DATABASE_URL);
 const ssl=runtimeEnv.PGSSL==="true"||(runtimeEnv.PGSSL!=="false"&&!["localhost","127.0.0.1"].includes(parsed.hostname));
-const pool=new Pool({connectionString:runtimeEnv.DATABASE_URL,ssl:ssl?{rejectUnauthorized:false}:false,max:10,connectionTimeoutMillis:10000});
+const pool=new Pool({connectionString:runtimeEnv.DATABASE_URL,ssl:cloudflareWorker?false:(ssl?{rejectUnauthorized:false}:false),max:cloudflareWorker?5:10,connectionTimeoutMillis:10000});
 pool.on("error",e=>console.error("PostgreSQL pool error:",e.message));
 const termsVersion=runtimeEnv.TERMS_VERSION||"2026-11-10";
 const clean=v=>String(v||"").trim(),emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
