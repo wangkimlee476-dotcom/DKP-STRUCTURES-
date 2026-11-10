@@ -1,6 +1,7 @@
 import { httpServerHandler } from "cloudflare:node";
 
 let appReady;
+let lastStartupDiagnostic = null;
 
 async function serveAsset(request, env) {
   const asset = await env.ASSETS.fetch(request);
@@ -61,6 +62,11 @@ export default {
         return httpServerHandler({ port: 8787 });
       })().catch((error) => {
         appReady = undefined;
+        lastStartupDiagnostic = {
+          name: String(error?.name || "Error"),
+          message: String(error?.message || error),
+          stack: String(error?.stack || "").slice(0, 1200)
+        };
         console.error("DKP Structures Worker startup failed at " + startupStage + ":", error);
         const diagnostic = new Error("DKP Worker startup failed at " + startupStage);
         diagnostic.cause = error;
@@ -80,7 +86,8 @@ export default {
         {
           error: "The application could not complete this request.",
           stage: stageMatch?.[1] || "request_handling",
-          diagnostic: causeMessage.slice(0, 240) || undefined
+          diagnostic: causeMessage.slice(0, 240) || lastStartupDiagnostic?.name + ": " + lastStartupDiagnostic?.message,
+          diagnosticStack: lastStartupDiagnostic?.stack || undefined
         },
         { status: 500 }
       );
