@@ -77,7 +77,7 @@ app.use((req,res,next)=>{
   });
   req.on("error",next);
 });
-app.use(session({store:new PgSession({pool,tableName:"user_sessions",createTableIfMissing:true,pruneSessionInterval:900}),name:"dkp.sid",secret:runtimeEnv.SESSION_SECRET||"development-only-change-this-secret",resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:"lax",secure:prod,maxAge:28800000}}));
+app.use(session({store:new PgSession({pool,tableName:"user_sessions",createTableIfMissing:false,pruneSessionInterval:900}),name:"dkp.sid",secret:runtimeEnv.SESSION_SECRET||"development-only-change-this-secret",resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:"lax",secure:prod,maxAge:28800000}}));
 app.use("/api",(req,res,next)=>{if(!["POST","PUT","PATCH","DELETE"].includes(req.method))return next();if(String(req.get("sec-fetch-site")||"").toLowerCase()==="cross-site")return res.status(403).json({error:"Cross-site requests are not allowed."});const o=req.get("origin");if(o){try{if(new URL(o).host!==req.get("host"))return res.status(403).json({error:"Request origin is not allowed."});}catch{return res.status(403).json({error:"Invalid request origin."});}}next();});
 app.use("/api/",rateLimit({windowMs:900000,limit:100,standardHeaders:"draft-7",legacyHeaders:false}));if(!cloudflareWorker)app.use(express.static(path.join(__dirname,"public")));
 app.get("/api/config",(req,res)=>res.json({smartsuppKey:runtimeEnv.SMARTSUPP_KEY||"",supportEmail:runtimeEnv.SUPPORT_EMAIL||"dkpstructures@gmail.com",termsVersion}));
