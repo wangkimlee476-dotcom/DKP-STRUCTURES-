@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dkp-structures",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-10",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "REPLACE_WITH_CLOUDFLARE_HYPERDRIVE_ID"
+    }
+  ],
+  "vars": {
+    "NODE_ENV": "production",
+    "CF_WORKER": "true",
+    "SUPPORT_EMAIL": "dkpstructures@gmail.com",
+    "TERMS_VERSION": "2026-11-10"
+  }
+}
