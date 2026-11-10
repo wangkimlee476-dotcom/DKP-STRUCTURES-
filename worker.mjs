@@ -53,9 +53,9 @@ export default {
 
       let startupStage = "import";
       appReady = (async () => {
-        const { app, init } = await import("./server.mjs");
-        startupStage = "database_initialization";
-        await init();
+        const { app } = await import("./server.mjs");
+        // Production tables are provisioned by the Neon migration, not by the
+        // restricted Hyperdrive runtime role. Avoid running CREATE statements here.
         startupStage = "http_adapter_start";
         app.listen(8787);
         startupStage = "http_adapter_ready";
