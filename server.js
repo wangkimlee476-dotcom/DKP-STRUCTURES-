@@ -89,6 +89,7 @@ const termsVersion = process.env.TERMS_VERSION || "2026-11-10";
 const adminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 
 app.disable("x-powered-by");
+app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "30kb" }));
 app.use(express.urlencoded({ extended: false, limit: "30kb" }));
