@@ -1,7 +1,5 @@
-import { createRequire } from "node:module";
 import { httpServerHandler } from "cloudflare:node";
 
-const require = createRequire("/worker.mjs");
 let appReady;
 
 async function serveAsset(request, env) {
@@ -47,7 +45,7 @@ export default {
       };
 
       appReady = (async () => {
-        const { app, init } = require("./server.js");
+        const { app, init } = await import("./server.js");
         await init();
         app.listen(8787);
         return httpServerHandler({ port: 8787 });
