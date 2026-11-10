@@ -32,6 +32,13 @@ export default {
         { status: 503 }
       );
     }
+    // Safe preview diagnostic: confirms required bindings without exposing secrets.
+    if (url.pathname === "/api/health/config") {
+      return Response.json({
+        databaseConfigured: Boolean(env.HYPERDRIVE?.connectionString),
+        sessionSecretConfigured: Boolean(env.SESSION_SECRET && env.SESSION_SECRET.length >= 32)
+      });
+    }
     if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 32) {
       return Response.json(
         { error: "The session secret is not configured correctly." },
