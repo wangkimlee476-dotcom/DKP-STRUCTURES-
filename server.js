@@ -93,7 +93,6 @@ for (const [name, definition] of [
 }
 
 const termsVersion = process.env.TERMS_VERSION || "2026-11-10";
-const adminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -116,6 +115,30 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 8
   }
 }));
+
+// Reject cross-origin browser writes to session-authenticated API routes.
+// SameSite=Lax cookies are an additional layer, not a replacement for this check.
+app.use("/api", (req, res, next) => {
+  if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) return next();
+
+  const fetchSite = String(req.get("sec-fetch-site") || "").toLowerCase();
+  if (fetchSite === "cross-site") {
+    return res.status(403).json({ error: "Cross-site requests are not allowed." });
+  }
+
+  const origin = req.get("origin");
+  if (origin) {
+    try {
+      if (new URL(origin).host !== req.get("host")) {
+        return res.status(403).json({ error: "Request origin is not allowed." });
+      }
+    } catch {
+      return res.status(403).json({ error: "Invalid request origin." });
+    }
+  }
+
+  next();
+});
 
 app.use("/api/", rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -251,7 +274,8 @@ app.post("/api/register", rateLimit({
 
   const hash = await bcrypt.hash(password, 12);
   const supporterId = "DKP-" + require("crypto").randomBytes(4).toString("hex").toUpperCase();
-  const role = (adminEmail && email === adminEmail) ? "admin" : "supporter";
+  // Public self-registration must never grant administrator privileges.
+  // Provision administrators through a private, owner-controlled database operation.
 
   const info = db.prepare(`
     INSERT INTO users(
