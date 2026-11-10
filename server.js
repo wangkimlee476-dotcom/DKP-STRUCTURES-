@@ -276,6 +276,7 @@ app.post("/api/register", rateLimit({
   const supporterId = "DKP-" + require("crypto").randomBytes(4).toString("hex").toUpperCase();
   // Public self-registration must never grant administrator privileges.
   // Provision administrators through a private, owner-controlled database operation.
+  const role = "supporter";
 
   const info = db.prepare(`
     INSERT INTO users(
