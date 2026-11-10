@@ -45,7 +45,7 @@ export default {
       };
 
       appReady = (async () => {
-        const { app, init } = await import("./server.js");
+        const { app, init } = await import("./server.mjs");
         await init();
         app.listen(8787);
         return httpServerHandler({ port: 8787 });
