@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node scripts/check-inline-js.js"
+    "check": "node --check server.js && node --check scripts/promote-admin.js && node scripts/check-inline-js.js",
+    "admin:promote": "node scripts/promote-admin.js"
   },
   "engines": {
     "node": ">=20"
