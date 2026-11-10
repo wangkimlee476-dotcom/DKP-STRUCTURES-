@@ -24,7 +24,7 @@ Requirements: Node.js 20+.
 
 1. Copy `.env.example` to `.env`.
 2. Set a unique random `SESSION_SECRET` of at least 32 characters.
-3. Set `ADMIN_EMAIL=dkpstructures@gmail.com` only for a private test deployment. In this starter, the matching email is granted admin role at registration. This bootstrap method is NOT safe for public launch until replaced by an owner-only invitation and email verification.
+3. Public registration always creates a supporter account. It never grants administrator privileges based on an email address. Provision the owner/admin role only through a private, authenticated database administration process; never expose that process as a public route.
 4. Set `SMARTSUPP_KEY` to your real Smartsupp website chat key after creating the Smartsupp account.
 5. Run `npm install`.
 6. Run `npm start`.
@@ -56,7 +56,7 @@ Typical Node service commands:
 Set production environment variables in the hosting dashboard:
 - `NODE_ENV=production`
 - `SESSION_SECRET` (strong random secret, 32+ characters)
-- `ADMIN_EMAIL` (owner address, but do not enable public registration-based admin assignment in production)
+- Admin role provisioning (perform privately in the database; there is intentionally no public email-based admin bootstrap)
 - `SUPPORT_EMAIL=dkpstructures@gmail.com`
 - `SMARTSUPP_KEY` (real website chat key)
 - `DB_PATH` (persistent storage path if retaining SQLite)
@@ -64,7 +64,7 @@ Set production environment variables in the hosting dashboard:
 ## Known launch blockers to resolve before public account registration
 - Replace email-based first-registration admin assignment with a private owner invitation/provisioning process.
 - Add email verification and password reset.
-- Add CSRF protection and review rate limits, session cookie settings and output handling.
+- Keep the API same-origin write checks, and complete a full CSRF/security review, rate-limit review, session-cookie review and output-handling review.
 - Add notifications for support requests; currently requests are saved in the database and visible in the admin board, but this code does not send notification emails.
 - Migrate SQLite and SQLite sessions to production-grade persistent storage.
 - Add scheduled backups and prove a restore works.
