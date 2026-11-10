@@ -74,11 +74,13 @@ export default {
     } catch (error) {
       console.error("DKP Structures Worker request failed:", error);
       const message = String(error?.message || "");
+      const causeMessage = String(error?.cause?.message || "");
       const stageMatch = message.match(/DKP Worker startup failed at ([a-z_]+)/);
       return Response.json(
         {
           error: "The application could not complete this request.",
-          stage: stageMatch?.[1] || "request_handling"
+          stage: stageMatch?.[1] || "request_handling",
+          diagnostic: causeMessage.slice(0, 240) || undefined
         },
         { status: 500 }
       );
