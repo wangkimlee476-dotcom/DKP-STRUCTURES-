@@ -1,16 +1,17 @@
 require("dotenv").config();
+const runtimeEnv=globalThis.__DKP_ENV||process.env;
 const express=require("express"),session=require("express-session");
 const PgSession=require("connect-pg-simple")(session);
 const {Pool}=require("pg"),bcrypt=require("bcryptjs"),helmet=require("helmet");
 const rateLimit=require("express-rate-limit"),path=require("node:path"),crypto=require("node:crypto");
-const app=express(),PORT=Number(process.env.PORT||3000),prod=process.env.NODE_ENV==="production",cloudflareWorker=process.env.CF_WORKER==="true";
-if(!process.env.DATABASE_URL)throw new Error("DATABASE_URL is required.");
-if(prod&&(!process.env.SESSION_SECRET||process.env.SESSION_SECRET.length<32))throw new Error("SESSION_SECRET must contain at least 32 characters.");
-const parsed=new URL(process.env.DATABASE_URL);
-const ssl=process.env.PGSSL==="true"||(process.env.PGSSL!=="false"&&!["localhost","127.0.0.1"].includes(parsed.hostname));
-const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:ssl?{rejectUnauthorized:false}:false,max:10,connectionTimeoutMillis:10000});
+const app=express(),PORT=Number(runtimeEnv.PORT||3000),prod=runtimeEnv.NODE_ENV==="production",cloudflareWorker=runtimeEnv.CF_WORKER==="true";
+if(!runtimeEnv.DATABASE_URL)throw new Error("DATABASE_URL is required.");
+if(prod&&(!runtimeEnv.SESSION_SECRET||runtimeEnv.SESSION_SECRET.length<32))throw new Error("SESSION_SECRET must contain at least 32 characters.");
+const parsed=new URL(runtimeEnv.DATABASE_URL);
+const ssl=runtimeEnv.PGSSL==="true"||(runtimeEnv.PGSSL!=="false"&&!["localhost","127.0.0.1"].includes(parsed.hostname));
+const pool=new Pool({connectionString:runtimeEnv.DATABASE_URL,ssl:ssl?{rejectUnauthorized:false}:false,max:10,connectionTimeoutMillis:10000});
 pool.on("error",e=>console.error("PostgreSQL pool error:",e.message));
-const termsVersion=process.env.TERMS_VERSION||"2026-11-10";
+const termsVersion=runtimeEnv.TERMS_VERSION||"2026-11-10";
 const clean=v=>String(v||"").trim(),emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
 const route=fn=>(req,res,next)=>Promise.resolve(fn(req,res,next)).catch(next);
 const levels=[["Basic",100,499],["Bronze",500,1249],["Silver",1250,2999],["Gold",3000,6999],["Platinum",7000,14999],["Diamond",15000,29999],["Founding",30000,Number.MAX_SAFE_INTEGER]];
@@ -21,10 +22,10 @@ function establish(req,res,status,payload,id){req.session.regenerate(err=>{if(er
 function auth(req,res,next){if(!req.session.userId)return res.status(401).json({error:"Please sign in first."});next();}
 const admin=route(async(req,res,next)=>{if(!req.session.userId)return res.status(401).json({error:"Please sign in first."});const r=await pool.query("SELECT role FROM users WHERE id=$1",[req.session.userId]);if(r.rows[0]?.role!=="admin")return res.status(403).json({error:"Administrator access required."});next();});
 app.disable("x-powered-by");app.set("trust proxy",1);app.use(helmet({contentSecurityPolicy:false}));app.use(express.json({limit:"30kb"}));app.use(express.urlencoded({extended:false,limit:"30kb"}));
-app.use(session({store:new PgSession({pool,tableName:"user_sessions",createTableIfMissing:true,pruneSessionInterval:900}),name:"dkp.sid",secret:process.env.SESSION_SECRET||"development-only-change-this-secret",resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:"lax",secure:prod,maxAge:28800000}}));
+app.use(session({store:new PgSession({pool,tableName:"user_sessions",createTableIfMissing:true,pruneSessionInterval:900}),name:"dkp.sid",secret:runtimeEnv.SESSION_SECRET||"development-only-change-this-secret",resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:"lax",secure:prod,maxAge:28800000}}));
 app.use("/api",(req,res,next)=>{if(!["POST","PUT","PATCH","DELETE"].includes(req.method))return next();if(String(req.get("sec-fetch-site")||"").toLowerCase()==="cross-site")return res.status(403).json({error:"Cross-site requests are not allowed."});const o=req.get("origin");if(o){try{if(new URL(o).host!==req.get("host"))return res.status(403).json({error:"Request origin is not allowed."});}catch{return res.status(403).json({error:"Invalid request origin."});}}next();});
 app.use("/api/",rateLimit({windowMs:900000,limit:100,standardHeaders:"draft-7",legacyHeaders:false}));if(!cloudflareWorker)app.use(express.static(path.join(__dirname,"public")));
-app.get("/api/config",(req,res)=>res.json({smartsuppKey:process.env.SMARTSUPP_KEY||"",supportEmail:process.env.SUPPORT_EMAIL||"dkpstructures@gmail.com",termsVersion}));
+app.get("/api/config",(req,res)=>res.json({smartsuppKey:runtimeEnv.SMARTSUPP_KEY||"",supportEmail:runtimeEnv.SUPPORT_EMAIL||"dkpstructures@gmail.com",termsVersion}));
 app.get("/api/health",route(async(req,res)=>{await pool.query("SELECT 1");res.json({ok:true,service:"DKP Structures API",database:"PostgreSQL"});}));
 app.post("/api/register",rateLimit({windowMs:3600000,limit:8}),route(async(req,res)=>{
  const name=clean(req.body.name),email=clean(req.body.email).toLowerCase(),country=clean(req.body.country),password=String(req.body.password||"");
