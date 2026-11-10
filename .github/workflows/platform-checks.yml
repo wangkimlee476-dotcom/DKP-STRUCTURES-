@@ -8,6 +8,7 @@ on:
       - main
       - release/platform-polish-security
       - ci/deploy-readiness-checks
+      - feature/cloudflare-workers
 
 jobs:
   syntax:
