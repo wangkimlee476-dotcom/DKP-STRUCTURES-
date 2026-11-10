@@ -33,7 +33,50 @@ const totalFor=async id=>Number((await pool.query("SELECT COALESCE(SUM(amount),0
 function establish(req,res,status,payload,id){req.session.regenerate(err=>{if(err)return res.status(500).json({error:"Could not start session."});req.session.userId=id;req.session.save(e=>e?res.status(500).json({error:"Could not save login session."}):res.status(status).json(payload));});}
 function auth(req,res,next){if(!req.session.userId)return res.status(401).json({error:"Please sign in first."});next();}
 const admin=route(async(req,res,next)=>{if(!req.session.userId)return res.status(401).json({error:"Please sign in first."});const r=await pool.query("SELECT role FROM users WHERE id=$1",[req.session.userId]);if(r.rows[0]?.role!=="admin")return res.status(403).json({error:"Administrator access required."});next();});
-app.disable("x-powered-by");app.set("trust proxy",1);app.use(helmet({contentSecurityPolicy:false}));app.use(express.json({limit:"30kb"}));app.use(express.urlencoded({extended:false,limit:"30kb"}));
+app.disable("x-powered-by");app.set("trust proxy",1);app.use(helmet({contentSecurityPolicy:false}));
+/*
+ * Avoid Express/body-parser's iconv-lite -> raw-body -> node:stream import
+ * path in the Cloudflare Workers bundle. Parse the two supported form types
+ * directly from the adapter's IncomingMessage stream instead.
+ */
+app.use((req,res,next)=>{
+  req.body={};
+  if(!["POST","PUT","PATCH","DELETE"].includes(req.method))return next();
+  const contentType=String(req.headers["content-type"]||"").split(";")[0].trim().toLowerCase();
+  if(contentType!=="application/json"&&contentType!=="application/x-www-form-urlencoded")return next();
+  const chunks=[];
+  let size=0,finished=false;
+  req.on("data",chunk=>{
+    if(finished)return;
+    const bytes=chunk instanceof Uint8Array?chunk:new TextEncoder().encode(String(chunk));
+    size+=bytes.byteLength;
+    if(size>30*1024){
+      finished=true;
+      res.status(413).json({error:"Request body is too large."});
+      return;
+    }
+    chunks.push(bytes);
+  });
+  req.on("end",()=>{
+    if(finished)return;
+    try{
+      const bytes=new Uint8Array(size);
+      let offset=0;
+      for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+      const bodyText=new TextDecoder().decode(bytes);
+      if(contentType==="application/json"){
+        req.body=bodyText?JSON.parse(bodyText):{};
+        if(!req.body||typeof req.body!=="object"||Array.isArray(req.body))throw new Error("JSON body must be an object.");
+      }else{
+        req.body=Object.fromEntries(new URLSearchParams(bodyText));
+      }
+      next();
+    }catch{
+      res.status(400).json({error:"Request body is not valid."});
+    }
+  });
+  req.on("error",next);
+});
 app.use(session({store:new PgSession({pool,tableName:"user_sessions",createTableIfMissing:true,pruneSessionInterval:900}),name:"dkp.sid",secret:runtimeEnv.SESSION_SECRET||"development-only-change-this-secret",resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:"lax",secure:prod,maxAge:28800000}}));
 app.use("/api",(req,res,next)=>{if(!["POST","PUT","PATCH","DELETE"].includes(req.method))return next();if(String(req.get("sec-fetch-site")||"").toLowerCase()==="cross-site")return res.status(403).json({error:"Cross-site requests are not allowed."});const o=req.get("origin");if(o){try{if(new URL(o).host!==req.get("host"))return res.status(403).json({error:"Request origin is not allowed."});}catch{return res.status(403).json({error:"Invalid request origin."});}}next();});
 app.use("/api/",rateLimit({windowMs:900000,limit:100,standardHeaders:"draft-7",legacyHeaders:false}));if(!cloudflareWorker)app.use(express.static(path.join(__dirname,"public")));
