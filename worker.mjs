@@ -76,7 +76,10 @@ export default {
 
     try {
       const handler = await appReady;
-      return await handler(request, env, ctx);
+      // httpServerHandler returns a Worker handler object (with fetch), not a bare function.
+      if (typeof handler === "function") return await handler(request, env, ctx);
+      if (handler && typeof handler.fetch === "function") return await handler.fetch(request, env, ctx);
+      throw new TypeError("Cloudflare HTTP adapter did not provide a fetch handler.");
     } catch (error) {
       const serialize = (value) => ({
         type: typeof value,
