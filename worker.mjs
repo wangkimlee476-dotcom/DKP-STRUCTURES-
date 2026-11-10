@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { httpServerHandler } from "cloudflare:node";
 
-const require = createRequire(import.meta.url);
+const require = createRequire(import.meta.url || "file:///worker.mjs");
 let appReady;
 
 async function serveAsset(request, env) {
