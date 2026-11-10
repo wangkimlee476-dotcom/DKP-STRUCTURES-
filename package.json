@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "DKP Structures website and secure supporter portal",
-  "main": "server.js",
+  "main": "server.mjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "check": "node --check server.js && node --check worker.mjs && node --check scripts/promote-admin.js && node scripts/check-inline-js.js",
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "check": "node --check server.mjs && node --check worker.mjs && node --check scripts/promote-admin.js && node scripts/check-inline-js.js",
     "admin:promote": "node scripts/promote-admin.js",
     "preinstall": "node -e \"console.log('DKP Cloudflare PostgreSQL branch selected')\""
   },
