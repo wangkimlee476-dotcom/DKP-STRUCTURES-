@@ -39,5 +39,29 @@ $("chatButton").addEventListener("click",()=>{
  }
 });
 api("/api/config").then(c=>{if(c.smartsuppKey){window._smartsupp=window._smartsupp||{};window._smartsupp.key=c.smartsuppKey;window.smartsupp||(function(d){var s,c2,o=smartsupp=function(){o._.push(arguments)};o._=[];s=d.getElementsByTagName("script")[0];c2=d.createElement("script");c2.type="text/javascript";c2.charset="utf-8";c2.async=true;c2.src="https://www.smartsuppchat.com/loader.js?";s.parentNode.insertBefore(c2,s)})(document)}}).catch(()=>{});
-loadDashboard();
-</script></body></html>
+
+async function loadDashboard() {
+  try {
+    const d = await api("/api/dashboard");
+
+    $("signedOut").classList.add("hidden");
+    $("dash").classList.remove("hidden");
+
+    $("welcome").textContent = "Welcome, " + d.user.name;
+    $("supporterId").textContent = "Supporter ID: " + d.user.supporterId + " · " + d.user.country;
+    $("total").textContent = "$" + Number(d.verifiedTotal).toLocaleString();
+    $("level").textContent = d.level;
+    $("progress").textContent = d.progress + "%";
+    $("targetForm").target.value = d.user.personalTarget || "";
+
+    $("history").innerHTML = d.history.length
+      ? d.history.map(h => `<p>${h.date} · $${h.amount} · ${h.status}</p>`).join("")
+      : "No contribution records yet.";
+
+  } catch (e) {
+    $("dash").classList.add("hidden");
+    $("signedOut").classList.remove("hidden");
+    $("signedOut").textContent = "Dashboard error: " + e.message;
+  }
+}
+ 
