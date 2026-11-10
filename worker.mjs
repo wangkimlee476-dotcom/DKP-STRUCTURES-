@@ -1,4 +1,4 @@
-import { httpServerHandler } from "cloudflare:node";
+import { handleAsNodeRequest } from "cloudflare:node";
 
 let appReady;
 let lastStartupDiagnostic = null;
@@ -59,7 +59,7 @@ export default {
         startupStage = "http_adapter_start";
         app.listen(8787);
         startupStage = "http_adapter_ready";
-        return httpServerHandler({ port: 8787 });
+        return true;
       })().catch((error) => {
         appReady = undefined;
         lastStartupDiagnostic = {
@@ -75,11 +75,9 @@ export default {
     }
 
     try {
-      const handler = await appReady;
-      // httpServerHandler returns a Worker handler object (with fetch), not a bare function.
-      if (typeof handler === "function") return await handler(request, env, ctx);
-      if (handler && typeof handler.fetch === "function") return await handler.fetch(request, env, ctx);
-      throw new TypeError("Cloudflare HTTP adapter did not provide a fetch handler.");
+      await appReady;
+      // Route this Worker request directly to the Node HTTP server.
+      return await handleAsNodeRequest(8787, request);
     } catch (error) {
       const serialize = (value) => ({
         type: typeof value,
