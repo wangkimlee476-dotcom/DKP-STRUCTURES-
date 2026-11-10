@@ -12,10 +12,11 @@ import { fileURLToPath } from "node:url";
 
 if (!globalThis.__DKP_ENV) dotenv.config();
 const runtimeEnv=globalThis.__DKP_ENV||process.env;
+const cloudflareWorker=runtimeEnv.CF_WORKER==="true";
+const __dirname=cloudflareWorker?"/":path.dirname(fileURLToPath(import.meta.url));
 const PgSession=connectPgSimple(session);
 const {Pool}=pg;
-const __dirname=path.dirname(fileURLToPath(import.meta.url));
-const app=express(),PORT=Number(runtimeEnv.PORT||3000),prod=runtimeEnv.NODE_ENV==="production",cloudflareWorker=runtimeEnv.CF_WORKER==="true";
+const app=express(),PORT=Number(runtimeEnv.PORT||3000),prod=runtimeEnv.NODE_ENV==="production";
 if(!runtimeEnv.DATABASE_URL)throw new Error("DATABASE_URL is required.");
 if(prod&&(!runtimeEnv.SESSION_SECRET||runtimeEnv.SESSION_SECRET.length<32))throw new Error("SESSION_SECRET must contain at least 32 characters.");
 const parsed=new URL(runtimeEnv.DATABASE_URL);
