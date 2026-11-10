@@ -3,6 +3,7 @@
   "name": "dkp-structures",
   "main": "worker.mjs",
   "compatibility_date": "2026-11-10",
+  "compatibility_flags": ["new_module_registry"],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
