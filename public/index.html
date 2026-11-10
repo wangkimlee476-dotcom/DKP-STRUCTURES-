@@ -36,6 +36,21 @@ label{font-weight:650;font-size:14px}
 .chatfloat{position:fixed;right:18px;bottom:18px;background:#168de2;color:white;z-index:100;box-shadow:0 8px 25px #0004}
 .error{color:#a32727}
 .success{color:#176b3a}
+.auth-card{max-width:560px;margin:18px auto;padding:clamp(20px,4vw,34px);border-radius:22px;box-shadow:0 14px 38px #10251a12}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;background:#edf2ee;border-radius:14px;margin-bottom:24px}
+.auth-tab{background:transparent;color:var(--muted);border-radius:10px;padding:12px 8px}
+.auth-tab.active{background:var(--g);color:#fff;box-shadow:0 3px 10px #073b2b25}
+.auth-card h3{margin:0 0 6px}
+.auth-card form{display:grid;gap:5px}
+.auth-card input:not([type=checkbox]){min-height:48px}
+.auth-submit{width:100%;min-height:49px;margin-top:12px;background:var(--g);color:#fff}
+.password-field{display:flex;gap:8px;align-items:center}
+.password-field input{flex:1;min-width:0}
+.password-toggle{background:#edf2ee;color:var(--g);border:1px solid var(--line);min-width:72px;min-height:46px}
+.terms-label{display:flex;align-items:flex-start;gap:9px;margin-top:8px}
+.terms-label input{width:auto;margin:5px 0 0;flex:0 0 auto}
+#authMessage{min-height:24px;margin:14px 0 0}
+[hidden]{display:none!important}
 footer{background:#101c18;color:white;text-align:center;padding:30px}
 @media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}.hero{padding:45px 22px}.links{gap:10px}}
 </style>
@@ -88,35 +103,40 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 
 <section id="account" class="section">
 <h2>Supporter account</h2>
-<div class="grid">
-<div class="card">
-<h3>Create account</h3>
-<form id="registerForm">
-<label>Full name</label>
-<input name="name" required maxlength="100">
-<label>Email</label>
-<input name="email" type="email" required>
-<label>Country</label>
-<input name="country" required maxlength="80">
-<label>Password (12+ characters)</label>
-<input name="password" type="password" minlength="12" required>
-<label><input type="checkbox" id="terms" style="width:auto" required> I accept the current Terms & Conditions</label>
-<p class="muted">By registering, you acknowledge the privacy and fundraising disclosures. The current terms version and acceptance time are recorded.</p>
-<button class="btn" type="submit">Create account</button>
-</form>
+<div class="auth-card card">
+<div class="auth-tabs" role="tablist" aria-label="Account access">
+<button class="auth-tab active" id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">Login</button>
+<button class="auth-tab" id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="registerPanel">Create account</button>
 </div>
-
-<div class="card">
-<h3>Login</h3>
+<div id="loginPanel" role="tabpanel" aria-labelledby="loginTab">
+<h3>Welcome back</h3>
+<p class="muted">Sign in to access your supporter dashboard.</p>
 <form id="loginForm">
 <label>Email</label>
-<input name="email" type="email" required>
+<input name="email" type="email" autocomplete="username" required>
 <label>Password</label>
-<input name="password" type="password" required>
-<button class="btn" type="submit">Login</button>
+<div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" data-password-toggle="loginPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
+<button class="btn auth-submit" type="submit">Login securely</button>
 </form>
-<p id="authMessage" aria-live="polite"></p>
 </div>
+<div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
+<h3>Create your supporter account</h3>
+<p class="muted">Register to track your supporter activity and verified contributions.</p>
+<form id="registerForm">
+<label>Full name</label>
+<input name="name" autocomplete="name" required maxlength="100">
+<label>Email</label>
+<input name="email" type="email" autocomplete="email" required>
+<label>Country</label>
+<input name="country" autocomplete="country-name" required maxlength="80">
+<label>Password (12+ characters)</label>
+<div class="password-field"><input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="12" required><button class="password-toggle" type="button" data-password-toggle="registerPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
+<label class="terms-label"><input type="checkbox" id="terms" required> I accept the current Terms & Conditions</label>
+<p class="muted">By registering, you acknowledge the privacy and fundraising disclosures. The current terms version and acceptance time are recorded.</p>
+<button class="btn auth-submit" type="submit">Create account</button>
+</form>
+</div>
+<p id="authMessage" aria-live="polite"></p>
 </div>
 </section>
 
@@ -216,6 +236,32 @@ const levels = [
 $("levelCards").innerHTML = levels.map(x =>
 `<article class="card"><h3>${x[0]}</h3><b>${x[1]}</b></article>`
 ).join("");
+
+function setAuthMode(mode) {
+  const login = mode === "login";
+  $("loginPanel").hidden = !login;
+  $("registerPanel").hidden = login;
+  $("loginTab").classList.toggle("active", login);
+  $("registerTab").classList.toggle("active", !login);
+  $("loginTab").setAttribute("aria-selected", String(login));
+  $("registerTab").setAttribute("aria-selected", String(!login));
+  $("authMessage").textContent = "";
+  $("authMessage").className = "";
+}
+$("loginTab").addEventListener("click", () => setAuthMode("login"));
+$("registerTab").addEventListener("click", () => setAuthMode("register"));
+
+document.querySelectorAll("[data-password-toggle]").forEach(button => {
+  button.addEventListener("click", () => {
+    const field = $(button.dataset.passwordToggle);
+    const visible = field.type === "password";
+    field.type = visible ? "text" : "password";
+    button.textContent = visible ? "Hide" : "Show";
+    button.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+    button.setAttribute("aria-pressed", String(visible));
+  });
+});
+
 
 async function api(url, opts = {}) {
   const r = await fetch(url, {
