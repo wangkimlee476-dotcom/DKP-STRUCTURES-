@@ -53,10 +53,13 @@ function walk(directory) {
       count += Number(patchPackage(path.join(child, "package.json")));
       continue;
     }
-    // Search scoped packages and nested dependency trees, but not package contents.
-    if (entry.name.startsWith("@") || entry.name === "node_modules") {
+    // Search scoped packages and each package's nested dependency tree.
+    if (entry.name.startsWith("@")) {
       count += walk(child);
+      continue;
     }
+    const nestedDependencies = path.join(child, "node_modules");
+    if (fs.existsSync(nestedDependencies)) count += walk(nestedDependencies);
   }
   return count;
 }
