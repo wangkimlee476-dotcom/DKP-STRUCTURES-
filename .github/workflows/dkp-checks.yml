@@ -1,0 +1,24 @@
+name: DKP Structures checks
+
+on:
+  pull_request:
+    branches:
+      - feature/cloudflare-workers
+  push:
+    branches:
+      - feature/mobile-supporter-dashboard
+
+jobs:
+  syntax-and-inline-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install
+      - name: Run project checks
+        run: npm run check
