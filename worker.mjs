@@ -2,6 +2,17 @@ import { createServer } from "node:http";
 import { httpServerHandler } from "cloudflare:node";
 
 let appReady;
+let databaseInitPromise;
+
+async function initializeDatabase(init) {
+  if (!databaseInitPromise) {
+    databaseInitPromise = init().catch(error => {
+      databaseInitPromise = undefined;
+      throw error;
+    });
+  }
+  await databaseInitPromise;
+}
 
 async function serveAsset(request, env) {
   const asset = await env.ASSETS.fetch(request);
@@ -64,7 +75,7 @@ async function ensureApplication(env) {
         await load();
       }
       startupStage = "server_module_evaluation";
-      const { app, withWorkerDatabase } = await import("./server.mjs");
+      const { app, init, withWorkerDatabase } = await import("./server.mjs");
       startupStage = "node_http_server_creation";
       const server = createServer(app);
       startupStage = "cloudflare_http_adapter_creation";
@@ -79,7 +90,7 @@ async function ensureApplication(env) {
         );
       }
       startupStage = "application_ready";
-      return { withWorkerDatabase, nodeHandler };
+      return { init, withWorkerDatabase, nodeHandler };
     })().catch((error) => {
       appReady = undefined;
       error.dkpStartupStage = startupStage;
@@ -122,12 +133,16 @@ export default {
     // Node HTTP bridge cannot hide whether Hyperdrive/PostgreSQL is reachable.
     if (url.pathname === "/api/health" && request.method === "GET") {
       try {
-        await checkDatabase(env.HYPERDRIVE.connectionString);
+        const { init, withWorkerDatabase } = await ensureApplication(env);
+        await withWorkerDatabase(env.HYPERDRIVE.connectionString, async () => {
+          await initializeDatabase(init);
+        });
         return Response.json({
           ok: true,
           service: "DKP Structures API",
           database: "PostgreSQL",
-          runtime: "Cloudflare Workers"
+          runtime: "Cloudflare Workers",
+          schema: "ready"
         });
       } catch (error) {
         console.error("DKP Structures database health check failed:", {
@@ -137,7 +152,7 @@ export default {
           stack: error?.stack || "No stack trace available"
         });
         return Response.json(
-          { ok: false, stage: "database_connection", error: "PostgreSQL health check failed." },
+          { ok: false, stage: error?.dkpStartupStage || "database_initialization", error: "PostgreSQL application initialization failed." },
           { status: 503 }
         );
       }
@@ -145,9 +160,11 @@ export default {
 
     let stage = "application_startup";
     try {
-      const { withWorkerDatabase, nodeHandler } = await ensureApplication(env);
+      const { init, withWorkerDatabase, nodeHandler } = await ensureApplication(env);
       stage = "database_connection";
       return await withWorkerDatabase(env.HYPERDRIVE.connectionString, async () => {
+        stage = "database_initialization";
+        await initializeDatabase(init);
         stage = "express_http_adapter";
         return await nodeHandler.fetch(request, env, ctx);
       });
