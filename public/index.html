@@ -451,7 +451,7 @@ $("supportForm").addEventListener("submit", async e => {
   try {
     const payload=Object.fromEntries(f.entries());
     const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
-    const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\\nName: "+payload.name+"\\nEmail: "+payload.email+"\\nCountry: "+payload.country+"\\nRequest type: "+payload.type+"\\nMessage: "+payload.message+"\\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
+    const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+payload.name+"\nEmail: "+payload.email+"\nCountry: "+payload.country+"\nRequest type: "+payload.type+"\nMessage: "+payload.message+"\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
     try {
       await loadSmartsupp();
       window.smartsupp("chat:send",chatText);
