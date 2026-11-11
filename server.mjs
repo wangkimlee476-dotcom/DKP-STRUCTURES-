@@ -8,6 +8,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import path from "node:path";
 import crypto from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { fileURLToPath } from "node:url";
 
 if (!globalThis.__DKP_ENV) dotenv.config();
@@ -15,14 +16,19 @@ const runtimeEnv=globalThis.__DKP_ENV||process.env;
 const cloudflareWorker=runtimeEnv.CF_WORKER==="true";
 const __dirname=cloudflareWorker?"/":path.dirname(fileURLToPath(import.meta.url));
 const PgSession=connectPgSimple(session);
-const {Pool}=pg;
+const {Pool,Client}=pg;
+const databaseContext=new AsyncLocalStorage();
 const app=express(),PORT=Number(runtimeEnv.PORT||3000),prod=runtimeEnv.NODE_ENV==="production";
 if(!runtimeEnv.DATABASE_URL)throw new Error("DATABASE_URL is required.");
 if(prod&&(!runtimeEnv.SESSION_SECRET||runtimeEnv.SESSION_SECRET.length<32))throw new Error("SESSION_SECRET must contain at least 32 characters.");
 const parsed=new URL(runtimeEnv.DATABASE_URL);
 const ssl=runtimeEnv.PGSSL==="true"||(runtimeEnv.PGSSL!=="false"&&!["localhost","127.0.0.1"].includes(parsed.hostname));
-const pool=new Pool({connectionString:runtimeEnv.DATABASE_URL,ssl:cloudflareWorker?false:(ssl?{rejectUnauthorized:false}:false),max:cloudflareWorker?5:10,connectionTimeoutMillis:10000});
-pool.on("error",e=>console.error("PostgreSQL pool error:",e.message));
+const pool=cloudflareWorker?{
+ query(...args){const client=databaseContext.getStore();if(!client)return Promise.reject(new Error("Database query executed outside the current Worker request."));return client.query(...args)},
+ async connect(){const client=databaseContext.getStore();if(!client)throw new Error("Database connection requested outside the current Worker request.");return{query:(...args)=>client.query(...args),release(){}}},
+ on(){return this}
+}:new Pool({connectionString:runtimeEnv.DATABASE_URL,ssl:ssl?{rejectUnauthorized:false}:false,max:10,connectionTimeoutMillis:10000});
+if(!cloudflareWorker)pool.on("error",e=>console.error("PostgreSQL pool error:",e.message));
 const termsVersion=runtimeEnv.TERMS_VERSION||"2026-11-10";
 const clean=v=>String(v||"").trim(),emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
 const route=fn=>(req,res,next)=>Promise.resolve(fn(req,res,next)).catch(next);
@@ -77,7 +83,7 @@ app.use((req,res,next)=>{
   });
   req.on("error",next);
 });
-app.use(session({store:new PgSession({pool,tableName:"user_sessions",createTableIfMissing:false,pruneSessionInterval:900}),name:"dkp.sid",secret:runtimeEnv.SESSION_SECRET||"development-only-change-this-secret",resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:"lax",secure:prod,maxAge:28800000}}));
+app.use(session({store:new PgSession({pool,tableName:"user_sessions",createTableIfMissing:false,pruneSessionInterval:cloudflareWorker?false:900}),name:"dkp.sid",secret:runtimeEnv.SESSION_SECRET||"development-only-change-this-secret",resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:"lax",secure:prod,maxAge:28800000}}));
 app.use("/api",(req,res,next)=>{if(!["POST","PUT","PATCH","DELETE"].includes(req.method))return next();if(String(req.get("sec-fetch-site")||"").toLowerCase()==="cross-site")return res.status(403).json({error:"Cross-site requests are not allowed."});const o=req.get("origin");if(o){try{if(new URL(o).host!==req.get("host"))return res.status(403).json({error:"Request origin is not allowed."});}catch{return res.status(403).json({error:"Invalid request origin."});}}next();});
 app.use("/api/",rateLimit({windowMs:900000,limit:100,standardHeaders:"draft-7",legacyHeaders:false}));if(!cloudflareWorker)app.use(express.static(path.join(__dirname,"public")));
 app.get("/api/config",(req,res)=>res.json({smartsuppKey:runtimeEnv.SMARTSUPP_KEY||"",supportEmail:runtimeEnv.SUPPORT_EMAIL||"dkpstructures@gmail.com",termsVersion}));
@@ -181,4 +187,9 @@ app.use((err,req,res,next)=>{console.error("Request failed:",{path:req.path,meth
 async function init(){await pool.query("CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,supporter_id VARCHAR(32) UNIQUE NOT NULL,full_name VARCHAR(100) NOT NULL,email VARCHAR(254) UNIQUE NOT NULL,country VARCHAR(80) NOT NULL,password_hash TEXT NOT NULL,role VARCHAR(20) NOT NULL DEFAULT 'supporter' CHECK(role IN ('supporter','admin')),personal_target DOUBLE PRECISION NOT NULL DEFAULT 0,terms_version VARCHAR(40) NOT NULL,terms_accepted_at TIMESTAMPTZ NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS contributions(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),amount NUMERIC(14,2) NOT NULL CHECK(amount>=100),currency VARCHAR(3) NOT NULL DEFAULT 'USD',reference VARCHAR(120) NOT NULL,payment_method VARCHAR(100) NOT NULL DEFAULT 'Customer service recorded',customer_service_note VARCHAR(1000) NOT NULL DEFAULT '',status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','verified','rejected')),verified_by INTEGER REFERENCES users(id),verified_at TIMESTAMPTZ,rejected_by INTEGER REFERENCES users(id),rejected_at TIMESTAMPTZ,admin_note VARCHAR(1000) NOT NULL DEFAULT '',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS support_requests(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),name VARCHAR(100) NOT NULL,email VARCHAR(254) NOT NULL,country VARCHAR(80) NOT NULL,request_type VARCHAR(30) NOT NULL,message VARCHAR(3000) NOT NULL,status VARCHAR(20) NOT NULL DEFAULT 'open',admin_note VARCHAR(2000),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS audit_logs(id SERIAL PRIMARY KEY,admin_id INTEGER NOT NULL REFERENCES users(id),action VARCHAR(100) NOT NULL,target_type VARCHAR(50) NOT NULL,target_id INTEGER,details TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());ALTER TABLE users ADD COLUMN IF NOT EXISTS selected_plan VARCHAR(40) NOT NULL DEFAULT 'Basic';ALTER TABLE users ADD COLUMN IF NOT EXISTS selected_amount NUMERIC(14,2) NOT NULL DEFAULT 100;ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR(12) NOT NULL DEFAULT 'en';ALTER TABLE users ADD COLUMN IF NOT EXISTS theme VARCHAR(12) NOT NULL DEFAULT 'light';ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data TEXT;CREATE TABLE IF NOT EXISTS password_reset_tokens(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,token_hash VARCHAR(64) NOT NULL UNIQUE,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_by INTEGER REFERENCES users(id),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens(user_id,expires_at DESC);CREATE INDEX IF NOT EXISTS idx_contributions_user_status ON contributions(user_id,status);CREATE INDEX IF NOT EXISTS idx_contributions_status_created ON contributions(status,created_at DESC);CREATE INDEX IF NOT EXISTS idx_support_requests_status_created ON support_requests(status,created_at DESC)");}
 if(!cloudflareWorker)init().then(()=>app.listen(PORT,()=>console.log("DKP Structures running on port "+PORT+" with PostgreSQL"))).catch(e=>{console.error("PostgreSQL initialisation failed:",e);process.exit(1);});
 if(!cloudflareWorker)process.on("SIGTERM",async()=>{await pool.end();process.exit(0);});
+export async function withWorkerDatabase(connectionString,handler){
+ const client=new Client({connectionString});
+ await client.connect();
+ return databaseContext.run(client,handler);
+}
 export { app, init, pool };
