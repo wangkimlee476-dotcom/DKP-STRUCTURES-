@@ -25,18 +25,18 @@ async function ensureApplication(env) {
     };
 
     appReady = (async () => {
-      const { app } = await import("./server.mjs");
+      const { app, withWorkerDatabase } = await import("./server.mjs");
       // Start Express only inside the request handler. Cloudflare's
       // handleAsNodeRequest bridge then routes this fetch to the registered port.
       app.listen(8787);
-      return true;
+      return withWorkerDatabase;
     })().catch((error) => {
       appReady = undefined;
       console.error("DKP Structures application startup failed:", error);
       throw error;
     });
   }
-  await appReady;
+  return await appReady;
 }
 
 export default {
@@ -62,8 +62,8 @@ export default {
     }
 
     try {
-      await ensureApplication(env);
-      return await handleAsNodeRequest(8787, request);
+      const withWorkerDatabase = await ensureApplication(env);
+      return await withWorkerDatabase(env.HYPERDRIVE.connectionString, () => handleAsNodeRequest(8787, request));
     } catch (error) {
       console.error("DKP Structures Worker request failed:", {
         name: error?.name || "Error",
