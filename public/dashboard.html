@@ -79,7 +79,7 @@ $("sendSupport").onclick=async()=>{
  button.disabled=true;button.textContent="Sending request…";
  try{
   const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify({name:me.name,email:me.email,country:me.country,type:"payment_methods",message:question})});
-  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\\nName: "+me.name+"\\nEmail: "+me.email+"\\nCountry: "+me.country+"\\nRequest: "+question+"\\nPlease assist this supporter with the official payment instructions. Do not request card details, passwords or bank login credentials.";
+  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+me.name+"\nEmail: "+me.email+"\nCountry: "+me.country+"\nRequest: "+question+"\nPlease assist this supporter with the official payment instructions. Do not request card details, passwords or bank login credentials.";
   try{await connectSmartsupp();window.smartsupp("chat:send",chatText);window.smartsupp("chat:open");say("supportStatus","Request #"+d.requestId+" has been saved and sent to the Smartsupp customer-service chat. Continue the conversation in the chat window.","success");$("supportMessage").value=""}
   catch(chatError){say("supportStatus","Request #"+d.requestId+" is safely recorded for the admin team, but Smartsupp could not be reached: "+chatError.message+" Please use the chat button or try again.","error")}
  }catch(e){say("supportStatus",e.message,"error")}
