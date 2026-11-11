@@ -37,6 +37,7 @@ async function initializeDatabase() {
   await pool.query("CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id), name VARCHAR(120) NOT NULL, email VARCHAR(320) NOT NULL, country VARCHAR(80) NOT NULL, request_type VARCHAR(40) NOT NULL, message TEXT NOT NULL, status VARCHAR(30) NOT NULL DEFAULT 'open', admin_note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY, admin_id INTEGER NOT NULL REFERENCES users(id), action VARCHAR(120) NOT NULL, target_type VARCHAR(80) NOT NULL, target_id INTEGER, details TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("CREATE TABLE IF NOT EXISTS password_reset_tokens (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, token_hash VARCHAR(255) UNIQUE NOT NULL, expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ, created_by INTEGER REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+  await pool.query("CREATE TABLE IF NOT EXISTS user_sessions (sid VARCHAR NOT NULL PRIMARY KEY, sess JSON NOT NULL, expire TIMESTAMP(6) NOT NULL)");
   await pool.query("CREATE INDEX IF NOT EXISTS idx_contributions_user_status ON contributions(user_id, status)");
   await pool.query("CREATE INDEX IF NOT EXISTS idx_contributions_status_created ON contributions(status, created_at DESC)");
   await pool.query("CREATE INDEX IF NOT EXISTS idx_support_requests_status_created ON support_requests(status, created_at DESC)");
