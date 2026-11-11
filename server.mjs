@@ -18,6 +18,7 @@ const __dirname=cloudflareWorker?"/":path.dirname(fileURLToPath(import.meta.url)
 const PgSession=connectPgSimple(session);
 const {Pool,Client}=pg;
 const databaseContext=new AsyncLocalStorage();
+const workerRequestClients=new Map();
 const app=express(),PORT=Number(runtimeEnv.PORT||3000),prod=runtimeEnv.NODE_ENV==="production";
 if(!runtimeEnv.DATABASE_URL)throw new Error("DATABASE_URL is required.");
 if(prod&&(!runtimeEnv.SESSION_SECRET||runtimeEnv.SESSION_SECRET.length<32))throw new Error("SESSION_SECRET must contain at least 32 characters.");
@@ -40,6 +41,12 @@ function establish(req,res,status,payload,id){req.session.regenerate(err=>{if(er
 function auth(req,res,next){if(!req.session.userId)return res.status(401).json({error:"Please sign in first."});next();}
 const admin=route(async(req,res,next)=>{if(!req.session.userId)return res.status(401).json({error:"Please sign in first."});const r=await pool.query("SELECT role FROM users WHERE id=$1",[req.session.userId]);if(r.rows[0]?.role!=="admin")return res.status(403).json({error:"Administrator access required."});next();});
 app.disable("x-powered-by");app.set("trust proxy",1);app.use(helmet({contentSecurityPolicy:false}));
+if(cloudflareWorker)app.use((req,res,next)=>{
+ const requestId=req.get("x-dkp-worker-request-id");
+ const client=workerRequestClients.get(requestId);
+ if(!client)return res.status(500).json({error:"Database request context is unavailable."});
+ databaseContext.run(client,next);
+});
 /*
  * Avoid Express/body-parser's iconv-lite -> raw-body -> node:stream import
  * path in the Cloudflare Workers bundle. Parse the two supported form types
@@ -193,6 +200,9 @@ export function withWorkerDatabaseClient(client,handler){
 export async function withWorkerDatabase(connectionString,handler){
  const client=new Client({connectionString});
  await client.connect();
- return withWorkerDatabaseClient(client,handler);
+ const requestId=crypto.randomUUID();
+ workerRequestClients.set(requestId,client);
+ try{return await handler(requestId)}
+ finally{workerRequestClients.delete(requestId)}
 }
 export { app, init, pool };
