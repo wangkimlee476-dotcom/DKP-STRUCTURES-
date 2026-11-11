@@ -12,12 +12,22 @@ globalThis.__DKP_ENV = {
 async function main() {
   const { pool, withWorkerDatabaseClient } = await import("../server.mjs");
 
-  const fakeClient = id => ({
-    async query() {
-      await Promise.resolve();
-      return { rows: [{ requestId: id }] };
-    }
-  });
+  const clients = [];
+  const fakeClient = id => {
+    const client = {
+      closed: false,
+      async query() {
+        if (client.closed) throw new Error("Query attempted after request client was closed.");
+        await Promise.resolve();
+        return { rows: [{ requestId: id }] };
+      },
+      async end() {
+        client.closed = true;
+      }
+    };
+    clients.push(client);
+    return client;
+  };
 
   async function request(id, waitMs) {
     return withWorkerDatabaseClient(fakeClient(id), async () => {
@@ -44,6 +54,8 @@ async function main() {
     ["request-A", "request-A"],
     ["request-B", "request-B"]
   ]);
+  assert.equal(clients.length, 2);
+  assert.ok(clients.every(client => client.closed), "Each request-scoped PostgreSQL client must be closed after its handler completes.");
   await assert.rejects(
     () => pool.query("SELECT outside request"),
     /outside the current Worker request/
