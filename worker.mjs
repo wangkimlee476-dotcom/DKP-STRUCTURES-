@@ -68,10 +68,15 @@ async function ensureApplication(env) {
       startupStage = "node_http_server_creation";
       const server = createServer(app);
       startupStage = "cloudflare_http_adapter_creation";
-      // httpServerHandler returns the Fetch-compatible handler function itself.
+      // Cloudflare's documented httpServerHandler(server) result is a
+      // Worker handler object (with a fetch method), not a bare function.
       const nodeHandler = httpServerHandler(server);
-      if (typeof nodeHandler !== "function") {
-        throw new Error("Cloudflare did not create the Express request handler.");
+      if (!nodeHandler || typeof nodeHandler.fetch !== "function") {
+        throw new Error(
+          "Cloudflare did not create a Fetch handler. Returned type: " +
+          (nodeHandler === null ? "null" : typeof nodeHandler) +
+          "; keys: " + Object.keys(nodeHandler || {}).join(",")
+        );
       }
       startupStage = "application_ready";
       return { withWorkerDatabase, nodeHandler };
@@ -144,7 +149,7 @@ export default {
       stage = "database_connection";
       return await withWorkerDatabase(env.HYPERDRIVE.connectionString, async () => {
         stage = "express_http_adapter";
-        return await nodeHandler(request, env, ctx);
+        return await nodeHandler.fetch(request, env, ctx);
       });
     } catch (error) {
       const failureStage = error?.dkpStartupStage || stage;
