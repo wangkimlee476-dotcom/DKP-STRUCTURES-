@@ -1,19 +1,28 @@
 import { createServer } from "node:http";
-import { handleAsNodeRequest } from "cloudflare:node";
+import { httpServerHandler } from "cloudflare:node";
 
 const NODE_SERVER_PORT = 8787;
+let expressApp;
 let appReady;
-let nodeServer;
+
+// Cloudflare's Node HTTP server must be registered at module scope. Starting it
+// inside fetch() causes Workers error 10021 ("Disallowed operation ... global scope").
+const nodeServer = createServer((request, response) => {
+  if (!expressApp) {
+    response.writeHead(503, { "content-type": "application/json; charset=utf-8", "retry-after": "1" });
+    response.end(JSON.stringify({ error: "Application is starting. Please retry shortly." }));
+    return;
+  }
+  expressApp(request, response);
+});
+nodeServer.listen(NODE_SERVER_PORT);
+const nodeHandler = httpServerHandler(nodeServer);
 
 async function ensureApp(env) {
   if (!appReady) {
     appReady = (async () => {
-      // Hyperdrive's connectionString must be read in request context, not
-      // during module evaluation. server.mjs reads this configuration once.
       const connectionString = env.HYPERDRIVE?.connectionString;
-      if (!connectionString) {
-        throw new Error("HYPERDRIVE connectionString is not configured.");
-      }
+      if (!connectionString) throw new Error("HYPERDRIVE connectionString is not configured.");
       if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 32) {
         throw new Error("SESSION_SECRET must contain at least 32 characters.");
       }
@@ -25,20 +34,21 @@ async function ensureApp(env) {
         SESSION_SECRET: env.SESSION_SECRET,
         SUPPORT_EMAIL: env.SUPPORT_EMAIL || "dkpstructures@gmail.com",
         SMARTSUPP_KEY: env.SMARTSUPP_KEY || "",
+        RESEND_API_KEY: env.RESEND_API_KEY || "",
+        EMAIL_FROM: env.EMAIL_FROM || "",
         TERMS_VERSION: env.TERMS_VERSION || "2026-11-10",
         PGPOOL_MAX: "5"
       };
 
-      const { app } = await import("./server.mjs");
-      nodeServer = createServer(app);
-      nodeServer.listen(NODE_SERVER_PORT);
+      const { app, init } = await import("./server.mjs");
+      await init();
+      expressApp = app;
     })().catch((error) => {
       appReady = undefined;
-      nodeServer = undefined;
+      expressApp = undefined;
       throw error;
     });
   }
-
   await appReady;
 }
 
@@ -50,7 +60,7 @@ async function serveAsset(request, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const isApi = url.pathname === "/api" || url.pathname.startsWith("/api/");
 
@@ -61,7 +71,7 @@ export default {
       if (!isApi) return new Response("Not found", { status: 404 });
 
       await ensureApp(env);
-      return await handleAsNodeRequest(NODE_SERVER_PORT, request);
+      return await nodeHandler(request, env, ctx);
     } catch (error) {
       console.error("DKP Structures Worker request failed:", {
         name: error?.name || "UnknownError",
@@ -69,13 +79,7 @@ export default {
         stack: error?.stack || "No stack trace available"
       });
       return Response.json(
-        {
-          error: "The application could not complete this request.",
-          diagnostic: {
-            name: error?.name || "UnknownError",
-            message: error?.message || String(error)
-          }
-        },
+        { error: "The application could not complete this request." },
         { status: 500 }
       );
     }
