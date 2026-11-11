@@ -187,15 +187,29 @@ app.use((err,req,res,next)=>{console.error("Request failed:",{path:req.path,meth
 async function init(){await pool.query("CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,supporter_id VARCHAR(32) UNIQUE NOT NULL,full_name VARCHAR(100) NOT NULL,email VARCHAR(254) UNIQUE NOT NULL,country VARCHAR(80) NOT NULL,password_hash TEXT NOT NULL,role VARCHAR(20) NOT NULL DEFAULT 'supporter' CHECK(role IN ('supporter','admin')),personal_target DOUBLE PRECISION NOT NULL DEFAULT 0,terms_version VARCHAR(40) NOT NULL,terms_accepted_at TIMESTAMPTZ NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS contributions(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),amount NUMERIC(14,2) NOT NULL CHECK(amount>=100),currency VARCHAR(3) NOT NULL DEFAULT 'USD',reference VARCHAR(120) NOT NULL,payment_method VARCHAR(100) NOT NULL DEFAULT 'Customer service recorded',customer_service_note VARCHAR(1000) NOT NULL DEFAULT '',status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','verified','rejected')),verified_by INTEGER REFERENCES users(id),verified_at TIMESTAMPTZ,rejected_by INTEGER REFERENCES users(id),rejected_at TIMESTAMPTZ,admin_note VARCHAR(1000) NOT NULL DEFAULT '',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS support_requests(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),name VARCHAR(100) NOT NULL,email VARCHAR(254) NOT NULL,country VARCHAR(80) NOT NULL,request_type VARCHAR(30) NOT NULL,message VARCHAR(3000) NOT NULL,status VARCHAR(20) NOT NULL DEFAULT 'open',admin_note VARCHAR(2000),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS audit_logs(id SERIAL PRIMARY KEY,admin_id INTEGER NOT NULL REFERENCES users(id),action VARCHAR(100) NOT NULL,target_type VARCHAR(50) NOT NULL,target_id INTEGER,details TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());ALTER TABLE users ADD COLUMN IF NOT EXISTS selected_plan VARCHAR(40) NOT NULL DEFAULT 'Basic';ALTER TABLE users ADD COLUMN IF NOT EXISTS selected_amount NUMERIC(14,2) NOT NULL DEFAULT 100;ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR(12) NOT NULL DEFAULT 'en';ALTER TABLE users ADD COLUMN IF NOT EXISTS theme VARCHAR(12) NOT NULL DEFAULT 'light';ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data TEXT;CREATE TABLE IF NOT EXISTS password_reset_tokens(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,token_hash VARCHAR(64) NOT NULL UNIQUE,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_by INTEGER REFERENCES users(id),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens(user_id,expires_at DESC);CREATE INDEX IF NOT EXISTS idx_contributions_user_status ON contributions(user_id,status);CREATE INDEX IF NOT EXISTS idx_contributions_status_created ON contributions(status,created_at DESC);CREATE INDEX IF NOT EXISTS idx_support_requests_status_created ON support_requests(status,created_at DESC)");}
 if(!cloudflareWorker)init().then(()=>app.listen(PORT,()=>console.log("DKP Structures running on port "+PORT+" with PostgreSQL"))).catch(e=>{console.error("PostgreSQL initialisation failed:",e);process.exit(1);});
 if(!cloudflareWorker)process.on("SIGTERM",async()=>{await pool.end();process.exit(0);});
-export function withWorkerDatabaseClient(client,handler){
- return databaseContext.run(client,handler);
+export async function withWorkerDatabaseClient(client,handler){
+ try{
+  return await databaseContext.run(client,handler);
+ }finally{
+  if(typeof client.end==="function"){
+   try{await client.end();}
+   catch(error){console.error("DKP PostgreSQL request client close failed:",error?.message||error);}
+  }
+ }
 }
 export async function withWorkerDatabase(connectionString,handler){
- const client=new Client({connectionString});
- await client.connect();
- // Keep the request's database client in AsyncLocalStorage for the entire
- // Fetch-to-Node adapter call. This avoids depending on an Express middleware
- // or request header to restore context after the adapter schedules work.
- return await withWorkerDatabaseClient(client,handler);
+ const client=new Client({connectionString,connectionTimeoutMillis:10000});
+ let connected=false;
+ try{
+  await client.connect();
+  connected=true;
+  // Keep one Hyperdrive client in AsyncLocalStorage for the complete
+  // Fetch-to-Node adapter call, then close it so requests cannot leak
+  // PostgreSQL connections and exhaust the Hyperdrive pool.
+  return await withWorkerDatabaseClient(client,handler);
+ }finally{
+  // If connect() failed, still ask pg to release any partially opened resources.
+  if(!connected)await client.end().catch(error=>console.error("DKP PostgreSQL connection cleanup failed:",error?.message||error));
+ }
 }
 export { app, init, pool };
