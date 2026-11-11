@@ -56,6 +56,16 @@ async function main() {
   ]);
   assert.equal(clients.length, 2);
   assert.ok(clients.every(client => client.closed), "Each request-scoped PostgreSQL client must be closed after its handler completes.");
+
+  const failingClient = fakeClient("request-fails");
+  await assert.rejects(
+    () => withWorkerDatabaseClient(failingClient, async () => {
+      throw new Error("simulated request failure");
+    }),
+    /simulated request failure/
+  );
+  assert.equal(failingClient.closed, true, "The request-scoped PostgreSQL client must also close when the handler throws.");
+
   await assert.rejects(
     () => pool.query("SELECT outside request"),
     /outside the current Worker request/
