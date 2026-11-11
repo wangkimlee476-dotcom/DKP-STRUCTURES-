@@ -2,13 +2,14 @@ name: Platform checks
 
 on:
   pull_request:
-    branches: [main, feature/postgresql-migration]
+    branches: [main, feature/postgresql-migration, feature/cloudflare-workers]
   push:
     branches:
       - main
       - release/platform-polish-security
       - ci/deploy-readiness-checks
       - feature/cloudflare-workers
+      - fix/smartsupp-support-payment-flow
 
 jobs:
   syntax:
