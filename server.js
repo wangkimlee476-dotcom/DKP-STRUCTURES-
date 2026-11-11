@@ -34,7 +34,9 @@ async function initializeDatabase() {
   await pool.query("SELECT 1");
   await pool.query("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, supporter_id VARCHAR(80) UNIQUE NOT NULL, full_name VARCHAR(120) NOT NULL, email VARCHAR(320) UNIQUE NOT NULL, country VARCHAR(80) NOT NULL, password_hash TEXT NOT NULL, role VARCHAR(20) NOT NULL DEFAULT 'supporter' CHECK (role IN ('supporter','admin')), personal_target DOUBLE PRECISION NOT NULL DEFAULT 0, terms_version VARCHAR(80) NOT NULL, terms_accepted_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), selected_plan VARCHAR(80) NOT NULL DEFAULT 'Basic', selected_amount NUMERIC NOT NULL DEFAULT 100, language VARCHAR(12) NOT NULL DEFAULT 'en', theme VARCHAR(12) NOT NULL DEFAULT 'light', avatar_data TEXT)");
   await pool.query("CREATE TABLE IF NOT EXISTS contributions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), amount NUMERIC NOT NULL CHECK (amount >= 100), currency VARCHAR(12) NOT NULL DEFAULT 'USD', reference VARCHAR(120) NOT NULL, payment_method VARCHAR(100) NOT NULL DEFAULT 'Customer service recorded', customer_service_note VARCHAR(1000) NOT NULL DEFAULT '', status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','verified','rejected')), verified_by INTEGER REFERENCES users(id), verified_at TIMESTAMPTZ, rejected_by INTEGER REFERENCES users(id), rejected_at TIMESTAMPTZ, admin_note VARCHAR(2000) NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-  await pool.query("CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id), name VARCHAR(120) NOT NULL, email VARCHAR(320) NOT NULL, country VARCHAR(80) NOT NULL, request_type VARCHAR(40) NOT NULL, message TEXT NOT NULL, status VARCHAR(30) NOT NULL DEFAULT 'open', admin_note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+  await pool.query("CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id), name VARCHAR(120) NOT NULL, email VARCHAR(320) NOT NULL, country VARCHAR(80) NOT NULL, request_type VARCHAR(40) NOT NULL, message TEXT NOT NULL, status VARCHAR(30) NOT NULL DEFAULT 'open', admin_note TEXT, admin_reply TEXT, replied_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+  await pool.query("ALTER TABLE support_requests ADD COLUMN IF NOT EXISTS admin_reply TEXT");
+  await pool.query("ALTER TABLE support_requests ADD COLUMN IF NOT EXISTS replied_at TIMESTAMPTZ");
   await pool.query("CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY, admin_id INTEGER NOT NULL REFERENCES users(id), action VARCHAR(120) NOT NULL, target_type VARCHAR(80) NOT NULL, target_id INTEGER, details TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("CREATE TABLE IF NOT EXISTS password_reset_tokens (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, token_hash VARCHAR(255) UNIQUE NOT NULL, expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ, created_by INTEGER REFERENCES users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("CREATE TABLE IF NOT EXISTS user_sessions (sid VARCHAR NOT NULL PRIMARY KEY, sess JSON NOT NULL, expire TIMESTAMP(6) NOT NULL)");
@@ -276,6 +278,13 @@ app.post("/api/support-requests", rateLimit({ windowMs: 60 * 60 * 1000, limit: 1
   } catch (err) { next(err); }
 });
 
+app.get("/api/support-requests/mine", requireAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query("SELECT id,request_type,message,status,admin_reply,replied_at,created_at FROM support_requests WHERE user_id=$1 ORDER BY id DESC LIMIT 50", [req.session.userId]);
+    res.json({ requests: result.rows });
+  } catch (err) { next(err); }
+});
+
 app.get("/api/admin/summary", requireAdmin, async (req, res, next) => {
   try {
     const [users, support, pending, rejected, verified] = await Promise.all([
@@ -311,21 +320,33 @@ app.get("/api/admin/support-requests", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/admin/support-requests/:id", requireAdmin, async (req, res, next) => {
   const client = await pool.connect();
+  let inTransaction = false;
   try {
     const status = clean(req.body.status);
-    const note = clean(req.body.adminNote).slice(0, 2000);
+    const note = clean(req.body.adminNote);
+    const reply = clean(req.body.adminReply);
     const id = Number(req.params.id);
-    if (!["open", "in_progress", "closed"].includes(status) || !Number.isSafeInteger(id) || id < 1) {
-      return res.status(400).json({ error: "Invalid status or request ID." });
+    if (!["open", "in_progress", "closed"].includes(status) || !Number.isSafeInteger(id) || id < 1 || note.length > 2000 || reply.length > 3000) {
+      return res.status(400).json({ error: "Invalid status, request ID, note or reply." });
     }
     await client.query("BEGIN");
-    await client.query("UPDATE support_requests SET status=$1,admin_note=$2 WHERE id=$3", [status, note, id]);
+    inTransaction = true;
+    const updated = await client.query(
+      "UPDATE support_requests SET status=$1,admin_note=$2,admin_reply=CASE WHEN $3 <> '' THEN $3 ELSE admin_reply END,replied_at=CASE WHEN $3 <> '' THEN NOW() ELSE replied_at END WHERE id=$4 RETURNING id",
+      [status, note, reply, id]
+    );
+    if (!updated.rowCount) {
+      await client.query("ROLLBACK");
+      inTransaction = false;
+      return res.status(404).json({ error: "Support request not found." });
+    }
     await client.query("INSERT INTO audit_logs(admin_id,action,target_type,target_id,details) VALUES($1,$2,$3,$4,$5)",
-      [req.session.userId, "update_support_request", "support_request", id, status]);
+      [req.session.userId, "update_support_request", "support_request", id, JSON.stringify({ status, replied: Boolean(reply) })]);
     await client.query("COMMIT");
-    res.json({ ok: true });
+    inTransaction = false;
+    res.json({ ok: true, message: reply ? "Reply saved and visible in the supporter's dashboard." : "Support request updated." });
   } catch (err) {
-    await client.query("ROLLBACK");
+    if (inTransaction) await client.query("ROLLBACK");
     next(err);
   } finally { client.release(); }
 });
