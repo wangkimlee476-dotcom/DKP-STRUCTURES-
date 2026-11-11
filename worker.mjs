@@ -1,4 +1,5 @@
-import { handleAsNodeRequest } from "cloudflare:node";
+import { createServer } from "node:http";
+import { httpServerHandler } from "cloudflare:node";
 
 let appReady;
 
@@ -26,10 +27,14 @@ async function ensureApplication(env) {
 
     appReady = (async () => {
       const { app, withWorkerDatabase } = await import("./server.mjs");
-      // Start Express only inside the request handler. Cloudflare's
-      // handleAsNodeRequest bridge then routes this fetch to the registered port.
-      app.listen(8787);
-      return withWorkerDatabase;
+      const server = createServer(app);
+      // httpServerHandler returns the Fetch-compatible handler function itself.
+      // It accepts (request, env, ctx); it is not an object with a .fetch method.
+      const nodeHandler = httpServerHandler(server);
+      if (typeof nodeHandler !== "function") {
+        throw new Error("Cloudflare did not create the Express request handler.");
+      }
+      return { withWorkerDatabase, nodeHandler };
     })().catch((error) => {
       appReady = undefined;
       console.error("DKP Structures application startup failed:", error);
@@ -62,12 +67,12 @@ export default {
     }
 
     try {
-      const withWorkerDatabase = await ensureApplication(env);
+      const { withWorkerDatabase, nodeHandler } = await ensureApplication(env);
       return await withWorkerDatabase(env.HYPERDRIVE.connectionString, (requestId) => {
         const headers = new Headers(request.headers);
         headers.set("x-dkp-worker-request-id", requestId);
         const scopedRequest = new Request(request, { headers });
-        return handleAsNodeRequest(8787, scopedRequest);
+        return nodeHandler(scopedRequest, env, ctx);
       });
     } catch (error) {
       console.error("DKP Structures Worker request failed:", {
