@@ -8,9 +8,9 @@ let checked = 0;
 
 for (const name of htmlFiles) {
   const html = fs.readFileSync(path.join(publicDir, name), "utf8");
-  const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)];
+  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
   for (const [, attributes, source] of scripts) {
-    if (/\\bsrc\\s*=/.test(attributes) || !source.trim()) continue;
+    if (/\bsrc\s*=/.test(attributes) || !source.trim()) continue;
     checked += 1;
     new vm.Script(source, { filename: "public/" + name + ":inline-script-" + checked + ".js" });
   }
