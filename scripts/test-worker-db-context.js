@@ -10,7 +10,7 @@ globalThis.__DKP_ENV = {
 };
 
 async function main() {
-  const { pool, withWorkerDatabase } = await import("../server.mjs");
+  const { pool, withWorkerDatabaseClient } = await import("../server.mjs");
 
   const fakeClient = id => ({
     async query() {
@@ -20,7 +20,7 @@ async function main() {
   });
 
   async function request(id, waitMs) {
-    return withWorkerDatabase(fakeClient(id), async () => {
+    return withWorkerDatabaseClient(fakeClient(id), async () => {
       if (waitMs) await new Promise(resolve => setTimeout(resolve, waitMs));
       const direct = await pool.query("SELECT request scope");
       const transactionClient = await pool.connect();
