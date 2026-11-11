@@ -383,38 +383,6 @@ $("loginForm").addEventListener("submit", async e => {
   }
 });
 
-$("targetForm").addEventListener("submit", async e => {
-  e.preventDefault();
-
-  try {
-    const f = new FormData(e.target);
-
-    await api("/api/profile/target", {
-      method: "PATCH",
-      body: JSON.stringify({
-        target: Number(f.get("target"))
-      })
-    });
-
-    await loadDashboard();
-
-  } catch (x) {
-    alert(x.message);
-  }
-});
-
-$("logout").addEventListener("click", async () => {
-  try {
-    await api("/api/logout", { method: "POST" });
-    $("dash").classList.add("hidden");
-    $("signedOut").classList.remove("hidden");
-    $("signedOut").textContent = "You have been signed out.";
-    message("authMessage", "Signed out successfully.", true);
-  } catch (e) {
-    message("authMessage", e.message);
-  }
-});
-
 function openPaymentOptionsRequest() {
   location.hash = "support";
 
@@ -442,7 +410,6 @@ function openPaymentOptionsRequest() {
 }
 
 $("depositOptionsBtn").addEventListener("click", openPaymentOptionsRequest);
-$("dashboardDepositBtn").addEventListener("click", openPaymentOptionsRequest);
 
 $("supportForm").addEventListener("submit", async e => {
   e.preventDefault();
