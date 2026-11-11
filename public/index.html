@@ -446,25 +446,25 @@ $("dashboardDepositBtn").addEventListener("click", openPaymentOptionsRequest);
 
 $("supportForm").addEventListener("submit", async e => {
   e.preventDefault();
-
-  const f = new FormData(e.target);
-
+  const form=e.target,button=form.querySelector('button[type="submit"]'),f=new FormData(form);
+  button.disabled=true;button.textContent="Sending request…";
   try {
-    const d = await api("/api/support-requests", {
-      method: "POST",
-      body: JSON.stringify(Object.fromEntries(f.entries()))
-    });
-
-    message(
-      "supportMessage",
-      d.message + " Reference: " + d.requestId,
-      true
-    );
-
-    e.target.reset();
-
+    const payload=Object.fromEntries(f.entries());
+    const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
+    const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\\nName: "+payload.name+"\\nEmail: "+payload.email+"\\nCountry: "+payload.country+"\\nRequest type: "+payload.type+"\\nMessage: "+payload.message+"\\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
+    try {
+      await loadSmartsupp();
+      window.smartsupp("chat:send",chatText);
+      window.smartsupp("chat:open");
+      message("supportMessage","Your request #"+d.requestId+" has been saved and sent to the Smartsupp customer-service chat. Please continue in the chat window.",true);
+      form.reset();
+    } catch(chatError) {
+      message("supportMessage","Your request #"+d.requestId+" is safely recorded for the admin team, but Smartsupp could not be reached: "+chatError.message+". Please use the live-chat button to retry.");
+    }
   } catch (x) {
     message("supportMessage", x.message);
+  } finally {
+    button.disabled=false;button.textContent="Send support request";
   }
 });
 
