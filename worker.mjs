@@ -43,19 +43,48 @@ async function ensureApplication(env) {
       PGPOOL_MAX: "5"
     };
 
+    let startupStage = "server_module_import";
     appReady = (async () => {
+      // Probe the runtime dependencies individually before evaluating the full
+      // Express application, so a Worker-only module incompatibility is visible.
+      const dependencies = [
+        ["dotenv_import", () => import("dotenv")],
+        ["express_import", () => import("express")],
+        ["express_session_import", () => import("express-session")],
+        ["connect_pg_simple_import", () => import("connect-pg-simple")],
+        ["pg_import", () => import("pg")],
+        ["bcryptjs_import", () => import("bcryptjs")],
+        ["helmet_import", () => import("helmet")],
+        ["express_rate_limit_import", () => import("express-rate-limit")],
+        ["node_async_hooks_import", () => import("node:async_hooks")],
+        ["node_url_import", () => import("node:url")]
+      ];
+      for (const [stage, load] of dependencies) {
+        startupStage = stage;
+        await load();
+      }
+      startupStage = "server_module_evaluation";
       const { app, withWorkerDatabase } = await import("./server.mjs");
+      startupStage = "node_http_server_creation";
       const server = createServer(app);
+      startupStage = "cloudflare_http_adapter_creation";
       // httpServerHandler returns the Fetch-compatible handler function itself.
-      // It accepts (request, env, ctx); it is not an object with a .fetch method.
       const nodeHandler = httpServerHandler(server);
       if (typeof nodeHandler !== "function") {
         throw new Error("Cloudflare did not create the Express request handler.");
       }
+      startupStage = "application_ready";
       return { withWorkerDatabase, nodeHandler };
     })().catch((error) => {
       appReady = undefined;
-      console.error("DKP Structures application startup failed:", error);
+      error.dkpStartupStage = startupStage;
+      console.error("DKP Structures application startup failed:", {
+        stage: startupStage,
+        name: error?.name || "Error",
+        message: error?.message || String(error),
+        code: error?.code || null,
+        stack: error?.stack || "No stack trace available"
+      });
       throw error;
     });
   }
@@ -118,15 +147,25 @@ export default {
         return await nodeHandler(request, env, ctx);
       });
     } catch (error) {
+      const failureStage = error?.dkpStartupStage || stage;
+      const safeMessage = String(error?.message || error || "Unknown error")
+        .replace(/postgres(?:ql)?:\/\/[^\s"'\x60]+/gi, "[redacted database URL]")
+        .replace(/(password|secret|token|api[_-]?key)\s*[=:]\s*[^\s,;]+/gi, "$1=[redacted]");
       console.error("DKP Structures Worker request failed:", {
-        stage,
+        stage: failureStage,
         name: error?.name || "Error",
-        message: error?.message || String(error),
+        message: safeMessage,
         code: error?.code || null,
         stack: error?.stack || "No stack trace available"
       });
       return Response.json(
-        { error: "The application could not complete this request.", stage },
+        {
+          error: "The application could not complete this request.",
+          stage: failureStage,
+          errorType: error?.name || "Error",
+          errorCode: error?.code || null,
+          detail: safeMessage
+        },
         { status: 500 }
       );
     }
