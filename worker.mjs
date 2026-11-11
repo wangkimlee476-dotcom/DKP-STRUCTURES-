@@ -46,6 +46,7 @@ async function ensureApp(env) {
 
 export default {
   async fetch(request, env) {
+    let phase = "request-routing";
     try {
       const url = new URL(request.url);
       const isApi = url.pathname === "/api" || url.pathname.startsWith("/api/");
@@ -68,14 +69,21 @@ export default {
         );
       }
 
+      phase = "express-startup";
       await ensureApp(env);
       if (typeof nodeHandler !== "function") {
         throw new Error("The Express HTTP adapter did not initialize.");
       }
 
+      phase = "express-request";
       return await nodeHandler(request);
     } catch (error) {
-      console.error("DKP Structures Worker request failed:", error);
+      console.error("DKP Structures Worker request failed:", {
+        phase,
+        name: error?.name || "UnknownError",
+        message: error?.message || String(error),
+        stack: error?.stack || "No stack trace available"
+      });
       return Response.json(
         { error: "The application could not complete this request." },
         { status: 500 }
