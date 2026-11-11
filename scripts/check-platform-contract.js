@@ -21,7 +21,8 @@ const requiredUi = [
   [forgot,'/api/password/forgot'],[reset,'/api/password/reset'],[admin,'/api/admin/contributions']
 ];
 for (const [source,needle] of requiredUi) if (!source.includes(needle)) throw new Error("Missing UI/API contract: " + needle);
-if (!worker.includes("handleAsNodeRequest(8787, request)") || !worker.includes("app.listen(8787)")) throw new Error("Worker must start Express inside fetch and use handleAsNodeRequest.");
+if (!worker.includes("handleAsNodeRequest(8787, request)") || !worker.includes("app.listen(8787)") || !worker.includes("withWorkerDatabase(env.HYPERDRIVE.connectionString")) throw new Error("Worker must start Express and use a request-scoped Hyperdrive client.");
+if (!server.includes("new AsyncLocalStorage()") || !server.includes("pruneSessionInterval:cloudflareWorker?false:900")) throw new Error("Worker database access must be request-scoped and background session pruning must be disabled.");
 if (worker.includes("nodeServer.listen(") || worker.includes("httpServerHandler")) throw new Error("Legacy HTTP adapter must not be present.");
 if (!wrangler.includes('"binding": "HYPERDRIVE"') || !wrangler.includes('"binding": "ASSETS"')) throw new Error("Required Cloudflare bindings are missing.");
 console.log("Platform contract checks passed: Worker bridge, account routes, supporter dashboard, password recovery, admin board and Cloudflare bindings.");
