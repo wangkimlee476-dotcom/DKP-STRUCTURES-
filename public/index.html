@@ -168,7 +168,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </form>
 <h3>Contribution history</h3>
 <p class="muted">This total records contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p>
-<div id="history" class="muted">No contributions recorded.</div>
+<div id="history" class="muted">No contributions recorded.</div><h3>My support requests & replies</h3><div id="mySupportRequests" class="muted">Sign in to view your support requests and replies.</div>
 <p class="muted">Ready to contribute? Request the payment options available in your country first.</p>
 <button id="dashboardDepositBtn" class="btn" type="button">Make a deposit · Ask customer support</button>
 <button id="logout" class="ghost" type="button">Log out</button>
@@ -306,6 +306,19 @@ async function loadDashboard() {
     $("targetForm").elements.target.value = d.user.personalTarget || "";
 
     $("history").textContent = "";
+
+    try {
+      const supportData = await api("/api/support-requests/mine");
+      const supportBox = $("mySupportRequests");
+      if (supportBox) {
+        supportBox.innerHTML = supportData.requests.length ? supportData.requests.map(r =>
+          `<article class="card"><b>Request #${r.id} · ${String(r.status).replace("_"," ")}</b><p>${r.message}</p><p class="muted">Submitted: ${r.created_at}</p>${r.admin_reply ? `<div class="notice"><b>DKP Structures support reply</b><p>${r.admin_reply}</p><small>${r.replied_at || ""}</small></div>` : '<p class="muted">Waiting for a support-team reply.</p>'}</article>`
+        ).join("") : "You have not submitted any support requests while signed in.";
+      }
+    } catch (supportError) {
+      const supportBox = $("mySupportRequests");
+      if (supportBox) supportBox.textContent = "Could not load support replies: " + supportError.message;
+    }
 
     if (d.history.length) {
       $("history").innerHTML = d.history.map(h =>
