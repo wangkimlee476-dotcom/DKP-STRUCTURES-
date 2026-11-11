@@ -320,7 +320,13 @@ function message(id, text, ok = false) {
   $(id).className = ok ? "success" : "error";
 }
 
-let selectedAvatarData = null;\n\nfunction applyTheme(theme) {\n  document.body.classList.toggle("dark-theme", theme === "dark");\n}\n\nasync function loadDashboard() {
+let selectedAvatarData = null;
+
+function applyTheme(theme) {
+  document.body.classList.toggle("dark-theme", theme === "dark");
+}
+
+async function loadDashboard() {
   try {
     const d = await api("/api/dashboard");
 
