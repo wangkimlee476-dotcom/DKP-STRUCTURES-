@@ -477,34 +477,41 @@ $("chatButton").addEventListener("click", () => {
 });
 
 async function loadSmartsupp() {
+  // Smartsupp website widget keys are public identifiers. Keep this fallback
+  // so chat still loads if the API configuration endpoint is unavailable.
+  let smartsuppKey = "784368b32262fad3ade23c88b4e9972d8c1c85e9";
+
   try {
     const config = await api("/api/config");
-
-    if (!config.smartsuppKey) return;
-
-    window._smartsupp = window._smartsupp || {};
-    window._smartsupp.key = config.smartsuppKey;
-
-    if (!window.smartsupp) {
-      (function(d) {
-        let s;
-        let c;
-        const o = window.smartsupp = function() {
-          o._.push(arguments);
-        };
-
-        o._ = [];
-        s = d.getElementsByTagName("script")[0];
-        c = d.createElement("script");
-        c.type = "text/javascript";
-        c.charset = "utf-8";
-        c.async = true;
-        c.src = "https://www.smartsuppchat.com/loader.js?";
-        s.parentNode.insertBefore(c, s);
-      })(document);
+    if (config && config.smartsuppKey) {
+      smartsuppKey = config.smartsuppKey;
     }
   } catch (e) {
-    console.warn("Smartsupp configuration unavailable:", e.message);
+    console.warn("Smartsupp API configuration unavailable; using website widget key:", e.message);
+  }
+
+  if (!smartsuppKey) return;
+
+  window._smartsupp = window._smartsupp || {};
+  window._smartsupp.key = smartsuppKey;
+
+  if (!window.smartsupp) {
+    (function(d) {
+      let s;
+      let c;
+      const o = window.smartsupp = function() {
+        o._.push(arguments);
+      };
+
+      o._ = [];
+      s = d.getElementsByTagName("script")[0];
+      c = d.createElement("script");
+      c.type = "text/javascript";
+      c.charset = "utf-8";
+      c.async = true;
+      c.src = "https://www.smartsuppchat.com/loader.js?";
+      s.parentNode.insertBefore(c, s);
+    })(document);
   }
 }
 
