@@ -9,6 +9,7 @@ on:
       - release/platform-polish-security
       - ci/deploy-readiness-checks
       - feature/cloudflare-workers
+      - fix/smartsupp-support-payment-flow
 
 jobs:
   syntax:
