@@ -85,7 +85,14 @@ export default {
         stack: error?.stack || "No stack trace available"
       });
       return Response.json(
-        { error: "The application could not complete this request." },
+        {
+          error: "The application could not complete this request.",
+          diagnostic: {
+            phase,
+            name: error?.name || "UnknownError",
+            message: error?.message || String(error)
+          }
+        },
         { status: 500 }
       );
     }
