@@ -50,7 +50,7 @@ async function initializeDatabase() {
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json({ limit: "30kb" }));
+app.use(express.json({ limit: "350kb" }));
 app.use(express.urlencoded({ extended: false, limit: "30kb" }));
 
 app.use(session({
@@ -135,6 +135,9 @@ function userPublic(u) {
     country: u.country,
     role: u.role,
     personalTarget: Number(u.personal_target || 0),
+    language: u.language || "en",
+    theme: u.theme || "light",
+    avatarData: u.avatar_data || "",
     createdAt: u.created_at
   };
 }
@@ -239,6 +242,41 @@ app.get("/api/dashboard", requireAuth, async (req, res, next) => {
       history: historyResult.rows,
       balanceMeaning: "Verified contribution total only. It is not cash held for the supporter, a bank deposit, withdrawable balance or investment account."
     });
+  } catch (err) { next(err); }
+});
+
+app.patch("/api/profile", requireAuth, async (req, res, next) => {
+  try {
+    const name = clean(req.body.name);
+    const country = clean(req.body.country);
+    const language = clean(req.body.language || "en");
+    const theme = clean(req.body.theme || "light");
+    const avatarData = req.body.avatarData;
+    const supportedLanguages = ["en", "es", "id", "ms", "de", "fr", "nl", "pt", "ar", "zh", "ja"];
+    if (name.length < 2 || name.length > 100 || country.length < 2 || country.length > 80) {
+      return res.status(400).json({ error: "Enter a valid full name and country." });
+    }
+    if (!supportedLanguages.includes(language) || !["light", "dark"].includes(theme)) {
+      return res.status(400).json({ error: "Choose a supported language and appearance." });
+    }
+    if (avatarData !== undefined && avatarData !== null && avatarData !== "") {
+      if (typeof avatarData !== "string" || avatarData.length > 310000 ||
+          !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(avatarData)) {
+        return res.status(400).json({ error: "Profile photo must be PNG, JPG or WebP and no larger than 220 KB." });
+      }
+      await pool.query(
+        "UPDATE users SET full_name=$1,country=$2,language=$3,theme=$4,avatar_data=$5 WHERE id=$6",
+        [name, country, language, theme, avatarData, req.session.userId]
+      );
+    } else {
+      await pool.query(
+        "UPDATE users SET full_name=$1,country=$2,language=$3,theme=$4 WHERE id=$5",
+        [name, country, language, theme, req.session.userId]
+      );
+    }
+    const updated = await pool.query("SELECT * FROM users WHERE id=$1", [req.session.userId]);
+    if (!updated.rows[0]) return res.status(404).json({ error: "Account not found." });
+    res.json({ user: userPublic(updated.rows[0]), message: "Profile and preferences saved." });
   } catch (err) { next(err); }
 });
 
