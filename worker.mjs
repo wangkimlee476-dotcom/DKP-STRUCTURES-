@@ -40,8 +40,7 @@ async function ensureApp(env) {
         PGPOOL_MAX: "5"
       };
 
-      const { app, init } = await import("./server.mjs");
-      await init();
+      const { app } = await import("./server.mjs");
       expressApp = app;
     })().catch((error) => {
       appReady = undefined;
