@@ -10,6 +10,24 @@ async function serveAsset(request, env) {
   return env.ASSETS.fetch(new Request(fallbackUrl, request));
 }
 
+async function checkDatabase(connectionString) {
+  const { Client } = await import("pg");
+  const client = new Client({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10000
+  });
+  try {
+    await client.connect();
+    await client.query("SELECT 1");
+    return true;
+  } finally {
+    await client.end().catch(error => {
+      console.error("DKP health-check PostgreSQL cleanup failed:", error?.message || error);
+    });
+  }
+}
+
 async function ensureApplication(env) {
   if (!appReady) {
     globalThis.__DKP_ENV = {
@@ -66,19 +84,49 @@ export default {
       return Response.json({ error: "The session secret is not configured correctly." }, { status: 503 });
     }
 
+    // Keep health diagnostics independent from Express startup so a failed
+    // Node HTTP bridge cannot hide whether Hyperdrive/PostgreSQL is reachable.
+    if (url.pathname === "/api/health" && request.method === "GET") {
+      try {
+        await checkDatabase(env.HYPERDRIVE.connectionString);
+        return Response.json({
+          ok: true,
+          service: "DKP Structures API",
+          database: "PostgreSQL",
+          runtime: "Cloudflare Workers"
+        });
+      } catch (error) {
+        console.error("DKP Structures database health check failed:", {
+          name: error?.name || "Error",
+          message: error?.message || String(error),
+          code: error?.code || null,
+          stack: error?.stack || "No stack trace available"
+        });
+        return Response.json(
+          { ok: false, stage: "database_connection", error: "PostgreSQL health check failed." },
+          { status: 503 }
+        );
+      }
+    }
+
+    let stage = "application_startup";
     try {
       const { withWorkerDatabase, nodeHandler } = await ensureApplication(env);
-      return await withWorkerDatabase(env.HYPERDRIVE.connectionString, () =>
-        nodeHandler(request, env, ctx)
-      );
+      stage = "database_connection";
+      return await withWorkerDatabase(env.HYPERDRIVE.connectionString, async () => {
+        stage = "express_http_adapter";
+        return await nodeHandler(request, env, ctx);
+      });
     } catch (error) {
       console.error("DKP Structures Worker request failed:", {
+        stage,
         name: error?.name || "Error",
         message: error?.message || String(error),
+        code: error?.code || null,
         stack: error?.stack || "No stack trace available"
       });
       return Response.json(
-        { error: "The application could not complete this request." },
+        { error: "The application could not complete this request.", stage },
         { status: 500 }
       );
     }
