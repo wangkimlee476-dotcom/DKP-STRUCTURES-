@@ -474,61 +474,113 @@ $("supportForm").addEventListener("submit", async e => {
   }
 });
 
-$("chatButton").addEventListener("click", () => {
-  if (window.smartsupp && typeof window.smartsupp === "function") {
-    window.smartsupp("chat:open");
-  } else {
-    const subject = encodeURIComponent("DKP Structures customer support enquiry");
-    const body = encodeURIComponent(
-      "Hello DKP Structures Customer Support,\n\nI would like help with: "
-    );
+let smartsuppReady = false;
+let smartsuppLoadPromise = null;
 
-    window.location.href =
-      "mailto:dkpstructures@gmail.com?subject=" +
-      subject + "&body=" + body;
+async function loadSmartsupp() {
+  if (smartsuppReady) return true;
+  if (smartsuppLoadPromise) return smartsuppLoadPromise;
+
+  smartsuppLoadPromise = (async () => {
+    // The website key is a public widget identifier, not a private API secret.
+    // Keep the previously configured key as a fallback if /api/config is temporarily unavailable.
+    let smartsuppKey = "784368b32262fad3ade23c88b4e9972d8c1c85e9";
+    try {
+      const config = await api("/api/config");
+      if (config && typeof config.smartsuppKey === "string" && config.smartsuppKey.trim()) {
+        smartsuppKey = config.smartsuppKey.trim();
+      }
+    } catch (error) {
+      console.warn("Smartsupp config endpoint unavailable; using the configured website widget key.", error);
+    }
+
+    window._smartsupp = window._smartsupp || {};
+    window._smartsupp.key = smartsuppKey;
+
+    // Queue commands until the hosted Smartsupp widget has finished loading.
+    if (typeof window.smartsupp !== "function") {
+      const queue = function() { queue._.push(arguments); };
+      queue._ = [];
+      window.smartsupp = queue;
+    }
+
+    let script = document.getElementById("smartsupp-loader");
+    if (script && script.dataset.loaded === "true") {
+      smartsuppReady = true;
+      return true;
+    }
+
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "smartsupp-loader";
+      script.type = "text/javascript";
+      script.charset = "utf-8";
+      script.async = true;
+      script.src = "https://www.smartsuppchat.com/loader.js?";
+    }
+
+    await new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        script.removeEventListener("load", onLoad);
+        script.removeEventListener("error", onError);
+        if (error) reject(error);
+        else resolve();
+      };
+      const onLoad = () => {
+        script.dataset.loaded = "true";
+        finish();
+      };
+      const onError = () => finish(new Error("Smartsupp could not load. Check the network or browser content blocker."));
+      const timeout = setTimeout(() => finish(new Error("Smartsupp took too long to load. Please try again.")), 12000);
+
+      script.addEventListener("load", onLoad);
+      script.addEventListener("error", onError);
+      if (!script.isConnected) document.head.appendChild(script);
+    });
+
+    smartsuppReady = true;
+    return true;
+  })().catch(error => {
+    smartsuppLoadPromise = null;
+    const script = document.getElementById("smartsupp-loader");
+    if (script && script.dataset.loaded !== "true") script.remove();
+    throw error;
+  });
+
+  return smartsuppLoadPromise;
+}
+
+$("chatButton").addEventListener("click", async () => {
+  const button = $("chatButton");
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "Connecting to support…";
+
+  try {
+    await loadSmartsupp();
+    window.smartsupp("chat:open");
+    button.textContent = "Opening support chat…";
+    setTimeout(() => {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }, 1800);
+  } catch (error) {
+    console.warn("Smartsupp could not open:", error.message);
+    button.disabled = false;
+    button.textContent = originalLabel;
+    const subject = encodeURIComponent("DKP Structures customer support enquiry");
+    const body = encodeURIComponent("Hello DKP Structures Customer Support,\n\nI would like help with: ");
+    window.location.href = "mailto:dkpstructures@gmail.com?subject=" + subject + "&body=" + body;
   }
 });
 
-async function loadSmartsupp() {
-  // Smartsupp website widget keys are public identifiers. Keep this fallback
-  // so chat still loads if the API configuration endpoint is unavailable.
-  let smartsuppKey = "784368b32262fad3ade23c88b4e9972d8c1c85e9";
-
-  try {
-    const config = await api("/api/config");
-    if (config && config.smartsuppKey) {
-      smartsuppKey = config.smartsuppKey;
-    }
-  } catch (e) {
-    console.warn("Smartsupp API configuration unavailable; using website widget key:", e.message);
-  }
-
-  if (!smartsuppKey) return;
-
-  window._smartsupp = window._smartsupp || {};
-  window._smartsupp.key = smartsuppKey;
-
-  if (!window.smartsupp) {
-    (function(d) {
-      let s;
-      let c;
-      const o = window.smartsupp = function() {
-        o._.push(arguments);
-      };
-
-      o._ = [];
-      s = d.getElementsByTagName("script")[0];
-      c = d.createElement("script");
-      c.type = "text/javascript";
-      c.charset = "utf-8";
-      c.async = true;
-      c.src = "https://www.smartsuppchat.com/loader.js?";
-      s.parentNode.insertBefore(c, s);
-    })(document);
-  }
-}
-
-loadSmartsupp();
+loadSmartsupp().catch(error => {
+  console.warn("Smartsupp configuration or loader unavailable:", error.message);
+});
 loadDashboard();
 </script>
 </body>
