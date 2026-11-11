@@ -70,7 +70,10 @@ export default {
       if (!isApi) return new Response("Not found", { status: 404 });
 
       await ensureApp(env);
-      return await nodeHandler(request, env, ctx);
+      if (!nodeHandler || typeof nodeHandler.fetch !== "function") {
+        throw new Error("Cloudflare HTTP adapter did not expose a Fetch handler.");
+      }
+      return await nodeHandler.fetch(request, env, ctx);
     } catch (error) {
       console.error("DKP Structures Worker request failed:", {
         name: error?.name || "UnknownError",
