@@ -28,3 +28,11 @@ jobs:
       - name: Validate Cloudflare Worker bundle
         if: github.ref == 'refs/heads/feature/cloudflare-workers' || github.head_ref == 'feature/cloudflare-workers'
         run: npx --yes wrangler@4 deploy --dry-run
+
+      - name: Deploy production Worker
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/cloudflare-workers' && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
