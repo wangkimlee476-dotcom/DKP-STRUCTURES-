@@ -133,7 +133,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 
 <section id="about" class="section">
 <h2>About DKP Structures</h2>
-<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified. Support is voluntary: please contribute only when convenient and never feel pressured. We make no promise of financial returns, ownership, employment or other benefits. If the vision becomes reality, we intend to remember and acknowledge our supporters as part of the journey.</p>
+<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified.</p>
 </section>
 
 <section id="campaign" class="section">
@@ -169,8 +169,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <input name="email" type="email" autocomplete="username" required>
 <label>Password</label>
 <div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" data-password-toggle="loginPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
-<button class="btn auth-submit" type="submit">Login securely</button>
-<p class="muted"><a href="/forgot-password.html">Forgot your password?</a></p>
+<p class="muted"><a href="/forgot-password.html">Forgot your password?</a></p><button class="btn auth-submit" type="submit">Login securely</button>
 </form>
 </div>
 <div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
@@ -329,57 +328,10 @@ function message(id, text, ok = false) {
 
 async function loadDashboard() {
   try {
-    const d = await api("/api/dashboard");
-
-    $("signedOut").classList.add("hidden");
-    $("dash").classList.remove("hidden");
-
-    $("welcome").textContent = "Welcome, " + d.user.name;
-    $("supporterId").textContent =
-      "Supporter ID: " + d.user.supporterId + " · " + d.user.country;
-
-    $("total").textContent =
-      "$" + Number(d.verifiedTotal).toLocaleString();
-
-    $("level").textContent = d.level;
-    $("progress").textContent = d.progress + "%";
-    $("progressFill").style.width = d.progress + "%";
-    $("progressTrack").setAttribute("aria-valuenow", String(d.progress));
-    $("targetForm").elements.target.value = d.user.personalTarget || "";
-
-    $("history").textContent = "";
-    if (d.history.length) {
-      d.history.forEach(h => {
-        const row = document.createElement("div");
-        row.className = "history-row";
-        const details = document.createElement("div");
-        const date = document.createElement("div");
-        date.className = "muted";
-        date.textContent = h.date || "Date unavailable";
-        const amount = document.createElement("strong");
-        amount.textContent = "$" + Number(h.amount).toLocaleString();
-        details.append(date, amount);
-        const status = document.createElement("span");
-        status.className = "history-status " + String(h.status || "").toLowerCase();
-        status.textContent = h.status || "Unknown";
-        row.append(details, status);
-        $("history").append(row);
-      });
-    } else {
-      const empty = document.createElement("p");
-      empty.className = "muted";
-      empty.textContent = "No contribution records yet.";
-      $("history").append(empty);
-    }
-
+    await api("/api/dashboard");
+    location.replace("/dashboard.html");
   } catch (e) {
-    $("dash").classList.add("hidden");
-    $("signedOut").classList.remove("hidden");
-
-    $("signedOut").textContent =
-      e.message === "Please sign in first."
-        ? "Sign in to view your supporter dashboard."
-        : "Dashboard error: " + e.message;
+    // Signed-out visitors remain on the public website.
   }
 }
 
@@ -403,7 +355,6 @@ $("registerForm").addEventListener("submit", async e => {
       })
     });
 
-    message("authMessage", "Account created successfully. Opening your supporter portal…", true);
     location.replace("/dashboard.html");
 
   } catch (x) {
@@ -425,7 +376,6 @@ $("loginForm").addEventListener("submit", async e => {
       })
     });
 
-    message("authMessage", "Signed in. Opening your supporter portal…", true);
     location.replace("/dashboard.html");
 
   } catch (x) {
@@ -566,7 +516,7 @@ async function loadSmartsupp() {
 }
 
 loadSmartsupp();
-api("/api/me").then(() => location.replace("/dashboard.html")).catch(() => {});
+loadDashboard();
 </script>
 </body>
 </html>
