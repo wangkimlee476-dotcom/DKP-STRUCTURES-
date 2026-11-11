@@ -133,7 +133,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 
 <section id="about" class="section">
 <h2>About DKP Structures</h2>
-<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified.</p>
+<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified. Support is voluntary: please contribute only when convenient and never feel pressured. We make no promise of financial returns, ownership, employment or other benefits. If the vision becomes reality, we intend to remember and acknowledge our supporters as part of the journey.</p>
 </section>
 
 <section id="campaign" class="section">
@@ -170,6 +170,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <label>Password</label>
 <div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" data-password-toggle="loginPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
 <button class="btn auth-submit" type="submit">Login securely</button>
+<p class="muted"><a href="/forgot-password.html">Forgot your password?</a></p>
 </form>
 </div>
 <div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
@@ -402,8 +403,8 @@ $("registerForm").addEventListener("submit", async e => {
       })
     });
 
-    message("authMessage", "Account created successfully.", true);
-    await loadDashboard();
+    message("authMessage", "Account created successfully. Opening your supporter portal…", true);
+    location.replace("/dashboard.html");
 
   } catch (x) {
     message("authMessage", x.message);
@@ -424,8 +425,8 @@ $("loginForm").addEventListener("submit", async e => {
       })
     });
 
-    message("authMessage", "Signed in.", true);
-    await loadDashboard();
+    message("authMessage", "Signed in. Opening your supporter portal…", true);
+    location.replace("/dashboard.html");
 
   } catch (x) {
     message("authMessage", x.message);
@@ -565,7 +566,7 @@ async function loadSmartsupp() {
 }
 
 loadSmartsupp();
-loadDashboard();
+api("/api/me").then(() => location.replace("/dashboard.html")).catch(() => {});
 </script>
 </body>
 </html>
