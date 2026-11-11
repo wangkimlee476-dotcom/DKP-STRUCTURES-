@@ -16,12 +16,12 @@ for (const route of requiredRoutes) if (!routes.includes(route)) throw new Error
 const requiredUi = [
   [dashboard,'api("/api/dashboard"'],[dashboard,'api("/api/profile/plan"'],[dashboard,'api("/api/profile/target"'],
   [dashboard,'api("/api/profile/settings"'],[dashboard,'api("/api/profile/email"'],[dashboard,'api("/api/profile/password"'],
-  [dashboard,'id="copySupporterId"'],[dashboard,'id="profilePicture"'],[dashboard,'id="adminLink"'],
+  [dashboard,'id="copyId"'],[dashboard,'id="copyIdSettings"'],[dashboard,'id="avatarFile"'],[dashboard,'id="adminEntry"'],[dashboard,'id="saveProfile"'],[dashboard,'id="saveEmail"'],[dashboard,'id="savePassword"'],
   [index,'location.replace("/dashboard.html")'],[index,'href="/forgot-password.html"'],
   [forgot,'/api/password/forgot'],[reset,'/api/password/reset'],[admin,'/api/admin/contributions']
 ];
 for (const [source,needle] of requiredUi) if (!source.includes(needle)) throw new Error("Missing UI/API contract: " + needle);
 if (!worker.includes("handleAsNodeRequest(8787, request)") || !worker.includes("app.listen(8787)")) throw new Error("Worker must start Express inside fetch and use handleAsNodeRequest.");
-if (/nodeServer\\.listen\\(/.test(worker) || worker.includes("httpServerHandler")) throw new Error("Legacy HTTP adapter must not be present.");
+if (worker.includes("nodeServer.listen(") || worker.includes("httpServerHandler")) throw new Error("Legacy HTTP adapter must not be present.");
 if (!wrangler.includes('"binding": "HYPERDRIVE"') || !wrangler.includes('"binding": "ASSETS"')) throw new Error("Required Cloudflare bindings are missing.");
 console.log("Platform contract checks passed: Worker bridge, account routes, supporter dashboard, password recovery, admin board and Cloudflare bindings.");
