@@ -45,7 +45,7 @@ async function ensureApp(env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     let phase = "request-routing";
     try {
       const url = new URL(request.url);
@@ -71,12 +71,14 @@ export default {
 
       phase = "express-startup";
       await ensureApp(env);
-      if (typeof nodeHandler !== "function") {
-        throw new Error("The Express HTTP adapter did not initialize.");
+      if (!nodeHandler || typeof nodeHandler.fetch !== "function") {
+        throw new Error(
+          "The Express HTTP adapter did not expose a Fetch handler."
+        );
       }
 
       phase = "express-request";
-      return await nodeHandler(request);
+      return await nodeHandler.fetch(request, env, ctx);
     } catch (error) {
       console.error("DKP Structures Worker request failed:", {
         phase,
