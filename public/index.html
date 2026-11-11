@@ -468,54 +468,95 @@ $("supportForm").addEventListener("submit", async e => {
   }
 });
 
-$("chatButton").addEventListener("click", () => {
-  if (window.smartsupp && typeof window.smartsupp === "function") {
-    window.smartsupp("chat:open");
-  } else {
-    const subject = encodeURIComponent("DKP Structures customer support enquiry");
-    const body = encodeURIComponent(
-      "Hello DKP Structures Customer Support,\n\nI would like help with: "
-    );
-
-    window.location.href =
-      "mailto:dkpstructures@gmail.com?subject=" +
-      subject + "&body=" + body;
-  }
-});
+let smartsuppReady = false;
+let smartsuppLoadPromise = null;
 
 async function loadSmartsupp() {
-  try {
-    const config = await api("/api/config");
+  if (smartsuppReady) return true;
+  if (smartsuppLoadPromise) return smartsuppLoadPromise;
 
-    if (!config.smartsuppKey) return;
+  smartsuppLoadPromise = (async () => {
+    const config = await api("/api/config");
+    if (!config.smartsuppKey) {
+      throw new Error("Smartsupp website key is not configured.");
+    }
 
     window._smartsupp = window._smartsupp || {};
     window._smartsupp.key = config.smartsuppKey;
 
-    if (!window.smartsupp) {
-      (function(d) {
-        let s;
-        let c;
-        const o = window.smartsupp = function() {
-          o._.push(arguments);
-        };
-
-        o._ = [];
-        s = d.getElementsByTagName("script")[0];
-        c = d.createElement("script");
-        c.type = "text/javascript";
-        c.charset = "utf-8";
-        c.async = true;
-        c.src = "https://www.smartsuppchat.com/loader.js?";
-        s.parentNode.insertBefore(c, s);
-      })(document);
+    // Create Smartsupp's command queue before loading its hosted widget.
+    if (typeof window.smartsupp !== "function") {
+      const queue = function() { queue._.push(arguments); };
+      queue._ = [];
+      window.smartsupp = queue;
     }
-  } catch (e) {
-    console.warn("Smartsupp configuration unavailable:", e.message);
-  }
+
+    let script = document.getElementById("smartsupp-loader");
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "smartsupp-loader";
+      script.type = "text/javascript";
+      script.charset = "utf-8";
+      script.async = true;
+      script.src = "https://www.smartsuppchat.com/loader.js?";
+      document.head.appendChild(script);
+    }
+
+    await new Promise((resolve, reject) => {
+      if (script.dataset.loaded === "true") return resolve();
+      const timeout = setTimeout(() => reject(new Error("Smartsupp did not load. Check browser/VPN content blocking.")), 10000);
+      script.addEventListener("load", () => {
+        clearTimeout(timeout);
+        script.dataset.loaded = "true";
+        resolve();
+      }, { once: true });
+      script.addEventListener("error", () => {
+        clearTimeout(timeout);
+        reject(new Error("Smartsupp loader was blocked or could not be downloaded."));
+      }, { once: true });
+    });
+
+    smartsuppReady = true;
+    return true;
+  })().catch(error => {
+    smartsuppLoadPromise = null;
+    throw error;
+  });
+
+  return smartsuppLoadPromise;
 }
 
-loadSmartsupp();
+$("chatButton").addEventListener("click", async () => {
+  const button = $("chatButton");
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "Connecting to support…";
+
+  try {
+    await loadSmartsupp();
+    window.smartsupp("chat:open");
+    button.textContent = "Opening support chat…";
+    setTimeout(() => {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }, 1800);
+  } catch (error) {
+    console.warn("Smartsupp could not open:", error.message);
+    button.disabled = false;
+    button.textContent = "Email support instead";
+    const subject = encodeURIComponent("DKP Structures customer support enquiry");
+    const body = encodeURIComponent(
+      "Hello DKP Structures Customer Support,\n\nI would like help with: "
+    );
+    window.location.href =
+      "mailto:dkpstructures@gmail.com?subject=" + subject + "&body=" + body;
+    setTimeout(() => { button.textContent = originalLabel; }, 2500);
+  }
+});
+
+loadSmartsupp().catch(error => {
+  console.warn("Smartsupp configuration or loader unavailable:", error.message);
+});
 loadDashboard();
 </script>
 </body>
