@@ -47,7 +47,7 @@ Requirements: Node.js 20+.
 - If chat is not configured or unavailable, the floating chat button opens a pre-addressed email draft.
 
 ## Deploy the full application
-Deploy as a Node.js web service, not a static-site upload. The app needs a persistent writable data directory for SQLite and the SQLite session store. The default filesystem on many cloud hosts is ephemeral. For production, migrate the database/session store to a managed PostgreSQL database and persistent session store, or use a host with a properly configured persistent disk. Verify backup and restore before use.
+Deploy as a Node.js web service (the repository includes a Dockerfile). The application now uses the existing Neon PostgreSQL database for supporter records, contributions, support requests, audit logs and login sessions. Set `DATABASE_URL` to the Neon connection string. Do not deploy with a blank database URL. Verify backups and restore before accepting real contributions.
 
 Typical Node service commands:
 - Build: `npm install`
@@ -56,17 +56,16 @@ Typical Node service commands:
 Set production environment variables in the hosting dashboard:
 - `NODE_ENV=production`
 - `SESSION_SECRET` (strong random secret, 32+ characters)
-- `ADMIN_EMAIL` (owner address, but do not enable public registration-based admin assignment in production)
+- `DATABASE_URL` (Neon PostgreSQL connection string; keep it private)
 - `SUPPORT_EMAIL=dkpstructures@gmail.com`
-- `SMARTSUPP_KEY` (real website chat key)
-- `DB_PATH` (persistent storage path if retaining SQLite)
+- `SMARTSUPP_KEY` (Smartsupp website chat key)
 
 ## Known launch blockers to resolve before public account registration
 - Replace email-based first-registration admin assignment with a private owner invitation/provisioning process.
 - Add email verification and password reset.
 - Add CSRF protection and review rate limits, session cookie settings and output handling.
 - Add notifications for support requests; currently requests are saved in the database and visible in the admin board, but this code does not send notification emails.
-- Migrate SQLite and SQLite sessions to production-grade persistent storage.
+- Configure `DATABASE_URL` to the managed Neon PostgreSQL database and verify backups and restore.
 - Add scheduled backups and prove a restore works.
 - Complete privacy notice, terms, fundraising disclosures and legal review for the actual recipient and jurisdiction.
 - Only use payment methods approved for the actual fundraising arrangement. Do not imply the site itself accepts or processes payments.
