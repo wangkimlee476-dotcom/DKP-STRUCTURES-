@@ -68,12 +68,9 @@ export default {
 
     try {
       const { withWorkerDatabase, nodeHandler } = await ensureApplication(env);
-      return await withWorkerDatabase(env.HYPERDRIVE.connectionString, (requestId) => {
-        const headers = new Headers(request.headers);
-        headers.set("x-dkp-worker-request-id", requestId);
-        const scopedRequest = new Request(request, { headers });
-        return nodeHandler(scopedRequest, env, ctx);
-      });
+      return await withWorkerDatabase(env.HYPERDRIVE.connectionString, () =>
+        nodeHandler(request, env, ctx)
+      );
     } catch (error) {
       console.error("DKP Structures Worker request failed:", {
         name: error?.name || "Error",
