@@ -16,7 +16,7 @@ for (const route of requiredRoutes) if (!routes.includes(route)) throw new Error
 const requiredUi = [
   [dashboard,'api("/api/dashboard"'],[dashboard,'api("/api/profile/plan"'],[dashboard,'api("/api/profile/target"'],
   [dashboard,'api("/api/profile/settings"'],[dashboard,'api("/api/profile/email"'],[dashboard,'api("/api/profile/password"'],
-  [dashboard,'id="copyId"'],[dashboard,'id="copyIdSettings"'],[dashboard,'id="avatarFile"'],[dashboard,'id="adminEntry"'],[dashboard,'id="saveProfile"'],[dashboard,'id="saveEmail"'],[dashboard,'id="savePassword"'],
+  [dashboard,'id="copyId"'],[dashboard,'id="copyIdSettings"'],[dashboard,'id="avatarFile"'],[dashboard,'id="adminEntry"'],[dashboard,'id="saveProfile"'],[dashboard,'id="saveEmail"'],[dashboard,'id="savePassword"'],[dashboard,'id="confirmPassword"'],[dashboard,'value="ar"'],[dashboard,"Your support is entirely voluntary."],[dashboard,"No financial return, ownership, employment, reward or other benefit is promised."],[dashboard,"we intend to remember and acknowledge"],
   [index,'location.replace("/dashboard.html")'],[index,'href="/forgot-password.html"'],
   [forgot,'/api/password/forgot'],[reset,'/api/password/reset'],[admin,'/api/admin/contributions']
 ];
