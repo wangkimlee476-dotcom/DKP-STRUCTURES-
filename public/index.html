@@ -51,6 +51,59 @@ label{font-weight:650;font-size:14px}
 .terms-label input{width:auto;margin:5px 0 0;flex:0 0 auto}
 #authMessage{min-height:24px;margin:14px 0 0}
 [hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:100px}
+body{letter-spacing:-.01em}
+.top{box-shadow:0 8px 28px #071b1420}
+.nav{min-height:72px}
+.links{align-items:center}
+.links a{padding:8px 10px;border-radius:9px;transition:background .2s,color .2s}
+.links a:hover,.links a:focus-visible{background:#ffffff18;color:#f0d58e}
+.hero{min-height:390px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 18px 44px #061b1426;background-position:center 46%}
+.hero h1{letter-spacing:-.045em}
+.hero .btn{margin-top:12px}
+.section h2{font-size:clamp(25px,3vw,34px);letter-spacing:-.035em;margin-bottom:10px}
+.section>p{max-width:780px}
+.card{box-shadow:0 8px 28px #102b1b08;transition:transform .18s,box-shadow .18s}
+#levelCards .card:hover{transform:translateY(-3px);box-shadow:0 14px 32px #102b1b12}
+button{transition:transform .15s,filter .15s}
+button:hover{filter:brightness(.97);transform:translateY(-1px)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d6ad5280;outline-offset:2px}
+input,select,textarea{min-height:46px;background:#fff}
+input:focus,select:focus,textarea:focus{border-color:var(--g);box-shadow:0 0 0 3px #073b2b12}
+.auth-card{border-radius:22px}
+.dashboard-card{border-radius:22px;padding:clamp(20px,4vw,30px)}
+.dashboard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.dashboard-top .status{background:#e6f2e9;color:#176b3a;font-weight:700}
+.dashboard-metrics{margin:20px 0}
+.dashboard-metric{background:#f7faf7;border:1px solid var(--line);border-radius:15px;padding:18px}
+.dashboard-metric .metric{font-size:clamp(24px,4vw,34px);overflow-wrap:anywhere}
+.progress-track{height:12px;background:#e8eee9;border-radius:20px;overflow:hidden;margin:10px 0 22px}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#073b2b,#d6ad52);border-radius:20px;transition:width .35s ease}
+.history-list{display:grid;gap:10px;margin:14px 0}
+.history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:#fff}
+.history-row strong{font-variant-numeric:tabular-nums}
+.history-status{font-size:12px;font-weight:700;text-transform:capitalize;padding:5px 9px;border-radius:20px;background:#edf2ee}
+.history-status.verified{background:#e3f3e8;color:#176b3a}
+.history-status.pending{background:#fff4d8;color:#76551a}
+.history-status.rejected{background:#f9e5e5;color:#922c2c}
+.dashboard-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.dashboard-actions button{min-height:46px}
+#targetForm{max-width:460px;margin:22px 0}
+#targetForm .ghost{min-height:44px}
+.notice{line-height:1.55}
+footer{line-height:1.9}
+@media(max-width:700px){
+ .wrap{padding:16px}
+ .nav{gap:10px}
+ .links{width:100%;flex-wrap:nowrap;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
+ .links a{white-space:nowrap;font-size:13px}
+ .hero{min-height:340px;padding:36px 22px;margin:14px auto}
+ .section{padding:34px 0}
+ .grid{grid-template-columns:1fr}
+ .dashboard-metrics{grid-template-columns:1fr}
+ .dashboard-actions button{flex:1 1 100%}
+ .chatfloat{right:12px;bottom:12px}
+}
 footer{background:#101c18;color:white;text-align:center;padding:30px}
 @media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}.hero{padding:45px 22px}.links{gap:10px}}
 </style>
@@ -116,7 +169,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <input name="email" type="email" autocomplete="username" required>
 <label>Password</label>
 <div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" data-password-toggle="loginPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
-<button class="btn auth-submit" type="submit">Login securely</button>
+<p class="muted"><a href="/forgot-password.html">Forgot your password?</a></p><button class="btn auth-submit" type="submit">Login securely</button>
 </form>
 </div>
 <div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
@@ -142,36 +195,22 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 
 <section id="dashboard" class="section">
 <h2>My supporter dashboard</h2>
-<div id="signedOut" class="notice">Sign in to view your supporter dashboard.</div>
+<div id="signedOut" class="notice">Sign in to view your private supporter dashboard and contribution history.</div>
 <div id="dash" class="hidden">
-<div class="card">
-<h3 id="welcome"></h3>
-<p id="supporterId" class="muted"></p>
-<div class="grid">
-<div>
-<div class="muted">Verified contribution total</div>
-<div class="metric" id="total">$0</div>
+<div class="card dashboard-card">
+<div class="dashboard-top"><div><h3 id="welcome">Welcome</h3><p id="supporterId" class="muted"></p></div><span class="status">Account overview</span></div>
+<div class="grid dashboard-metrics">
+<div class="dashboard-metric"><div class="muted">Verified contribution total</div><div class="metric" id="total">$0</div></div>
+<div class="dashboard-metric"><div class="muted">Recognition level</div><div class="metric" id="level">Basic</div></div>
+<div class="dashboard-metric"><div class="muted">Progress to personal target</div><div class="metric" id="progress">0%</div></div>
 </div>
-<div>
-<div class="muted">Recognition level</div>
-<div class="metric" id="level">Basic</div>
-</div>
-<div>
-<div class="muted">Progress to personal target</div>
-<div class="metric" id="progress">0%</div>
-</div>
-</div>
-<form id="targetForm">
-<label>Personal target (USD)</label>
-<input name="target" type="number" min="100" required>
-<button class="ghost" type="submit">Save target</button>
-</form>
+<div class="muted">Personal target progress</div><div class="progress-track" role="progressbar" aria-label="Progress to personal target" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+<form id="targetForm"><label>Personal target (USD)</label><input name="target" type="number" min="100" max="100000000" step="0.01" placeholder="Set your target" required><button class="ghost" type="submit">Save personal target</button></form>
 <h3>Contribution history</h3>
-<p class="muted">This total records contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p>
-<div id="history" class="muted">No contributions recorded.</div>
-<p class="muted">Ready to contribute? Request the payment options available in your country first.</p>
-<button id="dashboardDepositBtn" class="btn" type="button">Make a deposit · Ask customer support</button>
-<button id="logout" class="ghost" type="button">Log out</button>
+<p class="muted">This is a record of contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p>
+<div id="history" class="history-list"><p class="muted">No contributions recorded.</p></div>
+<p class="muted">To ask about available payment methods in your country, contact customer support first. No payments are processed on this website.</p>
+<div class="dashboard-actions"><button id="dashboardDepositBtn" class="btn" type="button">Request payment options</button><button id="logout" class="ghost" type="button">Log out</button></div>
 </div>
 </div>
 </section>
@@ -289,40 +328,10 @@ function message(id, text, ok = false) {
 
 async function loadDashboard() {
   try {
-    const d = await api("/api/dashboard");
-
-    $("signedOut").classList.add("hidden");
-    $("dash").classList.remove("hidden");
-
-    $("welcome").textContent = "Welcome, " + d.user.name;
-    $("supporterId").textContent =
-      "Supporter ID: " + d.user.supporterId + " · " + d.user.country;
-
-    $("total").textContent =
-      "$" + Number(d.verifiedTotal).toLocaleString();
-
-    $("level").textContent = d.level;
-    $("progress").textContent = d.progress + "%";
-    $("targetForm").elements.target.value = d.user.personalTarget || "";
-
-    $("history").textContent = "";
-
-    if (d.history.length) {
-      $("history").innerHTML = d.history.map(h =>
-        `<p>${h.date} · $${h.amount} · ${h.status}</p>`
-      ).join("");
-    } else {
-      $("history").textContent = "No contribution records yet.";
-    }
-
+    await api("/api/dashboard");
+    location.replace("/dashboard.html");
   } catch (e) {
-    $("dash").classList.add("hidden");
-    $("signedOut").classList.remove("hidden");
-
-    $("signedOut").textContent =
-      e.message === "Please sign in first."
-        ? "Sign in to view your supporter dashboard."
-        : "Dashboard error: " + e.message;
+    // Signed-out visitors remain on the public website.
   }
 }
 
@@ -346,8 +355,7 @@ $("registerForm").addEventListener("submit", async e => {
       })
     });
 
-    message("authMessage", "Account created successfully.", true);
-    await loadDashboard();
+    location.replace("/dashboard.html");
 
   } catch (x) {
     message("authMessage", x.message);
@@ -368,8 +376,7 @@ $("loginForm").addEventListener("submit", async e => {
       })
     });
 
-    message("authMessage", "Signed in.", true);
-    await loadDashboard();
+    location.replace("/dashboard.html");
 
   } catch (x) {
     message("authMessage", x.message);

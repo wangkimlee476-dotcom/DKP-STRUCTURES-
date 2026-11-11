@@ -3,22 +3,29 @@
   "version": "1.0.0",
   "private": true,
   "description": "DKP Structures website and secure supporter portal",
-  "main": "server.js",
+  "main": "server.mjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "check": "node --check server.mjs && node --check worker.mjs && node --check scripts/promote-admin.js && node scripts/check-inline-js.js && node scripts/check-platform-contract.js && node scripts/test-worker-db-context.js",
+    "admin:promote": "node scripts/promote-admin.js",
+    "preinstall": "node -e \"console.log('DKP Cloudflare PostgreSQL branch selected')\"",
+    "postinstall": "node scripts/patch-cloudflare-deps.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "connect-sqlite3": "^0.9.15",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "helmet": "^8.0.0",
-    "better-sqlite3": "^11.8.1",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "connect-pg-simple": "^10.0.0",
+    "pg": "^8.16.3"
+  },
+  "overrides": {
+    "iconv-lite": "0.7.0"
   }
 }

@@ -3,9 +3,9 @@
 ## Before any public launch
 - [ ] Confirm legal recipient, jurisdiction, fundraising model and required permissions.
 - [ ] Publish accurate terms, privacy notice, refund/complaints information and campaign disclosures.
-- [ ] Replace email-based admin bootstrap with secure owner-only provisioning.
+- [x] Remove public email-based admin self-registration; new public registrations are supporter-only.\n- [ ] Provision the owner/admin role through a private, authenticated database operation and verify admin access.
 - [ ] Add email verification and password reset.
-- [ ] Add CSRF protection and complete security review.
+- [x] Add same-origin checks for browser API writes and reject cross-site Fetch Metadata requests.\n- [ ] Complete independent CSRF/security review, including requests without an Origin header.
 - [ ] Migrate SQLite/session storage to persistent production database/session storage.
 - [ ] Configure backups and test restore.
 - [ ] Configure support-request email notifications (currently requests only appear in admin board).
