@@ -148,8 +148,16 @@ function openSmartsuppPage() {
   // Smartsupp frame appears, offer a first-party support route.
   window.setTimeout(function() {
    const frame = document.querySelector('iframe[src*="smartsupp"],iframe[src*="widget-page.smartsupp.com"]');
-   if (!frame) showDkpSupportFallback();
-  }, 3500);
+   const loader = document.querySelector('script[data-dkp-smartsupp]');
+   if (!frame) {
+    showDkpSupportFallback();
+    const status = ["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id => $(id)).find(Boolean);
+    if (status) {
+     status.textContent = loader ? "Smartsupp has not displayed its chat window yet. Use the support options shown on screen." : "The Smartsupp loader is missing. Use the support options shown on screen.";
+     status.className = "message error";
+    }
+   }
+  }, 8000);
   return true;
  } catch (error) {
   showDkpSupportFallback();
