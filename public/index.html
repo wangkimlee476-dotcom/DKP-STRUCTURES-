@@ -236,7 +236,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </select>
 <label>Message</label>
 <textarea name="message" required minlength="10" maxlength="3000"></textarea>
-<button class="btn" type="submit">Send support request</button>
+<button class="btn" type="submit">Copy request & open Smartsupp</button>
 </form>
 <p id="supportMessage" aria-live="polite"></p>
 </div>
@@ -326,6 +326,16 @@ function message(id, text, ok = false) {
   $(id).className = ok ? "success" : "error";
 }
 
+const SMARTSUPP_CHAT_URL="https://widget-page.smartsupp.com/widget/784368b32262fad3ade23c88b4e9972d8c1c85e9";
+function openSmartsuppPage(){return window.open(SMARTSUPP_CHAT_URL,"_blank")}
+async function copySupportMessage(text){
+ try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch{}
+ const field=document.createElement("textarea");field.value=text;field.setAttribute("readonly","");
+ field.style.position="fixed";field.style.opacity="0";document.body.appendChild(field);field.select();
+ let ok=false;try{ok=document.execCommand("copy")}catch{}field.remove();
+ if(!ok)throw Error("The browser blocked copying. Please copy the request text manually.");
+ return true;
+}
 async function connectSmartsupp() {
   const cfg = await api("/api/config");
   if (!cfg.smartsuppKey) throw new Error("Smartsupp is not configured on the website yet.");
@@ -451,44 +461,26 @@ $("depositOptionsBtn").addEventListener("click", openPaymentOptionsRequest);
 
 $("supportForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const form=e.target,button=form.querySelector('button[type="submit"]'),f=new FormData(form);
-  button.disabled=true;button.textContent="Sending request…";
+  const form=e.target,button=form.querySelector('button[type="submit"]'),payload=Object.fromEntries(new FormData(form).entries());
+  const chat=openSmartsuppPage();
+  button.disabled=true;button.textContent="Preparing request…";
   try {
-    const payload=Object.fromEntries(f.entries());
     const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
-    const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+payload.name+"\nEmail: "+payload.email+"\nCountry: "+payload.country+"\nRequest type: "+payload.type+"\nMessage: "+payload.message+"\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
-    try {
-      await connectSmartsupp();
-      window.smartsupp("name",payload.name);
-      window.smartsupp("email",payload.email);
-      window.smartsupp("variables",{Country:payload.country,Support_Request_ID:String(d.requestId),Request_Type:payload.type});
-      window.smartsupp("chat:show");
-      window.smartsupp("chat:open");
-      window.smartsupp("chat:send",chatText);
-      message("supportMessage","Your request #"+d.requestId+" is saved. Smartsupp has been opened and the request is being sent as your first chat message. Please check the chat window for the conversation.",true);
-      form.reset();
-    } catch(chatError) {
-      message("supportMessage","Your request #"+d.requestId+" is safely recorded for the admin team, but Smartsupp could not be opened or sent the message: "+chatError.message+". Your request remains recorded; please retry using the chat button.");
-    }
+    const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\\nName: "+payload.name+"\\nEmail: "+payload.email+"\\nCountry: "+payload.country+"\\nRequest type: "+payload.type+"\\nMessage: "+payload.message+"\\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
+    let copied=false;try{await copySupportMessage(chatText);copied=true}catch{}
+    message("supportMessage","Request #"+d.requestId+" is saved for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"Smartsupp opened in a new tab. Paste the message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, tap Chat with support, then paste the message. No message has been sent to customer support."),true);
+    form.reset();
   } catch (x) {
-    message("supportMessage", x.message);
+    if(chat)chat.close();
+    message("supportMessage",x.message);
   } finally {
-    button.disabled=false;button.textContent="Send support request";
+    button.disabled=false;button.textContent="Copy request & open Smartsupp";
   }
 });
 
-$("chatButton").addEventListener("click", async () => {
-  const button = $("chatButton");
-  button.disabled = true;
-  try {
-    await connectSmartsupp();
-    window.smartsupp("chat:show");
-    window.smartsupp("chat:open");
-  } catch (error) {
-    message("supportMessage","Smartsupp could not be opened: "+error.message+". You can also contact dkpstructures@gmail.com.");
-  } finally {
-    button.disabled = false;
-  }
+$("chatButton").addEventListener("click", () => {
+  const chat=openSmartsuppPage();
+  if(!chat)message("supportMessage","Your browser blocked the Smartsupp pop-up. Allow pop-ups for this website and tap Chat with support again.");
 });
 
 loadDashboard();
