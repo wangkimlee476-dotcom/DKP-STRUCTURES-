@@ -49,6 +49,13 @@ jobs:
           test -n "$SESSION_SECRET" || (echo "Missing SESSION_SECRET production secret" && exit 1)
           test "${#SESSION_SECRET}" -ge 32 || (echo "SESSION_SECRET must contain at least 32 characters" && exit 1)
 
+      - name: Configure production session secret
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+        run: printf '%s' "$SESSION_SECRET" | bunx wrangler@4.160.0 secret put SESSION_SECRET
+
       - name: Deploy Cloudflare Worker
         uses: cloudflare/wrangler-action@v3
         with:
