@@ -33,7 +33,7 @@ input,textarea,select{border-color:#d6dee7;border-radius:9px;width:100%;min-heig
 <section class="card" id="users"><h2>Supporter accounts & password recovery</h2><p class="muted">For a forgotten password, first verify the supporter controls the registered email address through your normal support process. Then issue a one-time link and send it only to that verified address. Links expire after 30 minutes.</p><div id="usersList"><p class="muted">No accounts loaded.</p></div></section>
 <section class="card"><h2>Payment verification checks</h2><p class="muted">Review each submitted transfer against the receiving provider’s cleared transaction record. A screenshot or customer claim alone is not proof that funds have cleared.</p></section>
 <section class="card" id="support"><h2>Support requests</h2><div id="supportList"><p class="muted">No records loaded.</p></div></section>
-<section class="card" id="audit"><h2>Recent audit log</h2><div id="audit"><p class="muted">No records loaded.</p></div></section>
+<section class="card" id="audit"><h2>Recent audit log</h2><div id="auditList"><p class="muted">No records loaded.</p></div></section>
 </main><script>
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(url,opts={}){const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.error||'Request failed');return d}
