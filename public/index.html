@@ -329,25 +329,26 @@ function message(id, text, ok = false) {
 async function connectSmartsupp(){
  const cfg=await api("/api/config");
  if(!cfg.smartsuppKey)throw Error("Smartsupp is not configured on the website yet.");
- window._smartsupp=window._smartsupp||{};window._smartsupp.key=cfg.smartsuppKey;
- if(typeof window.smartsupp!=="function"){const queue=function(){queue._.push(arguments)};queue._=[];window.smartsupp=queue}
- let script=document.getElementById("smartsupp-loader");
- if(script?.dataset.loaded==="true")return true;
- if(!window.__dkpSmartsuppLoadPromise){
-  window.__dkpSmartsuppLoadPromise=new Promise((resolve,reject)=>{
-   const timer=setTimeout(()=>{window.__dkpSmartsuppLoadPromise=null;reject(Error("Smartsupp timed out. Check your connection or content blocker."))},15000);
-   const loaded=()=>{clearTimeout(timer);if(script)script.dataset.loaded="true";resolve(true)};
-   const failed=()=>{clearTimeout(timer);window.__dkpSmartsuppLoadPromise=null;reject(Error("Smartsupp could not load. Check your connection or content blocker."))};
-   if(!script){script=document.createElement("script");script.id="smartsupp-loader";script.type="text/javascript";script.charset="utf-8";script.async=true;script.src="https://www.smartsuppchat.com/loader.js?"}
-   script.addEventListener("load",loaded,{once:true});script.addEventListener("error",failed,{once:true});
-   if(!script.isConnected){const first=document.getElementsByTagName("script")[0];if(first?.parentNode)first.parentNode.insertBefore(script,first);else document.head.appendChild(script)}
-  });
+ window._smartsupp=window._smartsupp||{};
+ window._smartsupp.key=cfg.smartsuppKey;
+ if(typeof window.smartsupp!=="function"){
+  const queue=function(){queue._.push(arguments)};
+  queue._=[];window.smartsupp=queue;
  }
- await window.__dkpSmartsuppLoadPromise;return true;
+ if(!document.getElementById("smartsupp-loader")){
+  const script=document.createElement("script");
+  script.id="smartsupp-loader";script.type="text/javascript";script.charset="utf-8";script.async=true;
+  script.src="https://www.smartsuppchat.com/loader.js?";
+  const first=document.getElementsByTagName("script")[0];
+  if(first?.parentNode)first.parentNode.insertBefore(script,first);else document.head.appendChild(script);
+ }
+ window.smartsupp("chat:open");
+ return true;
 }
 function openSmartsuppPage(){
- connectSmartsupp().then(()=>{if(typeof window.smartsupp==="function")window.smartsupp("chat:open")}).catch(error=>{
-  const status=$("supportMessage")||$("authMessage");if(status){status.textContent="Smartsupp could not open: "+error.message;status.className="error"}
+ connectSmartsupp().catch(error=>{
+  const status=$("supportMessage")||$("authMessage")||$("supportStatus")||$("paymentSubmitStatus");
+  if(status){status.textContent="Smartsupp could not open: "+error.message;status.className="message error"}
  });
  return true;
 }
