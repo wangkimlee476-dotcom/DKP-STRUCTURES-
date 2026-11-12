@@ -41,5 +41,13 @@
       "head_sampling_rate": 1,
       "persist": true
     }
+  },
+  "previews": {
+    "hyperdrive": [
+      {
+        "binding": "HYPERDRIVE",
+        "id": "455fb135411f45ed814b43b0f74ce930"
+      }
+    ]
   }
 }
