@@ -102,26 +102,27 @@ loadDepositRates();
 async function api(url,opts={}){const r=await fetch(url,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(opts.headers||{})},...opts});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed ("+r.status+")");return d}
 async function connectSmartsupp(){
  const cfg=await api("/api/config");
- if(!cfg.smartsuppKey)throw Error("Smartsupp is not configured on the website yet.");
+ if(!cfg.smartsuppKey)throw new Error("Smartsupp is not configured on the website.");
  window._smartsupp=window._smartsupp||{};
  window._smartsupp.key=cfg.smartsuppKey;
  if(typeof window.smartsupp!=="function"){
-  const queue=function(){queue._.push(arguments)};
-  queue._=[];window.smartsupp=queue;
+  const smartsupp=function(){smartsupp._.push(arguments)};
+  smartsupp._=[];window.smartsupp=smartsupp;
  }
  if(!document.getElementById("smartsupp-loader")){
   const script=document.createElement("script");
   script.id="smartsupp-loader";script.type="text/javascript";script.charset="utf-8";script.async=true;
   script.src="https://www.smartsuppchat.com/loader.js?";
   const first=document.getElementsByTagName("script")[0];
-  if(first?.parentNode)first.parentNode.insertBefore(script,first);else document.head.appendChild(script);
+  if(first&&first.parentNode)first.parentNode.insertBefore(script,first);
+  else document.head.appendChild(script);
  }
  window.smartsupp("chat:open");
  return true;
 }
 function openSmartsuppPage(){
  connectSmartsupp().catch(error=>{
-  const status=$("supportMessage")||$("authMessage")||$("supportStatus")||$("paymentSubmitStatus");
+  const status=["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id=>$(id)).find(Boolean);
   if(status){status.textContent="Smartsupp could not open: "+error.message;status.className="message error"}
  });
  return true;
