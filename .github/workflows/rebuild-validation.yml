@@ -16,6 +16,25 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dkp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dkp_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/dkp_test
+      SESSION_SECRET: dkp-ci-only-session-secret-not-for-production-2026
+      NODE_ENV: development
+      TERMS_VERSION: "2026-11-10"
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -30,6 +49,13 @@ jobs:
 
       - name: Run platform checks
         run: bun run check
+
+      - name: Run PostgreSQL-backed HTTP integration tests
+        run: |
+          node server.mjs > /tmp/dkp-structures-test-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          node scripts/test-http-integration.js
 
       - name: Validate Cloudflare Worker bundle and Wrangler configuration
         run: bunx wrangler@4.160.0 deploy --dry-run
