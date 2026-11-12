@@ -8,10 +8,10 @@ This is the dedicated rebuild branch. The original branch is left untouched.
 - Production branch: `rebuild/professional-functional`
 - Root directory: `/`
 - Build command: leave blank unless Cloudflare requires dependency installation
-- Deploy command: `npx wrangler deploy`
+- Deploy command: `npx wrangler@4.160.0 deploy`
 - Worker entrypoint: `worker.mjs` (configured in `wrangler.jsonc`)
 
-**Do not use `npx wrangler preview` as the deploy command.** It is a preview-era command and was the cause of the November 10 deployment failure. For local development use `bun run preview` (which runs `wrangler dev`). For production use `bun run deploy` or `npx wrangler deploy`.
+**Do not use `npx wrangler preview` as the deploy command.** It is a preview-era command and was the cause of the November 10 deployment failure. For local development use `bun run preview` (which runs `wrangler dev`). For production use `bun run deploy` or `npx wrangler@4.160.0 deploy`.
 
 ## Cloudflare bindings and secrets
 
