@@ -326,6 +326,51 @@ function message(id, text, ok = false) {
   $(id).className = ok ? "success" : "error";
 }
 
+let smartsuppLoadPromise = null;
+async function connectSmartsupp() {
+  if (typeof window.smartsupp === "function" && window._smartsupp?.key) return true;
+  if (smartsuppLoadPromise) return smartsuppLoadPromise;
+  smartsuppLoadPromise = (async () => {
+    const cfg = await api("/api/config");
+    if (!cfg.smartsuppKey) throw new Error("Smartsupp is not configured on the website yet.");
+    window._smartsupp = window._smartsupp || {};
+    window._smartsupp.key = cfg.smartsuppKey;
+    if (typeof window.smartsupp !== "function") {
+      const q = function () { q._.push(arguments); };
+      q._ = [];
+      window.smartsupp = q;
+    }
+    let script = document.getElementById("smartsupp-loader");
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "smartsupp-loader";
+      script.async = true;
+      script.charset = "utf-8";
+      script.src = "https://www.smartsuppchat.com/loader.js?";
+      document.head.appendChild(script);
+    }
+    if (!script.dataset.loaded) {
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Smartsupp did not load within 12 seconds. Check your connection or content blocker.")), 12000);
+        script.addEventListener("load", () => {
+          clearTimeout(timer);
+          script.dataset.loaded = "true";
+          resolve();
+        }, { once: true });
+        script.addEventListener("error", () => {
+          clearTimeout(timer);
+          reject(new Error("Smartsupp could not be loaded. Check your connection or content blocker."));
+        }, { once: true });
+      });
+    }
+    return true;
+  })().catch(error => {
+    smartsuppLoadPromise = null;
+    throw error;
+  });
+  return smartsuppLoadPromise;
+}
+
 async function loadDashboard() {
   try {
     await api("/api/dashboard");
@@ -420,12 +465,17 @@ $("supportForm").addEventListener("submit", async e => {
     const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
     const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+payload.name+"\nEmail: "+payload.email+"\nCountry: "+payload.country+"\nRequest type: "+payload.type+"\nMessage: "+payload.message+"\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
     try {
-      window.smartsupp("chat:send",chatText);
+      await connectSmartsupp();
+      window.smartsupp("name",payload.name);
+      window.smartsupp("email",payload.email);
+      window.smartsupp("variables",{Country:payload.country,Support_Request_ID:String(d.requestId),Request_Type:payload.type});
+      window.smartsupp("chat:show");
       window.smartsupp("chat:open");
-      message("supportMessage","Your request #"+d.requestId+" has been saved and sent to the Smartsupp customer-service chat. Please continue in the chat window.",true);
+      window.smartsupp("chat:send",chatText);
+      message("supportMessage","Your request #"+d.requestId+" is saved. Smartsupp has been opened and the request is being sent as your first chat message. Please check the chat window for the conversation.",true);
       form.reset();
     } catch(chatError) {
-      message("supportMessage","Your request #"+d.requestId+" is safely recorded for the admin team, but Smartsupp could not be reached: "+chatError.message+". Please use the live-chat button to retry.");
+      message("supportMessage","Your request #"+d.requestId+" is safely recorded for the admin team, but Smartsupp could not be opened or sent the message: "+chatError.message+". Your request remains recorded; please retry using the chat button.");
     }
   } catch (x) {
     message("supportMessage", x.message);
@@ -434,9 +484,18 @@ $("supportForm").addEventListener("submit", async e => {
   }
 });
 
-$("chatButton").addEventListener("click", () => {
-  // Open Smartsupp's standalone Chat Page; no website widget or loader required.
-  window.open("https://widget-page.smartsupp.com/widget/784368b32262fad3ade23c88b4e9972d8c1c85e9", "_blank", "noopener,noreferrer");
+$("chatButton").addEventListener("click", async () => {
+  const button = $("chatButton");
+  button.disabled = true;
+  try {
+    await connectSmartsupp();
+    window.smartsupp("chat:show");
+    window.smartsupp("chat:open");
+  } catch (error) {
+    message("supportMessage","Smartsupp could not be opened: "+error.message+". You can also contact dkpstructures@gmail.com.");
+  } finally {
+    button.disabled = false;
+  }
 });
 
 loadDashboard();
