@@ -57,11 +57,10 @@ jobs:
         run: printf '%s' "$SESSION_SECRET" | bunx wrangler@4.160.0 secret put SESSION_SECRET
 
       - name: Deploy Cloudflare Worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bunx wrangler@4.160.0 deploy
 
       - name: Verify deployed public pages and production API
         env:
