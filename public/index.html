@@ -5,25 +5,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#14263d">
-<!-- Official Smartsupp installation: independent of the DKP support button and API config endpoint. -->
-<script>
-  var _smartsupp = window._smartsupp || {};
-  _smartsupp.key = '784368b32262fad3ade23c88b4e9972d8c1c85e9';
-  window._smartsupp = _smartsupp;
-  window.smartsupp || (function(d) {
-    var s, c, o = window.smartsupp = function() { o._.push(arguments); };
-    o._ = [];
-    s = d.getElementsByTagName('script')[0];
-    c = d.createElement('script');
-    c.type = 'text/javascript';
-    c.charset = 'utf-8';
-    c.async = true;
-    c.src = 'https://www.smartsuppchat.com/loader.js?';
-    c.id = 'smartsupp-loader';
-    s.parentNode.insertBefore(c, s);
-  })(document);
-</script>
-
 <title>DKP Structures | Building a Vision</title>
 <style>
 :root{--g:#14263d;--ink:#1d2a38;--gold:#c5a46d;--paper:#f5f6f8;--muted:#657383;--line:#e0e5eb}
@@ -262,7 +243,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 
 <div class="card">
 <h3>Live chat with Smartsupp</h3>
-<p>Use the blue chat button at the bottom-right once DKP Structures connects its Smartsupp website key.</p>
+<p>Use the blue chat button at the bottom-right to open our dedicated Smartsupp support page in a separate tab.</p>
 <p class="muted">Support hours and response times should be published once staffed.</p>
 <p><strong>Email customer support:</strong> <a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20enquiry">dkpstructures@gmail.com</a></p>
 <p><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20payment%20options%20request">Email us to request available payment options</a></p>
@@ -453,24 +434,9 @@ $("supportForm").addEventListener("submit", async e => {
   }
 });
 
-$("chatButton").addEventListener("click", async () => {
-  const button = $("chatButton");
-  const originalLabel = button.textContent;
-  button.disabled = true;
-  button.textContent = "Connecting to support…";
-  try {
-    window.smartsupp("chat:open");
-    button.textContent = "Opening support chat…";
-    setTimeout(() => {
-      button.disabled = false;
-      button.textContent = originalLabel;
-    }, 1800);
-  } catch (error) {
-    console.warn("Smartsupp could not open:", error.message);
-    button.disabled = false;
-    button.textContent = "Live chat unavailable";
-    setTimeout(() => { button.textContent = originalLabel; }, 3500);
-  }
+$("chatButton").addEventListener("click", () => {
+  // Open Smartsupp's standalone Chat Page; no website widget or loader required.
+  window.open("https://widget-page.smartsupp.com/widget/784368b32262fad3ade23c88b4e9972d8c1c85e9", "_blank", "noopener,noreferrer");
 });
 
 loadDashboard();
