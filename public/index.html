@@ -5,6 +5,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#14263d">
+<!-- Official Smartsupp installation: independent of the DKP support button and API config endpoint. -->
+<script>
+  var _smartsupp = window._smartsupp || {};
+  _smartsupp.key = '784368b32262fad3ade23c88b4e9972d8c1c85e9';
+  window._smartsupp = _smartsupp;
+  window.smartsupp || (function(d) {
+    var s, c, o = window.smartsupp = function() { o._.push(arguments); };
+    o._ = [];
+    s = d.getElementsByTagName('script')[0];
+    c = d.createElement('script');
+    c.type = 'text/javascript';
+    c.charset = 'utf-8';
+    c.async = true;
+    c.src = 'https://www.smartsuppchat.com/loader.js?';
+    c.id = 'smartsupp-loader';
+    s.parentNode.insertBefore(c, s);
+  })(document);
+</script>
+
 <title>DKP Structures | Building a Vision</title>
 <style>
 :root{--g:#14263d;--ink:#1d2a38;--gold:#c5a46d;--paper:#f5f6f8;--muted:#657383;--line:#e0e5eb}
@@ -420,7 +439,6 @@ $("supportForm").addEventListener("submit", async e => {
     const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
     const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+payload.name+"\nEmail: "+payload.email+"\nCountry: "+payload.country+"\nRequest type: "+payload.type+"\nMessage: "+payload.message+"\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
     try {
-      await loadSmartsupp();
       window.smartsupp("chat:send",chatText);
       window.smartsupp("chat:open");
       message("supportMessage","Your request #"+d.requestId+" has been saved and sent to the Smartsupp customer-service chat. Please continue in the chat window.",true);
@@ -435,70 +453,12 @@ $("supportForm").addEventListener("submit", async e => {
   }
 });
 
-let smartsuppReady = false;
-let smartsuppLoadPromise = null;
-
-async function loadSmartsupp() {
-  if (smartsuppReady) return true;
-  if (smartsuppLoadPromise) return smartsuppLoadPromise;
-
-  smartsuppLoadPromise = (async () => {
-    const config = await api("/api/config");
-    if (!config.smartsuppKey) throw new Error("Smartsupp website key is not configured.");
-
-    window._smartsupp = window._smartsupp || {};
-    window._smartsupp.key = config.smartsuppKey;
-    if (typeof window.smartsupp !== "function") {
-      const queue = function() { queue._.push(arguments); };
-      queue._ = [];
-      window.smartsupp = queue;
-    }
-
-    let script = document.getElementById("smartsupp-loader");
-    if (script?.dataset.loaded === "true") {
-      smartsuppReady = true;
-      return true;
-    }
-    if (!script) {
-      script = document.createElement("script");
-      script.id = "smartsupp-loader";
-      script.type = "text/javascript";
-      script.charset = "utf-8";
-      script.async = true;
-      script.src = "https://www.smartsuppchat.com/loader.js?";
-    }
-
-    await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error("Smartsupp did not load. Check browser/VPN content blocking.")), 15000);
-      script.addEventListener("load", () => {
-        clearTimeout(timeout);
-        script.dataset.loaded = "true";
-        resolve();
-      }, { once: true });
-      script.addEventListener("error", () => {
-        clearTimeout(timeout);
-        reject(new Error("Smartsupp loader was blocked or could not be downloaded."));
-      }, { once: true });
-      if (!script.isConnected) document.head.appendChild(script);
-    });
-
-    smartsuppReady = true;
-    return true;
-  })().catch(error => {
-    smartsuppLoadPromise = null;
-    throw error;
-  });
-
-  return smartsuppLoadPromise;
-}
-
 $("chatButton").addEventListener("click", async () => {
   const button = $("chatButton");
   const originalLabel = button.textContent;
   button.disabled = true;
   button.textContent = "Connecting to support…";
   try {
-    await loadSmartsupp();
     window.smartsupp("chat:open");
     button.textContent = "Opening support chat…";
     setTimeout(() => {
@@ -513,9 +473,6 @@ $("chatButton").addEventListener("click", async () => {
   }
 });
 
-loadSmartsupp().catch(error => {
-  console.warn("Smartsupp configuration or loader unavailable:", error.message);
-});
 loadDashboard();
 </script>
 </body>
