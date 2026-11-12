@@ -129,15 +129,11 @@ window._smartsupp.key = "784368b32262fad3ade23c88b4e9972d8c1c85e9";
  if (s && s.parentNode) s.parentNode.insertBefore(c, s);
  else d.head.appendChild(c);
 })(document);
-async function openSmartsuppPage() {
+function openSmartsuppPage() {
  try {
-  if (!window.__dkpSmartsuppReady) throw new Error("The Smartsupp loader has not started. Refresh the page and try again.");
-  await Promise.race([
-   window.__dkpSmartsuppReady,
-   new Promise((_, reject) => setTimeout(() => reject(new Error("Smartsupp did not finish loading within 12 seconds. Check the network or allowed-domain settings.")), 12000))
-  ]);
-  await new Promise(resolve => setTimeout(resolve, 500));
-  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp loaded without exposing its chat command. Check the website key in Smartsupp.");
+  // Keep the API call inside the original tap/click gesture. Smartsupp's
+  // official queue accepts commands before its async loader has finished.
+  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp's command queue is unavailable. Refresh the page and try again.");
   window.smartsupp("chat:open");
   return true;
  } catch (error) {
