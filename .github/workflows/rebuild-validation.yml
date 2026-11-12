@@ -1,0 +1,35 @@
+name: DKP rebuild validation
+
+on:
+  push:
+    branches:
+      - rebuild/professional-functional
+  pull_request:
+    branches:
+      - rebuild/professional-functional
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run platform checks
+        run: bun run check
+
+      - name: Validate Cloudflare Worker bundle and Wrangler configuration
+        run: bunx wrangler@4.160.0 deploy --dry-run
