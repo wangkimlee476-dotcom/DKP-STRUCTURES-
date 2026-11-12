@@ -78,6 +78,16 @@ body[data-theme=dark] input,body[data-theme=dark] select,body[data-theme=dark] t
 <nav class="bottom" aria-label="Main navigation"><button type="button" class="active" data-nav="home" onclick="go('home')"><span class="ico">⌂</span>Home</button><button type="button" data-nav="plans" onclick="go('plans')"><span class="ico">◇</span>Plans</button><button type="button" data-nav="activity" onclick="go('activity')"><span class="ico">▤</span>Activity</button><button type="button" data-nav="settings" onclick="go('settings')"><span class="ico">⚙</span>Settings</button></nav>
 <script>
 const $=id=>document.getElementById(id);let me=null,selectedPlan="Basic",avatarData=null;
+// Shared status helper used by every supporter-dashboard action. Keep feedback local and safe.
+function say(id,message,type="info"){
+ const el=$(id);
+ if(!el)return;
+ el.textContent=String(message??"");
+ el.className="message"+(type==="error"?" error":type==="success"?" success":"");
+ el.setAttribute("role","status");
+ el.setAttribute("aria-live","polite");
+}
+
 const plans=[["Basic",100,499],["Bronze",500,1249],["Silver",1250,2999],["Gold",3000,6999],["Platinum",7000,14999],["Diamond",15000,29999],["Founding",30000,100000000]];
 let depositRates={USD:1},depositRateDate=null;
 const currencyNames={USD:"US Dollar",EUR:"Euro",GBP:"British Pound",CHF:"Swiss Franc",PLN:"Polish Złoty",SEK:"Swedish Krona",NOK:"Norwegian Krone",DKK:"Danish Krone",CZK:"Czech Koruna",HUF:"Hungarian Forint",RON:"Romanian Leu",BGN:"Bulgarian Lev",ISK:"Icelandic Króna",UAH:"Ukrainian Hryvnia",RSD:"Serbian Dinar",ALL:"Albanian Lek",BAM:"Bosnia and Herzegovina Convertible Mark",MKD:"Macedonian Denar",GEL:"Georgian Lari",TRY:"Turkish Lira",CAD:"Canadian Dollar",AUD:"Australian Dollar",NZD:"New Zealand Dollar",IDR:"Indonesian Rupiah",SGD:"Singapore Dollar",MYR:"Malaysian Ringgit",INR:"Indian Rupee",AED:"UAE Dirham",JPY:"Japanese Yen",CNY:"Chinese Yuan",BRL:"Brazilian Real",PHP:"Philippine Peso",MXN:"Mexican Peso",ARS:"Argentine Peso",COP:"Colombian Peso",CLP:"Chilean Peso",PEN:"Peruvian Sol",UYU:"Uruguayan Peso",CRC:"Costa Rican Colón",DOP:"Dominican Peso",GTQ:"Guatemalan Quetzal",HNL:"Honduran Lempira",NIO:"Nicaraguan Córdoba",PYG:"Paraguayan Guaraní",BOB:"Bolivian Boliviano"};
