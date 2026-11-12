@@ -90,15 +90,21 @@ $("sendSupport").onclick=async()=>{
 };
 $("paymentSubmitForm").onsubmit=async e=>{
   e.preventDefault();const form=e.target,button=$("submitPayment"),f=new FormData(form),payload=Object.fromEntries(f.entries());button.disabled=true;button.textContent="Submitting request…";
-  const chatWindow=window.open("about:blank","_blank");
   try{
    const d=await api("/api/contributions/submit",{method:"POST",body:JSON.stringify({amount:Number(payload.amount),paymentMethod:payload.paymentMethod,reference:payload.reference,note:payload.note||""})});
    const chatText="DKP STRUCTURES — PAYMENT CONFIRMATION REQUEST #"+d.id+"\nSupporter: "+me.name+"\nSupporter ID: "+me.supporterId+"\nEmail: "+me.email+"\nCountry: "+me.country+"\nAmount transferred: USD $"+Number(payload.amount).toFixed(2)+"\nPayment method: "+payload.paymentMethod+"\nTransfer reference: "+payload.reference+"\nAdditional details: "+(payload.note||"None")+"\nPlease help verify this transfer. Do not request card numbers, passwords or bank login credentials.";
-   let copied=false;try{await navigator.clipboard.writeText(chatText);copied=true}catch{}
-   if(chatWindow)chatWindow.location.href="https://widget-page.smartsupp.com/widget/784368b32262fad3ade23c88b4e9972d8c1c85e9";
-   const nextStep=copied?"The request details have been copied. Paste them into the Smartsupp chat and send them.":"In Smartsupp, send your request number #"+d.id+" and the transfer details shown in this form.";
-   say("paymentSubmitStatus","Payment request #"+d.id+" is recorded as PENDING. "+nextStep+" Your admin dashboard will show the pending payment for tracking; it will only be credited after cleared funds are independently confirmed.","success");form.reset();
-  }catch(error){if(chatWindow)chatWindow.close();say("paymentSubmitStatus",error.message,"error")}
+   try{
+    await connectSmartsupp();
+    window.smartsupp("name",me.name||"DKP Supporter");
+    window.smartsupp("email",me.email||"");
+    window.smartsupp("variables",{Supporter_ID:me.supporterId||"",Country:me.country||"",Payment_Request_ID:String(d.id),Payment_Amount:"USD $"+Number(payload.amount).toFixed(2),Payment_Status:"Pending verification"});
+    window.smartsupp("chat:send",chatText);
+    window.smartsupp("chat:open");
+    say("paymentSubmitStatus","Payment request #"+d.id+" is recorded as PENDING and its full details have been sent as your first message to Smartsupp. Customer service can now assist you. The admin dashboard retains the pending record and will only credit it after cleared funds are independently confirmed.","success");form.reset();
+   }catch(chatError){
+    say("paymentSubmitStatus","Payment request #"+d.id+" is safely recorded as PENDING, but Smartsupp could not send the chat message: "+chatError.message+" Please retry customer support from this page. The admin dashboard will retain the pending record; it will only be credited after cleared funds are independently confirmed.","error");
+   }
+  }catch(error){say("paymentSubmitStatus",error.message,"error")}
   finally{button.disabled=false;button.textContent="Send payment request to Smartsupp"}
  };
 $("logout").onclick=async()=>{try{await api("/api/logout",{method:"POST"});location.replace("/#account")}catch(e){alert(e.message)}};
