@@ -106,6 +106,65 @@ footer{line-height:1.9}
 }
 footer{background:#101c18;color:white;text-align:center;padding:30px}
 @media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}.hero{padding:45px 22px}.links{gap:10px}}
+/* Premium corporate homepage refresh */
+:root{--g:#14263d;--ink:#1d2a38;--gold:#c5a46d;--paper:#f5f6f8;--muted:#657383;--line:#e0e5eb}
+body{background:#f7f8fa;color:var(--ink)}
+.top{background:rgba(20,38,61,.97);backdrop-filter:blur(14px)}
+.nav{min-height:82px}
+.brand{font-size:19px;letter-spacing:.12em}
+.links{gap:8px}
+.links a{font-size:13px;letter-spacing:.02em;padding:10px 12px}
+.hero{position:relative;isolation:isolate;overflow:hidden;min-height:590px;margin:26px auto 0;padding:64px clamp(24px,5vw,70px);border-radius:28px;background:#14263d;box-shadow:0 24px 65px #14263d24;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
+.hero:before{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(circle at 15% 15%,#c5a46d22,transparent 35%),linear-gradient(135deg,#14263d 0%,#1d3855 100%)}
+.hero-copy{max-width:620px}
+.hero-kicker{display:flex;align-items:center;gap:10px;color:#e2c894;font-size:11px;font-weight:850;letter-spacing:.2em}
+.hero-kicker i{width:24px;height:2px;background:var(--gold)}
+.hero h1{font-size:clamp(42px,5.4vw,72px);line-height:1.02;letter-spacing:-.055em;margin:30px 0 20px;max-width:660px}
+.hero h1 em,.about-layout h2 em{font-style:normal;color:#d9bd88}
+.hero p{font-size:17px;line-height:1.8;color:#d5deea;max-width:530px}
+.hero-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:30px}
+.hero-primary{display:inline-flex;align-items:center;gap:20px;text-decoration:none;border-radius:5px;padding:15px 20px;background:var(--gold);color:#172638;font-weight:800}
+.hero-primary span{font-size:20px}
+.hero-link{color:#f3f5f8;text-decoration:none;font-size:14px;font-weight:700}
+.hero-link span{color:#dfc38e;margin-left:8px}
+.hero-proof{display:flex;gap:18px;align-items:center;border-top:1px solid #ffffff30;margin-top:48px;padding-top:18px;color:#c3cedb;font-size:11px}
+.hero-proof span:first-child{color:#dfc38e;font-weight:800;letter-spacing:.15em}
+.hero-image{align-self:stretch;min-height:430px;position:relative;border-radius:180px 180px 14px 14px;overflow:hidden;background:linear-gradient(180deg,#14263d00 45%,#14263dcc 100%),url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=85') center/cover;box-shadow:inset 0 0 0 1px #ffffff24}
+.image-caption{position:absolute;bottom:26px;left:26px;display:grid;gap:5px;color:white}
+.image-caption b{font-size:11px;letter-spacing:.18em;color:#e2c894}
+.image-caption span{font-size:14px}
+.section{padding:88px 0}
+.section-label{font-size:11px;font-weight:850;letter-spacing:.2em;color:#9a7b45;margin-bottom:24px}
+.about-layout{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start}
+.about-layout h2{font-size:clamp(32px,4vw,48px);line-height:1.12;letter-spacing:-.045em;margin:0}
+.about-layout h2 em{color:#9b7d4b}
+.about-lead{font-size:19px;line-height:1.65;margin:0 0 16px;color:#26384c}
+.principles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:42px}
+.principle{background:white;border:1px solid var(--line);border-radius:14px;padding:24px;min-height:190px}
+.principle>span{font-size:11px;font-weight:900;color:#a1814d;letter-spacing:.15em}
+.principle h3{margin:20px 0 8px;font-size:18px}
+.principle p{margin:0;color:var(--muted);font-size:14px;line-height:1.65}
+#campaign .notice{border-left:4px solid var(--gold);background:#f1ede5}
+#campaign>.card,#levelCards .card{border-radius:14px}
+#levels{background:#edf0f4;margin:0 -22px;padding:72px 22px;border-radius:20px}
+.auth-card{border:1px solid var(--line)}
+footer{background:#14263d}
+@media(max-width:760px){
+ .wrap{padding:16px}
+ .nav{align-items:flex-start;flex-direction:column;gap:10px;padding-top:18px;padding-bottom:14px}
+ .links{width:100%;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:2px 0 8px;scrollbar-width:thin}
+ .links a{white-space:nowrap;font-size:12px;padding:8px 10px}
+ .hero{grid-template-columns:1fr;gap:26px;min-height:0;padding:34px 24px 22px;margin:14px auto 0;border-radius:20px}
+ .hero h1{font-size:clamp(40px,11vw,58px);margin:24px 0 14px}
+ .hero p{font-size:15px;line-height:1.7}
+ .hero-proof{margin-top:28px;gap:10px;align-items:flex-start;flex-direction:column}
+ .hero-image{min-height:270px;border-radius:130px 130px 12px 12px;background-position:center 45%}
+ .section{padding:54px 0}
+ .about-layout{grid-template-columns:1fr;gap:20px}
+ .principles-grid{grid-template-columns:1fr;gap:10px;margin-top:26px}
+ .principle{min-height:0;padding:20px}
+ #levels{margin:0 -16px;padding:48px 16px;border-radius:14px}
+}
 </style>
 </head>
 <body>
@@ -125,15 +184,20 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 
 <main class="wrap">
 <section class="hero">
-<span style="color:#f0d58e;font-weight:800;letter-spacing:.18em">CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span>
-<h1>Building a vision. Creating opportunities.</h1>
-<p>DKP Structures is focused on developing a construction business grounded in responsible planning, quality workmanship and transparency.</p>
-<a href="#about"><button class="btn">Discover DKP Structures</button></a>
+<div class="hero-copy">
+<span class="hero-kicker"><i></i> CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span>
+<h1>Built on vision.<br><em>Driven by progress.</em></h1>
+<p>We are shaping a construction business around thoughtful development, dependable workmanship and transparent progress.</p>
+<div class="hero-actions"><a href="#about" class="btn hero-primary">Explore our vision <span>↗</span></a><a href="#account" class="hero-link">Become a supporter <span>→</span></a></div>
+<div class="hero-proof"><span>01 / OUR PURPOSE</span><span>Planning with responsibility. Building with care.</span></div>
+</div>
+<div class="hero-image" role="img" aria-label="Construction professionals working on a building project"><div class="image-caption"><b>BUILDING TOMORROW</b><span>One considered step at a time</span></div></div>
 </section>
 
-<section id="about" class="section">
-<h2>About DKP Structures</h2>
-<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified.</p>
+<section id="about" class="section about-section">
+<div class="section-label">01 — WHO WE ARE</div>
+<div class="about-layout"><h2>Practical foundations.<br><em>Long-term ambition.</em></h2><div><p class="about-lead">DKP Structures is focused on developing a construction company with a clear purpose: create lasting value through responsible planning and quality construction.</p><p class="muted">Our development roadmap is built around professional standards, careful decision-making and openness about progress. Company credentials and milestones will be published only when verified.</p></div></div>
+<div class="principles-grid"><article class="principle"><span>01</span><h3>Responsible planning</h3><p>Clear priorities and considered decisions at every stage.</p></article><article class="principle"><span>02</span><h3>Quality workmanship</h3><p>A commitment to care, consistency and professional standards.</p></article><article class="principle"><span>03</span><h3>Transparent progress</h3><p>Honest updates and clear communication as the business develops.</p></article></div>
 </section>
 
 <section id="campaign" class="section">
