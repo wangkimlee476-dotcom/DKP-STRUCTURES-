@@ -162,13 +162,23 @@ function openSmartsuppPage() {
 $("dkpSupportFallbackClose").onclick = () => $("dkpSupportFallback").classList.remove("open");
 $("dkpSupportFallback").addEventListener("click", e => { if (e.target.id === "dkpSupportFallback") e.currentTarget.classList.remove("open"); });
 $("dkpSupportFallbackForm").addEventListener("click", () => $("dkpSupportFallback").classList.remove("open"));
-async function copyRequestMessage(text){
- try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return}}
- catch{}
+function copyRequestMessage(text){
+ // Start the clipboard write immediately inside the user's click/submit gesture.
+ if(navigator.clipboard&&window.isSecureContext){
+  try{return navigator.clipboard.writeText(text).then(()=>true,()=>manualCopyRequestMessage(text))}
+  catch{}
+ }
+ return Promise.resolve(manualCopyRequestMessage(text));
+}
+function manualCopyRequestMessage(text){
  const field=document.createElement("textarea");field.value=text;field.setAttribute("readonly","");
- field.style.position="fixed";field.style.opacity="0";document.body.appendChild(field);field.select();
- let ok=false;try{ok=document.execCommand("copy")}catch{}field.remove();
- if(!ok)throw Error("Copy was blocked by your browser. Please copy the request text manually.");
+ field.setAttribute("aria-label","Message to copy");field.style.position="fixed";field.style.left="12px";field.style.right="12px";field.style.bottom="20px";field.style.width="calc(100% - 24px)";field.style.height="150px";field.style.zIndex="99999";field.style.background="#fff";field.style.color="#111";field.style.padding="12px";field.style.border="2px solid #176b4f";field.style.borderRadius="10px";
+ document.body.appendChild(field);field.focus();field.select();
+ let ok=false;try{ok=document.execCommand("copy")}catch{}
+ if(ok){field.remove();return true}
+ field.remove();
+ window.prompt("Automatic copying was blocked. Press and hold the message, choose Copy, then return to the chat:",text);
+ return false;
 }
 function go(id){const el=$(id);if(!el)return;el.scrollIntoView({behavior:"smooth",block:"start"});document.querySelectorAll("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===id||((id==="goal"||id==="support")&&b.dataset.nav==="home")))}
 function applyTheme(t){const mode=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;document.body.dataset.theme=mode}
@@ -205,14 +215,17 @@ $("sendSupport").onclick=async()=>{
  const usdAmount=amount/rate,ranges={"Basic":[100,499],"Bronze":[500,1249],"Silver":[1250,2999],"Gold":[3000,6999],"Platinum":[7000,14999],"Diamond":[15000,29999],"Founding":[30000,100000000]};
  const range=ranges[plan];if(usdAmount<range[0]||usdAmount>range[1]){say("supportStatus","Your amount is approximately "+money(usdAmount,"USD")+". It does not fall within the "+plan+" plan's USD range of "+money(range[0],"USD")+"–"+(range[1]>=100000000?"above":money(range[1],"USD"))+". Please adjust the amount or choose another plan.","error");$("depositAmount").focus();return}
  const question="Preferred contribution amount: "+money(amount,currency)+" ("+currency+")\nApproximate USD equivalent: "+money(usdAmount,"USD")+"\nPreferred supporter plan: "+plan+" (USD range "+money(range[0],"USD")+"–"+(range[1]>=100000000?"above":money(range[1],"USD"))+")\nPreferred payment method: "+method+"\nAdditional details: "+(details||"None")+"\nExchange rate reference: 1 USD = "+rate+" "+currency+(depositRateDate?"; updated "+depositRateDate:"");
- const chat=await openSmartsuppPage();
+ const chatText="DKP STRUCTURES — DEPOSIT OPTIONS REQUEST\nName: "+me.name+"\nSupporter ID: "+(me.supporterId||"")+
+  "\nEmail: "+me.email+"\nCountry: "+me.country+"\n"+question+
+  "\nPlease provide official payment instructions for this country. These are preferences only; no payment has been made. Currency conversions are indicative. Do not request card details, passwords or bank login credentials.";
+ const copyPromise=copyRequestMessage(chatText);
+ const chat=openSmartsuppPage();
  button.disabled=true;button.textContent="Preparing deposit request…";
  try{
   const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify({name:me.name,email:me.email,country:me.country,type:"payment_methods",message:question})});
-  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+me.name+"\nSupporter ID: "+(me.supporterId||"")+"\nEmail: "+me.email+"\nCountry: "+me.country+"\n"+question+"\nPlease advise which official contribution payment options are available in this country and provide the appropriate instructions. The amount, plan and method above are preferences only; no payment has been made. Currency conversions are indicative only; confirm the final amount and exchange rate before any transfer. Do not request card details, passwords or bank login credentials.";
-  let copied=false;try{await copyRequestMessage(chatText);copied=true}catch{}
-  say("supportStatus","Deposit request #"+d.requestId+" is recorded for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"The Smartsupp chat has been opened in a new tab. Paste the copied message into the chat and tap Send.":"Smartsupp could not open automatically. Check your connection and tap Chat with support again. No message has been sent yet."),"success");
- }catch(e){say("supportStatus",e.message,"error")}
+  let copied=false;try{copied=await copyPromise}catch{}
+  say("supportStatus","Deposit request #"+d.requestId+" is recorded for admin tracking. "+(copied?"The message was copied. ":"Automatic copying was blocked; a manual-copy prompt may be available. ")+(chat?"The Smartsupp chat has been opened. Paste the message into the chat and tap Send.":"Smartsupp could not open automatically. Use the support chat button or direct link. No message has been sent."),"success");
+ }catch(e){say("supportStatus",e.message+" The message may already be on your clipboard; no request was recorded.","error");try{await copyPromise}catch{}}
  finally{button.disabled=false;button.textContent="Copy deposit request & open Smartsupp"}
 };
 $("paymentSubmitForm").onsubmit=async e=>{
@@ -225,15 +238,16 @@ $("paymentSubmitForm").onsubmit=async e=>{
   const range=ranges[plan];if(usdAmount<range[0]||usdAmount>range[1]){say("paymentSubmitStatus","The transferred amount is approximately "+money(usdAmount,"USD")+". It does not fit the "+plan+" plan USD range. Please check the amount or plan.","error");return}
   const usdRounded=Math.round(usdAmount*100)/100;
   const noteParts=["Original transferred amount: "+money(transferredAmount,currency)+" ("+currency+")","Approximate USD equivalent: "+money(usdRounded,"USD"),"Selected supporter plan: "+plan,"Exchange rate reference: 1 USD = "+rate+" "+currency+(depositRateDate?"; updated "+depositRateDate:""),payload.note?"Additional details: "+payload.note:""];
-  const chat=await openSmartsuppPage();
+  const chatText="DKP STRUCTURES — PAYMENT CONFIRMATION REQUEST\nSupporter: "+me.name+"\nSupporter ID: "+me.supporterId+"\nEmail: "+me.email+"\nCountry: "+me.country+"\nActual amount transferred: "+money(transferredAmount,currency)+" ("+currency+")\nApproximate USD equivalent submitted for verification: "+money(usdRounded,"USD")+"\nSupporter plan: "+plan+"\nPayment method: "+payload.paymentMethod+"\nTransfer reference: "+payload.reference+"\nAdditional details: "+(payload.note||"None")+"\nExchange rate reference: 1 USD = "+rate+" "+currency+(depositRateDate?"; updated "+depositRateDate:"")+"\nPlease independently verify the cleared funds and actual received amount. Currency conversion is indicative only. Do not request card numbers, passwords or bank login credentials.";
+  const copyPromise=copyRequestMessage(chatText);
+  const chat=openSmartsuppPage();
   button.disabled=true;button.textContent="Preparing payment request…";
   try{
-   const d=await api("/api/contributions/submit",{method:"POST",body:JSON.stringify({amount:usdRounded,paymentMethod:payload.paymentMethod,reference:payload.reference,note:noteParts.filter(Boolean).join("\\n")})});
-   const chatText="DKP STRUCTURES — PAYMENT CONFIRMATION REQUEST #"+d.id+"\\nSupporter: "+me.name+"\\nSupporter ID: "+me.supporterId+"\\nEmail: "+me.email+"\\nCountry: "+me.country+"\\nActual amount transferred: "+money(transferredAmount,currency)+" ("+currency+")\\nApproximate USD equivalent submitted for verification: "+money(usdRounded,"USD")+"\\nSupporter plan: "+plan+"\\nPayment method: "+payload.paymentMethod+"\\nTransfer reference: "+payload.reference+"\\nAdditional details: "+(payload.note||"None")+"\\nExchange rate reference: 1 USD = "+rate+" "+currency+(depositRateDate?"; updated "+depositRateDate:"")+"\\nPlease independently verify the cleared funds and actual received amount. Currency conversion is indicative only. Do not request card numbers, passwords or bank login credentials.";
-   let copied=false;try{await copyRequestMessage(chatText);copied=true}catch{}
-   say("paymentSubmitStatus","Payment request #"+d.id+" is recorded as PENDING using the approximate USD equivalent. "+(copied?"The complete payment message has been copied. ":"Clipboard access was blocked; copy the payment details manually. ")+(chat?"The Smartsupp chat has been opened in a new tab. Paste the copied message into the chat and tap Send.":"Smartsupp could not open automatically. Check your connection and tap Chat with support again. No message has been sent to customer support."),"success");
+   const d=await api("/api/contributions/submit",{method:"POST",body:JSON.stringify({amount:usdRounded,paymentMethod:payload.paymentMethod,reference:payload.reference,note:noteParts.filter(Boolean).join("\n")})});
+   let copied=false;try{copied=await copyPromise}catch{}
+   say("paymentSubmitStatus","Payment request #"+d.id+" is recorded as PENDING using the approximate USD equivalent. "+(copied?"The complete confirmation message was copied. ":"Automatic copying was blocked; use the manual-copy prompt if shown. ")+(chat?"The Smartsupp chat has been opened. Paste the message into the chat and tap Send.":"Smartsupp could not open automatically. Use the support chat button or direct link. No message has been sent."),"success");
    form.reset();$("paymentCurrencyLabel").textContent=$("paymentCurrency").value;
-  }catch(error){say("paymentSubmitStatus",error.message,"error")}
+  }catch(error){say("paymentSubmitStatus",error.message+" The message may already be on your clipboard; no payment request was recorded.","error");try{await copyPromise}catch{}}
   finally{button.disabled=false;button.textContent="Copy payment confirmation & open Smartsupp"}
  };
 $("paymentCurrency").onchange=()=>{$("paymentCurrencyLabel").textContent=$("paymentCurrency").value};
