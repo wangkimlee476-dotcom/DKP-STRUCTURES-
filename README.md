@@ -1,23 +1,41 @@
-# DKP STRUCTURES — Full-stack platform (PostgreSQL migration)
+# DKP STRUCTURES — supporter and fundraising platform
 
-Node.js + Express application with PostgreSQL-backed supporter accounts, contributions, support requests, audit history and login sessions.
+Node.js + Express application with a Cloudflare Workers adapter and PostgreSQL-backed supporter accounts, contribution records, support requests, audit history and login sessions.
 
-## Features
+## Features in the current code
 - Public company-development website and campaign information.
 - Supporter registration, login, logout and dashboard.
 - Personal targets and recognition levels based on independently verified contributions.
+- Supporter profile/settings and contribution submission for manual review.
 - Customer-support request submission and admin review.
 - Admin board at `/admin.html` for pending contribution records, one-time verification/rejection and audit logs.
-- Smartsupp integration through `SMARTSUPP_KEY`.
-- PostgreSQL stores application data; PostgreSQL also stores login sessions in `user_sessions`.
+- Smartsupp widget integration and email/support-form fallbacks.
+- PostgreSQL stores application data and login sessions.
 
-## Important safety and migration notes
+## Important product and safety notes
 - The application does not process payments. The dashboard total is a record of verified contributions, not a wallet, deposit, investment or withdrawable balance.
-- Do not accept real contributions or sensitive personal information until legal review, payment-provider approval, email verification, password recovery, CSRF/security review, backups and restore testing are complete.
-- The app creates its PostgreSQL tables automatically on startup. Use a private managed PostgreSQL database and keep `DATABASE_URL` secret.
-- This code migration does not copy records from an existing SQLite database. If any real SQLite records exist, export and reconcile them before switching the production service. Do not delete the old database until the import has been checked and backed up.
-- Public registration always creates a supporter. It cannot grant administrator privileges.
-- A free web host may sleep or restart; the database must be external and persistent. Do not use an expiring trial database for long-term supporter records.
+- Contributions are voluntary. Recognition levels do not create shares, ownership, loans, deposits, guaranteed returns or other promised benefits.
+- Do not accept real contributions or sensitive personal information until legal review, email verification, secure password recovery, CSRF/security review, backups and restore testing are complete.
+- Public registration creates supporter accounts only; it cannot grant administrator privileges.
+- Current password recovery is not automatic email delivery: a request is recorded for the support team, and an administrator can generate a one-time reset link for delivery to the verified account email. Do not describe this as fully automated until a verified email provider workflow is implemented and tested.
+- Support requests are stored in the admin board; automatic email notifications are not currently implemented.
+- The Cloudflare Worker checks for a pre-provisioned PostgreSQL schema and required indexes at startup. It does not create or migrate the production schema on live requests.
+- The non-Worker Node runtime can create/update its PostgreSQL schema on startup. Do not confuse that local/server behavior with Cloudflare production behavior.
+- This code does not copy records from an existing SQLite database or another deployment. If real records exist, export, reconcile, back up and verify them before switching production. Do not delete the old database until the import is independently checked.
+
+## Cloudflare Workers deployment (rebuild branch)
+Use branch `rebuild/professional-functional`.
+
+- Root directory: `/`
+- Build command: leave blank unless Cloudflare requires dependency installation.
+- Deploy command: `npx wrangler deploy`
+- Do not use `npx wrangler preview` as the production deploy command.
+- Worker entrypoint: `worker.mjs` from `wrangler.jsonc`.
+- Configure the existing Hyperdrive binding to the intended Neon production database.
+- Add `SESSION_SECRET` as a Cloudflare Worker secret (random, at least 32 characters); never commit it or paste it into chat.
+- Ensure the production PostgreSQL schema, tables, columns and indexes described in `CLOUDFLARE_DEPLOY.md` have been applied before deployment.
+
+Read `CLOUDFLARE_DEPLOY.md` and `DEPLOYMENT_CHECKLIST.md` before any production launch.
 
 ## Local setup
 1. Install Node.js 20 or newer and PostgreSQL.
@@ -33,28 +51,19 @@ Node.js + Express application with PostgreSQL-backed supporter accounts, contrib
    `npm run admin:promote -- owner@example.com`
 3. Use the exact email address of the account you own. This script changes only that existing account's role. Never add a public admin-registration route or expose database credentials.
 
-## Render deployment
-Create a Node web service from this repository:
-- Build command: `npm install`
-- Start command: `npm start`
-- Runtime: Node 20+
-- Set `NODE_ENV=production`
-- Set `DATABASE_URL` to a managed PostgreSQL connection string.
-- Set `SESSION_SECRET` to a unique random value of at least 32 characters.
-- Optional: `SUPPORT_EMAIL=dkpstructures@gmail.com`, `SMARTSUPP_KEY` and `PGSSL=true` if required by your database provider.
-
-Do not use a local SQLite file or depend on the Render web service filesystem for durable records. If using a Render-managed free PostgreSQL instance, check its current expiry/retention terms before putting any records there. An external managed PostgreSQL provider can be connected by storing its connection string in Render's secret environment variables.
-
-## Checks
-- `npm run check` validates server and inline browser JavaScript syntax.
-- `npm run admin:promote -- email@example.com` privately promotes an existing account to administrator.
-- `/api/health` checks the API and PostgreSQL connection.
+## Automated checks
+- `bun run check` runs server/Worker syntax checks, inline browser JavaScript checks, platform contract checks and request-scoped Worker database tests.
+- `bun run deploy:check` runs Wrangler's production deployment dry-run.
+- GitHub Actions runs these checks on pushes to `rebuild/professional-functional`.
+- A passing automated build is not proof that the live Neon database, Cloudflare secrets, email delivery, Smartsupp, admin permissions or payment-verification workflow are correctly configured. Those require integration and end-to-end tests.
 
 ## Remaining launch requirements
-- Email verification and password recovery.
-- Full CSRF, session and security review.
-- Support-request email notifications.
-- Automated database backups and tested restore.
-- Privacy notice, accurate terms and fundraising/legal review for the actual recipient and jurisdictions.
-- Independent end-to-end testing on Android and desktop.
+See `DEPLOYMENT_CHECKLIST.md` for the full release gate. Key items include:
+- Verify owner/admin provisioning and attempt unauthorized admin access with a supporter account.
+- Implement and test verified-email ownership and one-time password reset email delivery.
+- Complete CSRF, session and independent security review.
+- Configure support-request notifications and staffed Smartsupp support.
+- Confirm Neon schema, least-privilege DB role, backups and tested restore.
+- Complete privacy, terms and fundraising/legal review for the actual recipient and jurisdictions.
+- Run end-to-end tests on Android and desktop.
 - Confirm payment records against cleared funds in the receiving provider; never trust screenshots alone.
