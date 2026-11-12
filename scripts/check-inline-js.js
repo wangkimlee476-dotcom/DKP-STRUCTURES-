@@ -17,11 +17,11 @@ for (const name of htmlFiles) {
 }
 
 const dashboardHtml = fs.readFileSync(path.join(publicDir, "dashboard.html"), "utf8");
-const dashboardScript = [...dashboardHtml.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
+const dashboardScripts = [...dashboardHtml.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
   .filter(([, attributes, source]) => !/\\bsrc\\s*=/.test(attributes) && source.trim())
   .map(([, , source]) => source)
   .join("\\n");
-if (/\\bsay\\s*\\(/.test(dashboardScript) && !/\\bfunction\\s+say\\s*\\(/.test(dashboardScript)) {
+if (/\\bsay\\s*\\(/.test(dashboardScripts) && !/\\bfunction\\s+say\\s*\\(/.test(dashboardScripts)) {
   throw new Error("Supporter dashboard calls say() but does not define the shared status helper.");
 }
 if (!checked) throw new Error("No inline JavaScript blocks were found to validate.");
