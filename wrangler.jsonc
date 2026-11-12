@@ -22,6 +22,14 @@
       "id": "455fb135411f45ed814b43b0f74ce930"
     }
   ],
+  "previews": {
+    "hyperdrive": [
+      {
+        "binding": "HYPERDRIVE",
+        "id": "fe8002f18dd840709c22a0af9905be91"
+      }
+    ]
+  },
   "vars": {
     "NODE_ENV": "production",
     "CF_WORKER": "true",
