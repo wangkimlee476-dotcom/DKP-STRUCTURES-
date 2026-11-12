@@ -100,33 +100,44 @@ async function loadDepositRates(){
 $("depositCurrency").onchange=renderDepositRanges;
 loadDepositRates();
 async function api(url,opts={}){const r=await fetch(url,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(opts.headers||{})},...opts});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed ("+r.status+")");return d}
-// Smartsupp official installation pattern.
+// Load Smartsupp on demand and wait for the loader before sending chat:open.
 window._smartsupp = window._smartsupp || {};
 window._smartsupp.key = "784368b32262fad3ade23c88b4e9972d8c1c85e9";
-window.smartsupp || (function(d) {
- var s, c, o = window.smartsupp = function() { o._.push(arguments); };
- o._ = [];
- s = d.getElementsByTagName("script")[0];
- c = d.createElement("script");
- c.type = "text/javascript";
- c.charset = "utf-8";
- c.async = true;
- c.src = "https://www.smartsuppchat.com/loader.js?";
- if (s && s.parentNode) s.parentNode.insertBefore(c, s);
- else d.head.appendChild(c);
-})(document);
-function connectSmartsupp() {
- if (typeof window.smartsupp !== "function") throw new Error("Smartsupp did not initialize. Check the chat code and allowed website domains in Smartsupp.");
- return true;
+window.smartsupp = window.smartsupp || function() { window.smartsupp._.push(arguments); };
+window.smartsupp._ = window.smartsupp._ || [];
+let dkpSmartsuppLoadPromise = null;
+function loadSmartsupp() {
+ if (window.__dkpSmartsuppLoaded) return Promise.resolve();
+ if (!dkpSmartsuppLoadPromise) {
+  dkpSmartsuppLoadPromise = new Promise((resolve, reject) => {
+   const script = document.createElement("script");
+   let settled = false;
+   const finish = (error) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    if (error) { dkpSmartsuppLoadPromise = null; reject(error); }
+    else { window.__dkpSmartsuppLoaded = true; resolve(); }
+   };
+   const timer = setTimeout(() => finish(new Error("Smartsupp did not respond within 12 seconds. Check your connection, content blocker, and allowed website domains in Smartsupp.")), 12000);
+   script.async = true;
+   script.src = "https://www.smartsuppchat.com/loader.js?";
+   script.onload = () => finish();
+   script.onerror = () => finish(new Error("The Smartsupp loader was blocked or could not be downloaded. Check your connection, content blocker, and allowed website domains in Smartsupp."));
+   document.head.appendChild(script);
+  });
+ }
+ return dkpSmartsuppLoadPromise;
 }
-function openSmartsuppPage() {
+async function openSmartsuppPage() {
  try {
-  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp loader is unavailable.");
+  await loadSmartsupp();
+  if (typeof window.smartsupp !== "function") throw new Error("The Smartsupp chat API is unavailable after loading.");
   window.smartsupp("chat:open");
   return true;
  } catch (error) {
   const status = ["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id => $(id)).find(Boolean);
-  if (status) { status.textContent = "Live chat could not open. Please check the Smartsupp Chat code and domain permissions in your Smartsupp account. " + error.message; status.className = "message error"; }
+  if (status) { status.textContent = "Support chat could not connect. " + error.message; status.className = "message error"; }
   return false;
  }
 }
@@ -146,9 +157,15 @@ function renderHistory(items){const box=$("history");box.textContent="";if(!item
 async function load(){try{const d=await api("/api/dashboard");me=d.user;document.documentElement.lang=me.language||"en";document.documentElement.dir=me.language==="ar"?"rtl":"ltr";selectedPlan=me.selectedPlan||"Basic";if(me.role==="admin")$("adminEntry").classList.remove("hidden");$("welcome").textContent="Welcome, "+me.name;$("supporterId").textContent=me.supporterId;$("total").textContent=new Intl.NumberFormat(me?.language||"en",{style:"currency",currency:"USD"}).format(Number(d.verifiedTotal));$("level").textContent=d.level;$("progress").textContent=d.progress+"%";$("progressFill").style.width=d.progress+"%";$("targetLabel").textContent=me.personalTarget?"Goal: $"+Number(me.personalTarget).toLocaleString(me.language||"en"):"No goal set";$("goalAmount").value=me.personalTarget||"";$("settingsGoal").value=me.personalTarget||"";$("fullName").value=me.name||"";$("country").value=me.country||"";$("language").value=me.language||"en";$("theme").value=me.theme||"light";$("newEmail").value=me.email||"";$("planAmount").value=me.selectedAmount||100;const p=plans.find(x=>x[0]===selectedPlan);$("planAmount").min=p[1];$("planAmount").max=p[2];applyTheme(me.theme||"light");renderAvatar(me.avatarData,me.name);renderPlans();renderHistory(d.history)}catch(e){if(e.message.includes("sign in")||e.message.includes("401")){location.replace("/#account");return}alert("We could not load your account. Please retry. "+e.message)}}
 async function copyId(){if(!me?.supporterId)return;try{await navigator.clipboard.writeText(me.supporterId);say("profileMessage","Supporter ID copied. Keep it private.","success")}catch{prompt("Copy your supporter ID:",me.supporterId)}}
 $("copyId").onclick=copyId;$("copyIdSettings").onclick=copyId;
-$("dashboardChatButton").onclick=()=>{
- const chat=openSmartsuppPage();
- if(!chat)say("supportStatus","Your browser blocked the Smartsupp pop-up. Allow pop-ups for this website and tap Chat with support again.","error");
+$("dashboardChatButton").onclick=async()=>{
+ const button=$("dashboardChatButton");
+ button.disabled=true;
+ const label=button.querySelector("span:last-child");
+ if(label)label.textContent="Connecting to support…";
+ const chat=await openSmartsuppPage();
+ button.disabled=false;
+ if(label)label.textContent=chat?"Chat with support":"Try support chat again";
+ if(!chat)say("supportStatus","Smartsupp could not connect. Check your internet connection and the website-domain permissions in your Smartsupp account, then try again.","error");
 };
 $("savePlan").onclick=async()=>{try{const d=await api("/api/profile/plan",{method:"PATCH",body:JSON.stringify({plan:selectedPlan,amount:Number($("planAmount").value)})});say("planMessage",d.message,"success");await load()}catch(e){say("planMessage",e.message,"error")}};
 async function saveGoal(){try{await api("/api/profile/target",{method:"PATCH",body:JSON.stringify({target:Number($("goalAmount").value||$("settingsGoal").value)})});say("goalMessage","Your goal has been saved.","success");say("settingsGoalMessage","Your goal has been saved.","success");await load()}catch(e){say("goalMessage",e.message,"error");say("settingsGoalMessage",e.message,"error")}}
@@ -167,7 +184,7 @@ $("sendSupport").onclick=async()=>{
  const usdAmount=amount/rate,ranges={"Basic":[100,499],"Bronze":[500,1249],"Silver":[1250,2999],"Gold":[3000,6999],"Platinum":[7000,14999],"Diamond":[15000,29999],"Founding":[30000,100000000]};
  const range=ranges[plan];if(usdAmount<range[0]||usdAmount>range[1]){say("supportStatus","Your amount is approximately "+money(usdAmount,"USD")+". It does not fall within the "+plan+" plan's USD range of "+money(range[0],"USD")+"–"+(range[1]>=100000000?"above":money(range[1],"USD"))+". Please adjust the amount or choose another plan.","error");$("depositAmount").focus();return}
  const question="Preferred contribution amount: "+money(amount,currency)+" ("+currency+")\nApproximate USD equivalent: "+money(usdAmount,"USD")+"\nPreferred supporter plan: "+plan+" (USD range "+money(range[0],"USD")+"–"+(range[1]>=100000000?"above":money(range[1],"USD"))+")\nPreferred payment method: "+method+"\nAdditional details: "+(details||"None")+"\nExchange rate reference: 1 USD = "+rate+" "+currency+(depositRateDate?"; updated "+depositRateDate:"");
- const chat=openSmartsuppPage();
+ const chat=await openSmartsuppPage();
  button.disabled=true;button.textContent="Preparing deposit request…";
  try{
   const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify({name:me.name,email:me.email,country:me.country,type:"payment_methods",message:question})});
@@ -187,7 +204,7 @@ $("paymentSubmitForm").onsubmit=async e=>{
   const range=ranges[plan];if(usdAmount<range[0]||usdAmount>range[1]){say("paymentSubmitStatus","The transferred amount is approximately "+money(usdAmount,"USD")+". It does not fit the "+plan+" plan USD range. Please check the amount or plan.","error");return}
   const usdRounded=Math.round(usdAmount*100)/100;
   const noteParts=["Original transferred amount: "+money(transferredAmount,currency)+" ("+currency+")","Approximate USD equivalent: "+money(usdRounded,"USD"),"Selected supporter plan: "+plan,"Exchange rate reference: 1 USD = "+rate+" "+currency+(depositRateDate?"; updated "+depositRateDate:""),payload.note?"Additional details: "+payload.note:""];
-  const chat=openSmartsuppPage();
+  const chat=await openSmartsuppPage();
   button.disabled=true;button.textContent="Preparing payment request…";
   try{
    const d=await api("/api/contributions/submit",{method:"POST",body:JSON.stringify({amount:usdRounded,paymentMethod:payload.paymentMethod,reference:payload.reference,note:noteParts.filter(Boolean).join("\\n")})});
