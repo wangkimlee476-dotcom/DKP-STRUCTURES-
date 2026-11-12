@@ -98,11 +98,12 @@ $("paymentSubmitForm").onsubmit=async e=>{
     window.smartsupp("name",me.name||"DKP Supporter");
     window.smartsupp("email",me.email||"");
     window.smartsupp("variables",{Supporter_ID:me.supporterId||"",Country:me.country||"",Payment_Request_ID:String(d.id),Payment_Amount:"USD $"+Number(payload.amount).toFixed(2),Payment_Status:"Pending verification"});
-    window.smartsupp("chat:send",chatText);
+    window.smartsupp("chat:show");
     window.smartsupp("chat:open");
-    say("paymentSubmitStatus","Payment request #"+d.id+" is recorded as PENDING and its full details have been sent as your first message to Smartsupp. Customer service can now assist you. The admin dashboard retains the pending record and will only credit it after cleared funds are independently confirmed.","success");form.reset();
+    window.smartsupp("chat:send",chatText);
+    say("paymentSubmitStatus","Payment request #"+d.id+" is saved as PENDING. Smartsupp has been instructed to open and receive your order as the first chat message. Please check the chat window; if it does not appear, use the chat bubble and tell us so we can investigate. The admin dashboard retains the pending record and will only credit it after cleared funds are independently confirmed.","success");form.reset();
    }catch(chatError){
-    say("paymentSubmitStatus","Payment request #"+d.id+" is safely recorded as PENDING, but Smartsupp could not send the chat message: "+chatError.message+" Please retry customer support from this page. The admin dashboard will retain the pending record; it will only be credited after cleared funds are independently confirmed.","error");
+    say("paymentSubmitStatus","Payment request #"+d.id+" is safely recorded as PENDING, but Smartsupp could not be opened or sent the chat message: "+chatError.message+" The admin dashboard retains the pending record; it will only be credited after cleared funds are independently confirmed.","error");
    }
   }catch(error){say("paymentSubmitStatus",error.message,"error")}
   finally{button.disabled=false;button.textContent="Send payment request to Smartsupp"}
