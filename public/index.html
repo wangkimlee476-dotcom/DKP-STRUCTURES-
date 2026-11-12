@@ -243,7 +243,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 
 <div class="card">
 <h3>Live chat with Smartsupp</h3>
-<p>Use the blue chat button at the bottom-right to open our dedicated Smartsupp support page in a separate tab.</p>
+<p>Tap the chat button to open the Smartsupp conversation directly on this page.</p>
 <p class="muted">Support hours and response times should be published once staffed.</p>
 <p><strong>Email customer support:</strong> <a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20enquiry">dkpstructures@gmail.com</a></p>
 <p><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20payment%20options%20request">Email us to request available payment options</a></p>
@@ -326,8 +326,31 @@ function message(id, text, ok = false) {
   $(id).className = ok ? "success" : "error";
 }
 
-const SMARTSUPP_CHAT_URL="https://widget-page.smartsupp.com/widget/784368b32262fad3ade23c88b4e9972d8c1c85e9";
-function openSmartsuppPage(){return window.open(SMARTSUPP_CHAT_URL,"_blank")}
+async function connectSmartsupp(){
+ const cfg=await api("/api/config");
+ if(!cfg.smartsuppKey)throw Error("Smartsupp is not configured on the website yet.");
+ window._smartsupp=window._smartsupp||{};window._smartsupp.key=cfg.smartsuppKey;
+ if(typeof window.smartsupp!=="function"){const queue=function(){queue._.push(arguments)};queue._=[];window.smartsupp=queue}
+ let script=document.getElementById("smartsupp-loader");
+ if(script?.dataset.loaded==="true")return true;
+ if(!window.__dkpSmartsuppLoadPromise){
+  window.__dkpSmartsuppLoadPromise=new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>{window.__dkpSmartsuppLoadPromise=null;reject(Error("Smartsupp timed out. Check your connection or content blocker."))},15000);
+   const loaded=()=>{clearTimeout(timer);if(script)script.dataset.loaded="true";resolve(true)};
+   const failed=()=>{clearTimeout(timer);window.__dkpSmartsuppLoadPromise=null;reject(Error("Smartsupp could not load. Check your connection or content blocker."))};
+   if(!script){script=document.createElement("script");script.id="smartsupp-loader";script.type="text/javascript";script.charset="utf-8";script.async=true;script.src="https://www.smartsuppchat.com/loader.js?"}
+   script.addEventListener("load",loaded,{once:true});script.addEventListener("error",failed,{once:true});
+   if(!script.isConnected){const first=document.getElementsByTagName("script")[0];if(first?.parentNode)first.parentNode.insertBefore(script,first);else document.head.appendChild(script)}
+  });
+ }
+ await window.__dkpSmartsuppLoadPromise;return true;
+}
+function openSmartsuppPage(){
+ connectSmartsupp().then(()=>{if(typeof window.smartsupp==="function")window.smartsupp("chat:open")}).catch(error=>{
+  const status=$("supportMessage")||$("authMessage");if(status){status.textContent="Smartsupp could not open: "+error.message;status.className="error"}
+ });
+ return true;
+}
 async function copySupportMessage(text){
  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch{}
  const field=document.createElement("textarea");field.value=text;field.setAttribute("readonly","");
@@ -468,10 +491,10 @@ $("supportForm").addEventListener("submit", async e => {
     const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
     const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\\nName: "+payload.name+"\\nEmail: "+payload.email+"\\nCountry: "+payload.country+"\\nRequest type: "+payload.type+"\\nMessage: "+payload.message+"\\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
     let copied=false;try{await copySupportMessage(chatText);copied=true}catch{}
-    message("supportMessage","Request #"+d.requestId+" is saved for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"Smartsupp opened in a new tab. Paste the message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, tap Chat with support, then paste the message. No message has been sent to customer support."),true);
+    message("supportMessage","Request #"+d.requestId+" is saved for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"Smartsupp is opening on this page. Paste the copied message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, tap Chat with support, then paste the message. No message has been sent to customer support."),true);
     form.reset();
   } catch (x) {
-    if(chat)chat.close();
+    
     message("supportMessage",x.message);
   } finally {
     button.disabled=false;button.textContent="Copy request & open Smartsupp";
