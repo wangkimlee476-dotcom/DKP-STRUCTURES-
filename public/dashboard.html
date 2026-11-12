@@ -12,6 +12,8 @@ body[data-theme=dark] input,body[data-theme=dark] select,body[data-theme=dark] t
 
 .sidebar{display:none}@media(min-width:900px){body{padding:0 0 0 250px}.sidebar{display:flex;position:fixed;inset:0 auto 0 0;width:250px;background:#14263d;color:#fff;padding:28px 18px;flex-direction:column;gap:8px;z-index:30}.sidebrand{font-size:18px;font-weight:900;letter-spacing:.08em;padding:6px 10px 22px}.sidebrand span{display:block;color:#c5a46d;font-size:11px;letter-spacing:.2em}.sidecaption{font-size:10px;color:#aab8c8;letter-spacing:.16em;padding:12px 10px}.sidebar a{display:flex;align-items:center;gap:12px;color:#e9eef4;text-decoration:none;padding:13px 12px;border-radius:12px;font-size:14px}.sidebar a:hover,.sidebar a:focus{background:#ffffff18;color:#e5c98e}.sidefoot{margin-top:auto;color:#aab8c8;font-size:12px;line-height:1.5;padding:12px}.hero{border-radius:0 0 30px 30px}.content{max-width:1120px}.bottom{display:none}}
 @media(max-width:899px){.sidebar{display:none}}
+
+#dkpSupportFallback{position:fixed;inset:0;z-index:9999;background:#10182799;display:none;align-items:flex-end;justify-content:center;padding:16px}#dkpSupportFallback.open{display:flex}#dkpSupportFallback .dkp-fallback-card{width:min(100%,440px);background:#fff;color:#182333;border-radius:22px;padding:22px;box-shadow:0 18px 60px #0005;font:inherit}#dkpSupportFallback h3{margin:0 32px 8px 0;font-size:20px}#dkpSupportFallback p{color:#536171;line-height:1.5}#dkpSupportFallback .dkp-fallback-actions{display:grid;gap:10px;margin-top:16px}#dkpSupportFallback a{display:block;text-align:center;text-decoration:none;border-radius:13px;padding:13px 16px;font-weight:800;background:#176b4a;color:white}#dkpSupportFallback a.secondary-link{background:#edf2f6;color:#1b3449}#dkpSupportFallback button{float:right;border:0;background:transparent;font-size:24px;color:#536171}
 </style></head><body>
 <aside class="sidebar" aria-label="Supporter navigation"><div class="sidebrand">DKP <span>STRUCTURES</span></div><div class="sidecaption">SUPPORTER PORTAL</div><a href="#home">▦ <span>Overview</span></a><a href="#plans">◇ <span>My supporter plan</span></a><a href="#activity">↗ <span>Contributions</span></a><a href="#goal">◎ <span>Personal goal</span></a><a href="#support">＋ <span>Help & support</span></a><a href="#settings">⚙ <span>Account settings</span></a><div class="sidefoot">Building a stronger future together.</div></aside>\n<header class="hero"><div class="hero-inner">
  <div class="brandrow"><div class="brand">DKP STRUCTURES</div><button class="gear" type="button" onclick="go('settings')" aria-label="Settings">⚙</button></div>
@@ -69,6 +71,10 @@ body[data-theme=dark] input,body[data-theme=dark] select,body[data-theme=dark] t
  <p class="muted legal">DKP Structures · Support is voluntary and may be made at your convenience. No benefits are guaranteed. Every supporter will be remembered as part of the journey if the company becomes a reality, subject to what the company can responsibly acknowledge at that time.</p>
 </main>
 <button class="chatfloat" id="dashboardChatButton" type="button" aria-label="Open Smartsupp live chat"><span class="chat-icon" aria-hidden="true">💬</span><span>Chat with support</span></button>
+
+<div id="dkpSupportFallback" role="dialog" aria-modal="true" aria-labelledby="dkpSupportFallbackTitle">
+ <div class="dkp-fallback-card"><button type="button" id="dkpSupportFallbackClose" aria-label="Close support options">×</button><h3 id="dkpSupportFallbackTitle">Live chat hasn't appeared</h3><p>Smartsupp is taking too long to open on this device. Your account is safe. You can still contact DKP Structures using the options below.</p><div class="dkp-fallback-actions"><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20request">Email DKP Structures support</a><a class="secondary-link" href="#support" id="dkpSupportFallbackForm">Open support request form</a></div></div>
+</div>
 <nav class="bottom" aria-label="Main navigation"><button class="active" data-nav="home" onclick="go('home')"><span class="ico">⌂</span>Home</button><button data-nav="plans" onclick="go('plans')"><span class="ico">◇</span>Plans</button><button data-nav="activity" onclick="go('activity')"><span class="ico">▤</span>Activity</button><button data-nav="settings" onclick="go('settings')"><span class="ico">⚙</span>Settings</button></nav>
 <script>
 const $=id=>document.getElementById(id);let me=null,selectedPlan="Basic",avatarData=null;
@@ -129,19 +135,32 @@ window._smartsupp.key = "784368b32262fad3ade23c88b4e9972d8c1c85e9";
  if (s && s.parentNode) s.parentNode.insertBefore(c, s);
  else d.head.appendChild(c);
 })(document);
+function showDkpSupportFallback() {
+ const panel = $("dkpSupportFallback");
+ if (panel) panel.classList.add("open");
+}
 function openSmartsuppPage() {
  try {
-  // Keep the API call inside the original tap/click gesture. Smartsupp's
-  // official queue accepts commands before its async loader has finished.
-  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp's command queue is unavailable. Refresh the page and try again.");
+  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp's command queue is unavailable.");
+  // Send the documented command immediately during the user's tap.
   window.smartsupp("chat:open");
+  // Do not claim success merely because the command was queued. If no
+  // Smartsupp frame appears, offer a first-party support route.
+  window.setTimeout(function() {
+   const frame = document.querySelector('iframe[src*="smartsupp"],iframe[src*="widget-page.smartsupp.com"]');
+   if (!frame) showDkpSupportFallback();
+  }, 3500);
   return true;
  } catch (error) {
+  showDkpSupportFallback();
   const status = ["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id => $(id)).find(Boolean);
-  if (status) { status.textContent = "Support chat could not open. " + error.message; status.className = "message error"; }
+  if (status) { status.textContent = "Live chat is unavailable. Use the support options shown on screen."; status.className = "message error"; }
   return false;
  }
 }
+$("dkpSupportFallbackClose").onclick = () => $("dkpSupportFallback").classList.remove("open");
+$("dkpSupportFallback").addEventListener("click", e => { if (e.target.id === "dkpSupportFallback") e.currentTarget.classList.remove("open"); });
+$("dkpSupportFallbackForm").addEventListener("click", () => $("dkpSupportFallback").classList.remove("open"));
 async function copyRequestMessage(text){
  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return}}
  catch{}
