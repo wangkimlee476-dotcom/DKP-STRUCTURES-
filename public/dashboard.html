@@ -83,6 +83,8 @@ async function connectSmartsupp(){
  return true;
 }
 function say(id,t,type=""){const e=$(id);e.textContent=t;e.className="message "+type}
+const SMARTSUPP_CHAT_URL="https://widget-page.smartsupp.com/widget/784368b32262fad3ade23c88b4e9972d8c1c85e9";
+function openSmartsuppPage(){return window.open(SMARTSUPP_CHAT_URL,"_blank")}
 async function copyRequestMessage(text){
  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return}}
  catch{}
@@ -99,17 +101,9 @@ function renderHistory(items){const box=$("history");box.textContent="";if(!item
 async function load(){try{const d=await api("/api/dashboard");me=d.user;document.documentElement.lang=me.language||"en";document.documentElement.dir=me.language==="ar"?"rtl":"ltr";selectedPlan=me.selectedPlan||"Basic";if(me.role==="admin")$("adminEntry").classList.remove("hidden");$("welcome").textContent="Welcome, "+me.name;$("supporterId").textContent=me.supporterId;$("total").textContent=new Intl.NumberFormat(me?.language||"en",{style:"currency",currency:"USD"}).format(Number(d.verifiedTotal));$("level").textContent=d.level;$("progress").textContent=d.progress+"%";$("progressFill").style.width=d.progress+"%";$("targetLabel").textContent=me.personalTarget?"Goal: $"+Number(me.personalTarget).toLocaleString(me.language||"en"):"No goal set";$("goalAmount").value=me.personalTarget||"";$("settingsGoal").value=me.personalTarget||"";$("fullName").value=me.name||"";$("country").value=me.country||"";$("language").value=me.language||"en";$("theme").value=me.theme||"light";$("newEmail").value=me.email||"";$("planAmount").value=me.selectedAmount||100;const p=plans.find(x=>x[0]===selectedPlan);$("planAmount").min=p[1];$("planAmount").max=p[2];applyTheme(me.theme||"light");renderAvatar(me.avatarData,me.name);renderPlans();renderHistory(d.history)}catch(e){if(e.message.includes("sign in")||e.message.includes("401")){location.replace("/#account");return}alert("We could not load your account. Please retry. "+e.message)}}
 async function copyId(){if(!me?.supporterId)return;try{await navigator.clipboard.writeText(me.supporterId);say("profileMessage","Supporter ID copied. Keep it private.","success")}catch{prompt("Copy your supporter ID:",me.supporterId)}}
 $("copyId").onclick=copyId;$("copyIdSettings").onclick=copyId;
-$("dashboardChatButton").onclick=async()=>{
- const button=$("dashboardChatButton");
- button.disabled=true;
- try{
-  await connectSmartsupp();
-  window.smartsupp("chat:show");
-  window.smartsupp("chat:open");
- }catch(error){
-  say("supportStatus","Smartsupp could not be opened: "+error.message+" You can also contact dkpstructures@gmail.com.","error");
-  go("support");
- }finally{button.disabled=false}
+$("dashboardChatButton").onclick=()=>{
+ const chat=openSmartsuppPage();
+ if(!chat)say("supportStatus","Your browser blocked the Smartsupp pop-up. Allow pop-ups for this website and tap Chat with support again.","error");
 };
 $("savePlan").onclick=async()=>{try{const d=await api("/api/profile/plan",{method:"PATCH",body:JSON.stringify({plan:selectedPlan,amount:Number($("planAmount").value)})});say("planMessage",d.message,"success");await load()}catch(e){say("planMessage",e.message,"error")}};
 async function saveGoal(){try{await api("/api/profile/target",{method:"PATCH",body:JSON.stringify({target:Number($("goalAmount").value||$("settingsGoal").value)})});say("goalMessage","Your goal has been saved.","success");say("settingsGoalMessage","Your goal has been saved.","success");await load()}catch(e){say("goalMessage",e.message,"error");say("settingsGoalMessage",e.message,"error")}}
@@ -121,30 +115,28 @@ $("saveEmail").onclick=async()=>{try{const d=await api("/api/profile/email",{met
 $("savePassword").onclick=async()=>{const next=$("newPassword").value;if(next!==$("confirmPassword").value){say("passwordMessage","The new passwords do not match.","error");return}try{const d=await api("/api/profile/password",{method:"PATCH",body:JSON.stringify({currentPassword:$("currentPassword").value,newPassword:next})});$("currentPassword").value="";$("newPassword").value="";$("confirmPassword").value="";say("passwordMessage",d.message,"success")}catch(e){say("passwordMessage",e.message,"error")}};
 $("sendSupport").onclick=async()=>{
  const button=$("sendSupport"),question=$("supportMessage").value.trim()||"Please advise which official contribution payment methods are currently available in my country.";
+ const chat=openSmartsuppPage();
  button.disabled=true;button.textContent="Preparing request…";
  try{
   const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify({name:me.name,email:me.email,country:me.country,type:"payment_methods",message:question})});
   const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\\nName: "+me.name+"\\nSupporter ID: "+(me.supporterId||"")+"\\nEmail: "+me.email+"\\nCountry: "+me.country+"\\nRequest: "+question+"\\nPlease assist this supporter with the official payment instructions. Do not request card details, passwords or bank login credentials.";
-  try{
-   await copyRequestMessage(chatText);await connectSmartsupp();window.smartsupp("chat:show");window.smartsupp("chat:open");
-   say("supportStatus","Request #"+d.requestId+" is saved and copied. Smartsupp is opening: paste the message into the chat and tap Send. The request is also recorded for admin tracking.","success");$("supportMessage").value="";
-  }catch(err){say("supportStatus","Request #"+d.requestId+" is saved for admin tracking. "+err.message+" Open Smartsupp, paste the copied message if available, and tap Send.","error")}
- }catch(e){say("supportStatus",e.message,"error")}
+  let copied=false;try{await copyRequestMessage(chatText);copied=true}catch{}
+  say("supportStatus","Request #"+d.requestId+" is saved for admin tracking. "+(copied?"The full message has been copied. ":"Copy the request text from your details if clipboard access was blocked. ")+(chat?"Smartsupp opened in a new tab; paste the message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, tap Chat with support, then paste the copied message. No message has been sent yet."),"success");
+  $("supportMessage").value="";
+ }catch(e){if(chat)chat.close();say("supportStatus",e.message,"error")}
  finally{button.disabled=false;button.textContent="Copy request & open Smartsupp"}
 };
 $("paymentSubmitForm").onsubmit=async e=>{
-  e.preventDefault();const form=e.target,button=$("submitPayment"),f=new FormData(form),payload=Object.fromEntries(f.entries());button.disabled=true;button.textContent="Preparing payment request…";
+  e.preventDefault();const form=e.target,button=$("submitPayment"),f=new FormData(form),payload=Object.fromEntries(f.entries());
+  const chat=openSmartsuppPage();
+  button.disabled=true;button.textContent="Preparing payment request…";
   try{
    const d=await api("/api/contributions/submit",{method:"POST",body:JSON.stringify({amount:Number(payload.amount),paymentMethod:payload.paymentMethod,reference:payload.reference,note:payload.note||""})});
    const chatText="DKP STRUCTURES — PAYMENT CONFIRMATION REQUEST #"+d.id+"\\nSupporter: "+me.name+"\\nSupporter ID: "+me.supporterId+"\\nEmail: "+me.email+"\\nCountry: "+me.country+"\\nAmount transferred: USD $"+Number(payload.amount).toFixed(2)+"\\nPayment method: "+payload.paymentMethod+"\\nTransfer reference: "+payload.reference+"\\nAdditional details: "+(payload.note||"None")+"\\nPlease help verify this transfer. Do not request card numbers, passwords or bank login credentials.";
-   try{
-    await copyRequestMessage(chatText);await connectSmartsupp();
-    window.smartsupp("name",me.name||"DKP Supporter");window.smartsupp("email",me.email||"");
-    window.smartsupp("variables",{Supporter_ID:me.supporterId||"",Country:me.country||"",Payment_Request_ID:String(d.id),Payment_Amount:"USD $"+Number(payload.amount).toFixed(2),Payment_Status:"Pending verification"});
-    window.smartsupp("chat:show");window.smartsupp("chat:open");
-    say("paymentSubmitStatus","Payment request #"+d.id+" is recorded as PENDING and copied. Smartsupp is opening: paste the complete payment message into the chat and tap Send. The admin dashboard retains the pending record and will only credit it after cleared funds are independently confirmed.","success");form.reset();
-   }catch(err){say("paymentSubmitStatus","Payment request #"+d.id+" is safely recorded as PENDING. "+err.message+" Open Smartsupp, paste the copied message if available, and tap Send. Admin verification is required before crediting.","error")}
-  }catch(error){say("paymentSubmitStatus",error.message,"error")}
+   let copied=false;try{await copyRequestMessage(chatText);copied=true}catch{}
+   say("paymentSubmitStatus","Payment request #"+d.id+" is recorded as PENDING. "+(copied?"The complete payment message has been copied. ":"Clipboard access was blocked; copy the payment details manually. ")+(chat?"Smartsupp opened in a new tab. Paste the message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, tap Chat with support, then paste the copied message. No message has been sent to customer support."),"success");
+   form.reset();
+  }catch(error){if(chat)chat.close();say("paymentSubmitStatus",error.message,"error")}
   finally{button.disabled=false;button.textContent="Copy payment request & open Smartsupp"}
  };
 $("logout").onclick=async()=>{try{await api("/api/logout",{method:"POST"});location.replace("/#account")}catch(e){alert(e.message)}};
