@@ -444,14 +444,10 @@ async function loadSmartsupp() {
 
   smartsuppLoadPromise = (async () => {
     const config = await api("/api/config");
-    if (!config.smartsuppKey) {
-      throw new Error("Smartsupp website key is not configured.");
-    }
+    if (!config.smartsuppKey) throw new Error("Smartsupp website key is not configured.");
 
     window._smartsupp = window._smartsupp || {};
     window._smartsupp.key = config.smartsuppKey;
-
-    // Create Smartsupp's command queue before loading its hosted widget.
     if (typeof window.smartsupp !== "function") {
       const queue = function() { queue._.push(arguments); };
       queue._ = [];
@@ -459,6 +455,10 @@ async function loadSmartsupp() {
     }
 
     let script = document.getElementById("smartsupp-loader");
+    if (script?.dataset.loaded === "true") {
+      smartsuppReady = true;
+      return true;
+    }
     if (!script) {
       script = document.createElement("script");
       script.id = "smartsupp-loader";
@@ -466,12 +466,10 @@ async function loadSmartsupp() {
       script.charset = "utf-8";
       script.async = true;
       script.src = "https://www.smartsuppchat.com/loader.js?";
-      document.head.appendChild(script);
     }
 
     await new Promise((resolve, reject) => {
-      if (script.dataset.loaded === "true") return resolve();
-      const timeout = setTimeout(() => reject(new Error("Smartsupp did not load. Check browser/VPN content blocking.")), 10000);
+      const timeout = setTimeout(() => reject(new Error("Smartsupp did not load. Check browser/VPN content blocking.")), 15000);
       script.addEventListener("load", () => {
         clearTimeout(timeout);
         script.dataset.loaded = "true";
@@ -481,6 +479,7 @@ async function loadSmartsupp() {
         clearTimeout(timeout);
         reject(new Error("Smartsupp loader was blocked or could not be downloaded."));
       }, { once: true });
+      if (!script.isConnected) document.head.appendChild(script);
     });
 
     smartsuppReady = true;
@@ -498,7 +497,6 @@ $("chatButton").addEventListener("click", async () => {
   const originalLabel = button.textContent;
   button.disabled = true;
   button.textContent = "Connecting to support…";
-
   try {
     await loadSmartsupp();
     window.smartsupp("chat:open");
@@ -510,14 +508,8 @@ $("chatButton").addEventListener("click", async () => {
   } catch (error) {
     console.warn("Smartsupp could not open:", error.message);
     button.disabled = false;
-    button.textContent = "Email support instead";
-    const subject = encodeURIComponent("DKP Structures customer support enquiry");
-    const body = encodeURIComponent(
-      "Hello DKP Structures Customer Support,\n\nI would like help with: "
-    );
-    window.location.href =
-      "mailto:dkpstructures@gmail.com?subject=" + subject + "&body=" + body;
-    setTimeout(() => { button.textContent = originalLabel; }, 2500);
+    button.textContent = "Live chat unavailable";
+    setTimeout(() => { button.textContent = originalLabel; }, 3500);
   }
 });
 
