@@ -11,9 +11,9 @@
     "admin:promote": "node scripts/promote-admin.js",
     "preinstall": "node -e \"console.log('DKP Cloudflare PostgreSQL branch selected')\"",
     "postinstall": "node scripts/patch-cloudflare-deps.js",
-    "deploy": "wrangler deploy",
-    "preview": "wrangler dev",
-    "deploy:check": "wrangler deploy --dry-run"
+    "deploy": "bunx wrangler@4.160.0 deploy",
+    "preview": "bunx wrangler@4.160.0 dev",
+    "deploy:check": "bunx wrangler@4.160.0 deploy --dry-run"
   },
   "engines": {
     "node": ">=20"
