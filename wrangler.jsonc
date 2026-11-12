@@ -28,7 +28,14 @@
         "binding": "HYPERDRIVE",
         "id": "fe8002f18dd840709c22a0af9905be91"
       }
-    ]
+    ],
+    "vars": {
+      "NODE_ENV": "production",
+      "CF_WORKER": "true",
+      "SUPPORT_EMAIL": "dkpstructures@gmail.com",
+      "SMARTSUPP_KEY": "784368b32262fad3ade23c88b4e9972d8c1c85e9",
+      "TERMS_VERSION": "2026-11-10"
+    }
   },
   "vars": {
     "NODE_ENV": "production",
