@@ -288,11 +288,10 @@ footer{background:#071d36}
 </div>
 
 <div class="card">
-<h3>Live chat with Smartsupp</h3>
-<p>Use the blue chat button at the bottom-right once DKP Structures connects its Smartsupp website key.</p>
+<h3>Independent Smartsupp live chat</h3>
+<p>Open the blue live-chat button to speak with the DKP Structures support team. Chat conversations stay inside Smartsupp and are not routed through email.</p>
 <p class="muted">Support hours and response times should be published once staffed.</p>
-<p><strong>Email customer support:</strong> <a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20enquiry">dkpstructures@gmail.com</a></p>
-<p><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20payment%20options%20request">Email us to request available payment options</a></p>
+<p class="muted">The live chat is an independent customer-service channel. Support requests submitted through the form above are stored separately in the administrator inbox.</p>
 </div>
 </div>
 </section>
@@ -459,25 +458,16 @@ $("depositOptionsBtn").addEventListener("click", openPaymentOptionsRequest);
 
 $("supportForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const form=e.target,button=form.querySelector('button[type="submit"]'),f=new FormData(form);
-  button.disabled=true;button.textContent="Sending request…";
+  const form=e.target,button=form.querySelector('button[type="submit"]'),payload=Object.fromEntries(new FormData(form).entries());
+  button.disabled=true;button.textContent="Saving request…";
   try {
-    const payload=Object.fromEntries(f.entries());
-    const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
-    const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+payload.name+"\nEmail: "+payload.email+"\nCountry: "+payload.country+"\nRequest type: "+payload.type+"\nMessage: "+payload.message+"\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
-    try {
-      await loadSmartsupp();
-      window.smartsupp("chat:send",chatText);
-      window.smartsupp("chat:open");
-      message("supportMessage","Your request #"+d.requestId+" has been saved and sent to the Smartsupp customer-service chat. Please continue in the chat window.",true);
-      form.reset();
-    } catch(chatError) {
-      message("supportMessage","Your request #"+d.requestId+" is safely recorded for the admin team, but Smartsupp could not be reached: "+chatError.message+". Please use the live-chat button to retry.");
-    }
-  } catch (x) {
-    message("supportMessage", x.message);
+    const result=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
+    message("supportMessage","Your support request #"+result.requestId+" has been saved in the DKP administrator support inbox. Smartsupp live chat operates separately.",true);
+    form.reset();
+  } catch (error) {
+    message("supportMessage",error.message);
   } finally {
-    button.disabled=false;button.textContent="Send support request";
+    button.disabled=false;button.textContent="Save support request";
   }
 });
 
@@ -556,20 +546,12 @@ $("chatButton").addEventListener("click", async () => {
   } catch (error) {
     console.warn("Smartsupp could not open:", error.message);
     button.disabled = false;
-    button.textContent = "Email support instead";
-    const subject = encodeURIComponent("DKP Structures customer support enquiry");
-    const body = encodeURIComponent(
-      "Hello DKP Structures Customer Support,\n\nI would like help with: "
-    );
-    window.location.href =
-      "mailto:dkpstructures@gmail.com?subject=" + subject + "&body=" + body;
-    setTimeout(() => { button.textContent = originalLabel; }, 2500);
+    button.textContent = "Live chat unavailable";
+    message("supportMessage","Smartsupp could not connect. Please try again shortly; no email handoff has been started.");
+    setTimeout(() => { button.disabled = false; button.textContent = originalLabel; }, 2500);
   }
 });
 
-loadSmartsupp().catch(error => {
-  console.warn("Smartsupp configuration or loader unavailable:", error.message);
-});
 loadDashboard();
 </script>
 </body>
