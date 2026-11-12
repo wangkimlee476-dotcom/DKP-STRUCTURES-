@@ -10,7 +10,10 @@
     "check": "node --check server.mjs && node --check worker.mjs && node --check scripts/promote-admin.js && node scripts/check-inline-js.js && node scripts/check-platform-contract.js && node scripts/test-worker-db-context.js",
     "admin:promote": "node scripts/promote-admin.js",
     "preinstall": "node -e \"console.log('DKP Cloudflare PostgreSQL branch selected')\"",
-    "postinstall": "node scripts/patch-cloudflare-deps.js"
+    "postinstall": "node scripts/patch-cloudflare-deps.js",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev",
+    "deploy:check": "wrangler deploy --dry-run"
   },
   "engines": {
     "node": ">=20"
