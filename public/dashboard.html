@@ -100,44 +100,39 @@ async function loadDepositRates(){
 $("depositCurrency").onchange=renderDepositRanges;
 loadDepositRates();
 async function api(url,opts={}){const r=await fetch(url,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(opts.headers||{})},...opts});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed ("+r.status+")");return d}
-// Load Smartsupp on demand and wait for the loader before sending chat:open.
+// Smartsupp's official embed: load the widget as the page initializes,
+// then queue chat:open from the site's own support buttons.
 window._smartsupp = window._smartsupp || {};
 window._smartsupp.key = "784368b32262fad3ade23c88b4e9972d8c1c85e9";
-window.smartsupp = window.smartsupp || function() { window.smartsupp._.push(arguments); };
-window.smartsupp._ = window.smartsupp._ || [];
-let dkpSmartsuppLoadPromise = null;
-function loadSmartsupp() {
- if (window.__dkpSmartsuppLoaded) return Promise.resolve();
- if (!dkpSmartsuppLoadPromise) {
-  dkpSmartsuppLoadPromise = new Promise((resolve, reject) => {
-   const script = document.createElement("script");
-   let settled = false;
-   const finish = (error) => {
-    if (settled) return;
-    settled = true;
-    clearTimeout(timer);
-    if (error) { dkpSmartsuppLoadPromise = null; reject(error); }
-    else { window.__dkpSmartsuppLoaded = true; resolve(); }
-   };
-   const timer = setTimeout(() => finish(new Error("Smartsupp did not respond within 12 seconds. Check your connection, content blocker, and allowed website domains in Smartsupp.")), 12000);
-   script.async = true;
-   script.src = "https://www.smartsuppchat.com/loader.js?";
-   script.onload = () => finish();
-   script.onerror = () => finish(new Error("The Smartsupp loader was blocked or could not be downloaded. Check your connection, content blocker, and allowed website domains in Smartsupp."));
-   document.head.appendChild(script);
-  });
- }
- return dkpSmartsuppLoadPromise;
-}
-async function openSmartsuppPage() {
+(function(d) {
+ if (d.querySelector("script[data-dkp-smartsupp]")) return;
+ var s, c, o = window.smartsupp = window.smartsupp || function() { o._.push(arguments); };
+ o._ = o._ || [];
+ s = d.getElementsByTagName("script")[0];
+ c = d.createElement("script");
+ c.type = "text/javascript";
+ c.charset = "utf-8";
+ c.async = true;
+ c.dataset.dkpSmartsupp = "true";
+ c.src = "https://www.smartsuppchat.com/loader.js?";
+ c.onerror = function() {
+  const status = ["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id => document.getElementById(id)).find(Boolean);
+  if (status) {
+   status.textContent = "Smartsupp could not load. Check your connection and allow this website's domain in Smartsupp settings.";
+   status.className = "message error";
+  }
+ };
+ if (s && s.parentNode) s.parentNode.insertBefore(c, s);
+ else d.head.appendChild(c);
+})(document);
+function openSmartsuppPage() {
  try {
-  await loadSmartsupp();
-  if (typeof window.smartsupp !== "function") throw new Error("The Smartsupp chat API is unavailable after loading.");
+  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp's chat command is not initialized yet. Refresh the page and try again.");
   window.smartsupp("chat:open");
   return true;
  } catch (error) {
   const status = ["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id => $(id)).find(Boolean);
-  if (status) { status.textContent = "Support chat could not connect. " + error.message; status.className = "message error"; }
+  if (status) { status.textContent = "Support chat could not open. " + error.message; status.className = "message error"; }
   return false;
  }
 }
