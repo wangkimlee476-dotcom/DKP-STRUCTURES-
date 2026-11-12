@@ -98,10 +98,14 @@ $("paymentSubmitForm").onsubmit=async e=>{
     window.smartsupp("name",me.name||"DKP Supporter");
     window.smartsupp("email",me.email||"");
     window.smartsupp("variables",{Supporter_ID:me.supporterId||"",Country:me.country||"",Payment_Request_ID:String(d.id),Payment_Amount:"USD $"+Number(payload.amount).toFixed(2),Payment_Status:"Pending verification"});
-    window.smartsupp("chat:show");
-    window.smartsupp("chat:open");
-    window.smartsupp("chat:send",chatText);
-    say("paymentSubmitStatus","Payment request #"+d.id+" is saved as PENDING. Smartsupp has been instructed to open and receive your order as the first chat message. Please check the chat window; if it does not appear, use the chat bubble and tell us so we can investigate. The admin dashboard retains the pending record and will only credit it after cleared funds are independently confirmed.","success");form.reset();
+    await new Promise((resolve,reject)=>{
+     let settled=false;const timer=setTimeout(()=>{if(!settled){settled=true;reject(Error("Smartsupp did not confirm that the order message was sent. Your request remains pending in the admin dashboard."))}},12000);
+     window.smartsupp("on","message_sent",function(message){if(settled)return;settled=true;clearTimeout(timer);resolve(message)});
+     window.smartsupp("chat:show");
+     window.smartsupp("chat:open");
+     window.smartsupp("chat:send",chatText);
+    });
+    say("paymentSubmitStatus","Payment request #"+d.id+" is saved as PENDING and Smartsupp confirmed the message was sent. The chat is open so you can wait for customer service. The admin dashboard retains the pending record and will only credit it after cleared funds are independently confirmed.","success");form.reset();
    }catch(chatError){
     say("paymentSubmitStatus","Payment request #"+d.id+" is safely recorded as PENDING, but Smartsupp could not be opened or sent the chat message: "+chatError.message+" The admin dashboard retains the pending record; it will only be credited after cleared funds are independently confirmed.","error");
    }
