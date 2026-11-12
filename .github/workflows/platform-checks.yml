@@ -30,7 +30,7 @@ jobs:
       - name: Check server and browser JavaScript syntax
         run: npm run check
       - name: Validate Cloudflare Worker bundle
-        if: github.ref == 'refs/heads/feature/cloudflare-workers' || github.head_ref == 'feature/cloudflare-workers'
+        if: github.ref == 'refs/heads/feature/cloudflare-workers' || github.head_ref == 'feature/cloudflare-workers' || github.ref == 'refs/heads/rebuild/clean-cloudflare-platform' || github.head_ref == 'rebuild/clean-cloudflare-platform'
         run: npx --yes wrangler@4 deploy --dry-run
 
       - name: Deploy production Worker
