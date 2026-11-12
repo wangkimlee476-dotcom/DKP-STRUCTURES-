@@ -366,29 +366,22 @@ function showDkpSupportFallback() {
  if (panel) panel.classList.add("open");
 }
 function openSmartsuppPage() {
+ // Open the verified standalone chat directly during the user's tap.
+ // This bypasses the slower embedded-widget initialization path.
  try {
-  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp's command queue is unavailable.");
-  // Send the documented command immediately during the user's tap.
-  window.smartsupp("chat:open");
-  // Do not claim success merely because the command was queued. If no
-  // Smartsupp frame appears, offer a first-party support route.
-  window.setTimeout(function() {
-   const frame = document.querySelector('iframe[src*="smartsupp"],iframe[src*="widget-page.smartsupp.com"]');
-   const loader = document.querySelector('script[data-dkp-smartsupp]');
-   if (!frame) {
-    showDkpSupportFallback();
-    const status = ["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id => $(id)).find(Boolean);
-    if (status) {
-     status.textContent = loader ? "Smartsupp has not displayed its chat window yet. Use the support options shown on screen." : "The Smartsupp loader is missing. Use the support options shown on screen.";
-     status.className = "message error";
-    }
-   }
-  }, 8000);
+  const chatWindow = window.open("https://widget-page.smartsupp.com/widget/784368b32262fad3ade23c88b4e9972d8c1c85e9", "_blank");
+  if (!chatWindow) {
+   showDkpSupportFallback();
+   const status = ["supportMessage","supportStatus","paymentSubmitStatus"].map(id => $(id)).find(Boolean);
+   if (status) { status.textContent = "Your browser blocked the chat pop-up. Use the direct chat link shown on screen."; status.className = "message error"; }
+   return false;
+  }
+  try { chatWindow.opener = null; } catch {}
   return true;
  } catch (error) {
   showDkpSupportFallback();
-  const status = ["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id => $(id)).find(Boolean);
-  if (status) { status.textContent = "Live chat is unavailable. Use the support options shown on screen."; status.className = "message error"; }
+  const status = ["supportMessage","supportStatus","paymentSubmitStatus"].map(id => $(id)).find(Boolean);
+  if (status) { status.textContent = "Live chat could not be opened. Use the direct chat link shown on screen."; status.className = "message error"; }
   return false;
  }
 }
