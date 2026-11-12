@@ -490,7 +490,7 @@ $("supportForm").addEventListener("submit", async e => {
     const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify(payload)});
     const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\\nName: "+payload.name+"\\nEmail: "+payload.email+"\\nCountry: "+payload.country+"\\nRequest type: "+payload.type+"\\nMessage: "+payload.message+"\\nPlease assist this visitor. For payment questions, provide official payment instructions only. Never request card details, passwords or bank login credentials.";
     let copied=false;try{await copySupportMessage(chatText);copied=true}catch{}
-    message("supportMessage","Request #"+d.requestId+" is saved for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"Smartsupp is opening on this page. Paste the copied message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, tap Chat with support, then paste the message. No message has been sent to customer support."),true);
+    message("supportMessage","Request #"+d.requestId+" is saved for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"The Smartsupp chat has been opened in a new tab. Paste the copied message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, tap Chat with support, then paste the message. No message has been sent to customer support."),true);
     form.reset();
   } catch (x) {
     
