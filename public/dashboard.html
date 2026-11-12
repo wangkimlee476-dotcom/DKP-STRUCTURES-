@@ -31,7 +31,8 @@ body[data-theme=dark] input,body[data-theme=dark] select,body[data-theme=dark] t
  <section class="section" id="support"><h2>Deposit request</h2>
   <div class="card">
    <p class="muted">Ask customer support which official contribution payment methods are available in your country. Your request is recorded for admin tracking, copied as a complete message, and Smartsupp opens so you can paste it into the conversation and tap Send.</p>
-   <div class="field"><label for="supportMessage">Your deposit request</label><textarea id="supportMessage">Please advise which official contribution payment methods are currently available in my country.</textarea></div>
+   <div class="field"><label for="supportRequestType">What do you need help with?</label><select id="supportRequestType" required><option value="">Select a request</option><option value="Official payment methods available in my country">Official payment methods available in my country</option><option value="Instructions for making a contribution">Instructions for making a contribution</option><option value="Help with a contribution payment">Help with a contribution payment</option><option value="Other support request">Other support request</option></select></div>
+   <div class="field"><label for="supportMessage">Request details</label><textarea id="supportMessage" maxlength="1000" required placeholder="Describe what you need help with. Do not enter card numbers, passwords or bank login credentials."></textarea></div>
    <button class="primary" id="sendSupport" type="button">Copy deposit request & open Smartsupp</button>
    <p class="message" id="supportStatus" aria-live="polite"></p>
   </div>
@@ -134,12 +135,15 @@ $("theme").onchange=()=>applyTheme($("theme").value);
 $("saveEmail").onclick=async()=>{try{const d=await api("/api/profile/email",{method:"PATCH",body:JSON.stringify({newEmail:$("newEmail").value,currentPassword:$("emailPassword").value})});$("emailPassword").value="";say("emailMessage",d.message,"success");await load()}catch(e){say("emailMessage",e.message,"error")}};
 $("savePassword").onclick=async()=>{const next=$("newPassword").value;if(next!==$("confirmPassword").value){say("passwordMessage","The new passwords do not match.","error");return}try{const d=await api("/api/profile/password",{method:"PATCH",body:JSON.stringify({currentPassword:$("currentPassword").value,newPassword:next})});$("currentPassword").value="";$("newPassword").value="";$("confirmPassword").value="";say("passwordMessage",d.message,"success")}catch(e){say("passwordMessage",e.message,"error")}};
 $("sendSupport").onclick=async()=>{
- const button=$("sendSupport"),question=$("supportMessage").value.trim()||"Please advise which official contribution payment methods are currently available in my country.";
+ const button=$("sendSupport"),requestType=$("supportRequestType").value,details=$("supportMessage").value.trim();
+ if(!requestType){say("supportStatus","Please select what you need help with.","error");$("supportRequestType").focus();return}
+ if(!details){say("supportStatus","Please enter your request details before continuing.","error");$("supportMessage").focus();return}
+ const question="Request type: "+requestType+"\nRequest details: "+details;
  const chat=openSmartsuppPage();
  button.disabled=true;button.textContent="Preparing deposit request…";
  try{
   const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify({name:me.name,email:me.email,country:me.country,type:"payment_methods",message:question})});
-  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+me.name+"\nSupporter ID: "+(me.supporterId||"")+"\nEmail: "+me.email+"\nCountry: "+me.country+"\nRequest: "+question+"\nPlease assist this supporter with the official payment instructions. Do not request card details, passwords or bank login credentials.";
+  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+me.name+"\nSupporter ID: "+(me.supporterId||"")+"\nEmail: "+me.email+"\nCountry: "+me.country+"\n"+question+"\nPlease assist this supporter with the official contribution instructions. Do not request card details, passwords or bank login credentials.";
   let copied=false;try{await copyRequestMessage(chatText);copied=true}catch{}
   say("supportStatus","Deposit request #"+d.requestId+" is recorded for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"Smartsupp opened in a new tab. Paste the message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, open Smartsupp, paste the copied message and tap Send. No message has been sent yet."),"success");
  }catch(e){if(chat)chat.close();say("supportStatus",e.message,"error")}
