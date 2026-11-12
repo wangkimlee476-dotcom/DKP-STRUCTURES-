@@ -44,21 +44,27 @@ body[data-theme=dark] input,body[data-theme=dark] select,body[data-theme=dark] t
 const $=id=>document.getElementById(id);let me=null,selectedPlan="Basic",avatarData=null;
 const plans=[["Basic",100,499],["Bronze",500,1249],["Silver",1250,2999],["Gold",3000,6999],["Platinum",7000,14999],["Diamond",15000,29999],["Founding",30000,100000000]];
 async function api(url,opts={}){const r=await fetch(url,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(opts.headers||{})},...opts});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed ("+r.status+")");return d}
-let smartsuppLoadPromise=null;
 async function connectSmartsupp(){
- if(typeof window.smartsupp==="function"&&window._smartsupp?.key)return true;
- if(smartsuppLoadPromise)return smartsuppLoadPromise;
- smartsuppLoadPromise=(async()=>{
-  const cfg=await api("/api/config");
-  if(!cfg.smartsuppKey)throw Error("Smartsupp is not configured on the website yet.");
-  window._smartsupp=window._smartsupp||{};window._smartsupp.key=cfg.smartsuppKey;
-  if(typeof window.smartsupp!=="function"){const q=function(){q._.push(arguments)};q._=[];window.smartsupp=q;}
-  let script=document.getElementById("smartsupp-loader");
-  if(!script){script=document.createElement("script");script.id="smartsupp-loader";script.async=true;script.charset="utf-8";script.src="https://www.smartsuppchat.com/loader.js?";document.head.appendChild(script);}
-  if(!script.dataset.loaded)await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error("Smartsupp chat did not load. Please check your connection.")),12000);script.addEventListener("load",()=>{clearTimeout(timer);script.dataset.loaded="true";resolve()},{once:true});script.addEventListener("error",()=>{clearTimeout(timer);reject(Error("Smartsupp could not be reached."))},{once:true});});
-  return true;
- })().catch(e=>{smartsuppLoadPromise=null;throw e});
- return smartsuppLoadPromise;
+ const cfg=await api("/api/config");
+ if(!cfg.smartsuppKey)throw Error("Smartsupp is not configured on the website yet.");
+ window._smartsupp=window._smartsupp||{};
+ window._smartsupp.key=cfg.smartsuppKey;
+ if(typeof window.smartsupp!=="function"){
+  const queue=function(){queue._.push(arguments)};
+  queue._=[];
+  window.smartsupp=queue;
+ }
+ if(!document.getElementById("smartsupp-loader")){
+  const script=document.createElement("script");
+  script.id="smartsupp-loader";
+  script.type="text/javascript";
+  script.charset="utf-8";
+  script.async=true;
+  script.src="https://www.smartsuppchat.com/loader.js?";
+  const first=document.getElementsByTagName("script")[0];
+  first.parentNode.insertBefore(script,first);
+ }
+ return true;
 }
 function say(id,t,type=""){const e=$(id);e.textContent=t;e.className="message "+type}
 function go(id){const el=$(id);if(!el)return;el.scrollIntoView({behavior:"smooth",block:"start"});document.querySelectorAll("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===id||((id==="goal"||id==="support")&&b.dataset.nav==="home")))}
