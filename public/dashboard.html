@@ -65,7 +65,7 @@ const plans=[["Basic",100,499],["Bronze",500,1249],["Silver",1250,2999],["Gold",
 async function api(url,opts={}){const r=await fetch(url,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(opts.headers||{})},...opts});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed ("+r.status+")");return d}
 let smartsuppLoadPromise=null;
 async function connectSmartsupp(){
- if(typeof window.smartsupp==="function"&&window._smartsupp?.key)return true;
+ if(typeof window.smartsupp==="function"&&window._smartsupp?.key&&document.getElementById("smartsupp-loader")?.dataset.loaded==="true")return true;
  if(smartsuppLoadPromise)return smartsuppLoadPromise;
  smartsuppLoadPromise=(async()=>{
   const cfg=await api("/api/config");
@@ -73,8 +73,15 @@ async function connectSmartsupp(){
   window._smartsupp=window._smartsupp||{};window._smartsupp.key=cfg.smartsuppKey;
   if(typeof window.smartsupp!=="function"){const q=function(){q._.push(arguments)};q._=[];window.smartsupp=q;}
   let script=document.getElementById("smartsupp-loader");
-  if(!script){script=document.createElement("script");script.id="smartsupp-loader";script.async=true;script.charset="utf-8";script.src="https://www.smartsuppchat.com/loader.js?";document.head.appendChild(script);}
-  if(!script.dataset.loaded)await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error("Smartsupp chat did not load. Please check your connection.")),12000);script.addEventListener("load",()=>{clearTimeout(timer);script.dataset.loaded="true";resolve()},{once:true});script.addEventListener("error",()=>{clearTimeout(timer);reject(Error("Smartsupp could not be reached."))},{once:true});});
+  if(script?.dataset.loaded==="true")return true;
+  if(!script){script=document.createElement("script");script.id="smartsupp-loader";script.type="text/javascript";script.charset="utf-8";script.async=true;script.src="https://www.smartsuppchat.com/loader.js?";}
+  script.dataset.loading="true";
+  await new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>reject(Error("Smartsupp chat did not load. Check browser/VPN content blocking.")),15000);
+   script.addEventListener("load",()=>{clearTimeout(timer);script.dataset.loading="false";script.dataset.loaded="true";resolve()},{once:true});
+   script.addEventListener("error",()=>{clearTimeout(timer);script.dataset.loading="false";reject(Error("Smartsupp could not be reached."))},{once:true});
+   if(!script.isConnected)document.head.appendChild(script);
+  });
   return true;
  })().catch(e=>{smartsuppLoadPromise=null;throw e});
  return smartsuppLoadPromise;
