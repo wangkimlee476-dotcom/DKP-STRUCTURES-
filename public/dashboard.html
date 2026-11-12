@@ -55,16 +55,31 @@ async function connectSmartsupp(){
   queue._=[];
   window.smartsupp=queue;
  }
- if(!document.getElementById("smartsupp-loader")){
-  const script=document.createElement("script");
-  script.id="smartsupp-loader";
-  script.type="text/javascript";
-  script.charset="utf-8";
-  script.async=true;
-  script.src="https://www.smartsuppchat.com/loader.js?";
-  const first=document.getElementsByTagName("script")[0];
-  first.parentNode.insertBefore(script,first);
+ let script=document.getElementById("smartsupp-loader");
+ if(script?.dataset.loaded==="true")return true;
+ if(!window.__dkpSmartsuppLoadPromise){
+  window.__dkpSmartsuppLoadPromise=new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>{window.__dkpSmartsuppLoadPromise=null;reject(Error("Smartsupp did not finish loading. Check your connection, VPN or content blocker."))},15000);
+   const loaded=()=>{clearTimeout(timer);if(script)script.dataset.loaded="true";resolve(true)};
+   const failed=()=>{clearTimeout(timer);window.__dkpSmartsuppLoadPromise=null;reject(Error("Smartsupp could not load. Check your connection or content blocker."))};
+   if(!script){
+    script=document.createElement("script");
+    script.id="smartsupp-loader";
+    script.type="text/javascript";
+    script.charset="utf-8";
+    script.async=true;
+    script.src="https://www.smartsuppchat.com/loader.js?";
+   }
+   script.addEventListener("load",loaded,{once:true});
+   script.addEventListener("error",failed,{once:true});
+   if(!script.isConnected){
+    const first=document.getElementsByTagName("script")[0];
+    if(first?.parentNode)first.parentNode.insertBefore(script,first);
+    else document.head.appendChild(script);
+   }
+  });
  }
+ await window.__dkpSmartsuppLoadPromise;
  return true;
 }
 function say(id,t,type=""){const e=$(id);e.textContent=t;e.className="message "+type}
