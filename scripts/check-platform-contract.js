@@ -10,6 +10,9 @@ const admin = read("public/admin.html");
 const forgot = read("public/forgot-password.html");
 const reset = read("public/reset-password.html");
 const wrangler = read("wrangler.jsonc");
+const packageJson = JSON.parse(read("package.json"));
+const deployGuide = read("CLOUDFLARE_DEPLOY.md");
+const readinessChecklist = read("DEPLOYMENT_CHECKLIST.md");
 const routes = [...server.matchAll(/app\.(?:get|post|patch|put|delete)\(["']([^"']+)["']/g)].map(match => match[1]);
 const requiredRoutes = ["/api/dashboard","/api/profile/plan","/api/profile/target","/api/profile/settings","/api/profile/email","/api/profile/password","/api/password/forgot","/api/password/reset","/api/support-requests","/api/contributions/submit","/api/admin/summary","/api/admin/users","/api/admin/contributions","/api/admin/contributions/:id/verify","/api/admin/contributions/:id/reject"];
 for (const route of requiredRoutes) if (!routes.includes(route)) throw new Error("Missing server route: " + route);
@@ -31,4 +34,8 @@ if (!worker.includes('import { httpServerHandler } from "cloudflare:node"') || !
 if (!server.includes("new AsyncLocalStorage()") || !server.includes("databaseContext.run(client,handler)") || !server.includes("pruneSessionInterval:cloudflareWorker?false:900") || server.includes("workerRequestClients")) throw new Error("Worker database access must remain request-scoped for the full adapter call and background session pruning must be disabled.");
 if (worker.includes("nodeServer.listen(") || worker.includes("handleAsNodeRequest(") || worker.includes("app.listen(8787)")) throw new Error("Legacy HTTP adapter startup must not be present.");
 if (!wrangler.includes('"binding": "HYPERDRIVE"') || !wrangler.includes('"binding": "ASSETS"')) throw new Error("Required Cloudflare bindings are missing.");
+if (!wrangler.includes('"previews"') || !wrangler.includes('"hyperdrive"')) throw new Error("Wrangler preview Hyperdrive configuration is missing.");
+if (packageJson.scripts?.deploy !== "wrangler deploy" || packageJson.scripts?.preview !== "wrangler dev") throw new Error("Deployment scripts must use wrangler deploy for production and wrangler dev for local preview.");
+if (deployGuide.includes("feature/cloudflare-workers") || !deployGuide.includes("rebuild/professional-functional") || !deployGuide.includes("npx wrangler deploy") || deployGuide.includes("npx wrangler preview")) throw new Error("Cloudflare deployment guide contains an outdated branch or deploy command.");
+if (!readinessChecklist.includes("does not automatically email a reset link") || !readinessChecklist.includes("Do not launch for real supporters")) throw new Error("Production checklist must disclose current password-recovery and launch-readiness limitations.");
 console.log("Platform contract checks passed: Worker bridge, account routes, supporter dashboard, password recovery, admin board and Cloudflare bindings.");
