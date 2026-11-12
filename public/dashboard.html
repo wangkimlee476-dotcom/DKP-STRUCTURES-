@@ -31,8 +31,10 @@ body[data-theme=dark] input,body[data-theme=dark] select,body[data-theme=dark] t
  <section class="section" id="support"><h2>Deposit request</h2>
   <div class="card">
    <p class="muted">Ask customer support which official contribution payment methods are available in your country. Your request is recorded for admin tracking, copied as a complete message, and Smartsupp opens so you can paste it into the conversation and tap Send.</p>
-   <div class="field"><label for="supportRequestType">What do you need help with?</label><select id="supportRequestType" required><option value="">Select a request</option><option value="Official payment methods available in my country">Official payment methods available in my country</option><option value="Instructions for making a contribution">Instructions for making a contribution</option><option value="Help with a contribution payment">Help with a contribution payment</option><option value="Other support request">Other support request</option></select></div>
-   <div class="field"><label for="supportMessage">Request details</label><textarea id="supportMessage" maxlength="1000" required placeholder="Describe what you need help with. Do not enter card numbers, passwords or bank login credentials."></textarea></div>
+   <div class="field"><label for="depositAmount">Preferred contribution amount (USD)</label><input id="depositAmount" type="number" min="100" max="100000000" step="0.01" placeholder="Enter your preferred amount" required></div>
+   <div class="field"><label for="depositPlan">Preferred supporter plan</label><select id="depositPlan" required><option value="">Select your preferred plan</option><option value="Basic">Basic — $100–$499</option><option value="Bronze">Bronze — $500–$1,249</option><option value="Silver">Silver — $1,250–$2,999</option><option value="Gold">Gold — $3,000–$6,999</option><option value="Platinum">Platinum — $7,000–$14,999</option><option value="Diamond">Diamond — $15,000–$29,999</option><option value="Founding">Founding — $30,000+</option></select></div>
+   <div class="field"><label for="depositMethod">Preferred / convenient payment method</label><select id="depositMethod" required><option value="">Select your preferred payment method</option><option value="Bank transfer">Bank transfer</option><option value="Mobile money">Mobile money</option><option value="Debit or credit card, if officially supported">Debit or credit card (if officially supported)</option><option value="Other payment method">Other payment method</option><option value="Please recommend an available method">Please recommend an available method</option></select></div>
+   <div class="field"><label for="supportMessage">Additional request details (optional)</label><textarea id="supportMessage" maxlength="1000" placeholder="Tell us anything else we should know. Do not enter card numbers, passwords or bank login credentials."></textarea></div>
    <button class="primary" id="sendSupport" type="button">Copy deposit request & open Smartsupp</button>
    <p class="message" id="supportStatus" aria-live="polite"></p>
   </div>
@@ -135,15 +137,18 @@ $("theme").onchange=()=>applyTheme($("theme").value);
 $("saveEmail").onclick=async()=>{try{const d=await api("/api/profile/email",{method:"PATCH",body:JSON.stringify({newEmail:$("newEmail").value,currentPassword:$("emailPassword").value})});$("emailPassword").value="";say("emailMessage",d.message,"success");await load()}catch(e){say("emailMessage",e.message,"error")}};
 $("savePassword").onclick=async()=>{const next=$("newPassword").value;if(next!==$("confirmPassword").value){say("passwordMessage","The new passwords do not match.","error");return}try{const d=await api("/api/profile/password",{method:"PATCH",body:JSON.stringify({currentPassword:$("currentPassword").value,newPassword:next})});$("currentPassword").value="";$("newPassword").value="";$("confirmPassword").value="";say("passwordMessage",d.message,"success")}catch(e){say("passwordMessage",e.message,"error")}};
 $("sendSupport").onclick=async()=>{
- const button=$("sendSupport"),requestType=$("supportRequestType").value,details=$("supportMessage").value.trim();
- if(!requestType){say("supportStatus","Please select what you need help with.","error");$("supportRequestType").focus();return}
- if(!details){say("supportStatus","Please enter your request details before continuing.","error");$("supportMessage").focus();return}
- const question="Request type: "+requestType+"\nRequest details: "+details;
+ const button=$("sendSupport"),amount=Number($("depositAmount").value),plan=$("depositPlan").value,method=$("depositMethod").value,details=$("supportMessage").value.trim();
+ if(!Number.isFinite(amount)||amount<100){say("supportStatus","Please enter a preferred amount of at least USD $100.","error");$("depositAmount").focus();return}
+ if(!plan){say("supportStatus","Please select your preferred supporter plan.","error");$("depositPlan").focus();return}
+ if(!method){say("supportStatus","Please select your preferred payment method.","error");$("depositMethod").focus();return}
+ const ranges={"Basic":[100,499],"Bronze":[500,1249],"Silver":[1250,2999],"Gold":[3000,6999],"Platinum":[7000,14999],"Diamond":[15000,29999],"Founding":[30000,100000000]};
+ const range=ranges[plan];if(amount<range[0]||amount>range[1]){say("supportStatus","Your preferred amount does not fall within the "+plan+" plan range. Please adjust the amount or choose another plan.","error");$("depositAmount").focus();return}
+ const question="Preferred contribution amount: USD $"+amount.toFixed(2)+"\nPreferred supporter plan: "+plan+"\nPreferred payment method: "+method+"\nAdditional details: "+(details||"None");
  const chat=openSmartsuppPage();
  button.disabled=true;button.textContent="Preparing deposit request…";
  try{
   const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify({name:me.name,email:me.email,country:me.country,type:"payment_methods",message:question})});
-  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+me.name+"\nSupporter ID: "+(me.supporterId||"")+"\nEmail: "+me.email+"\nCountry: "+me.country+"\n"+question+"\nPlease assist this supporter with the official contribution instructions. Do not request card details, passwords or bank login credentials.";
+  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+me.name+"\nSupporter ID: "+(me.supporterId||"")+"\nEmail: "+me.email+"\nCountry: "+me.country+"\n"+question+"\nPlease advise which official contribution payment options are available in this country and provide the appropriate instructions. The amount, plan and method above are preferences only; no payment has been made. Do not request card details, passwords or bank login credentials.";
   let copied=false;try{await copyRequestMessage(chatText);copied=true}catch{}
   say("supportStatus","Deposit request #"+d.requestId+" is recorded for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"Smartsupp opened in a new tab. Paste the message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, open Smartsupp, paste the copied message and tap Send. No message has been sent yet."),"success");
  }catch(e){if(chat)chat.close();say("supportStatus",e.message,"error")}
