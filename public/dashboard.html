@@ -28,7 +28,14 @@ body[data-theme=dark] input,body[data-theme=dark] select,body[data-theme=dark] t
  <section class="section" id="plans"><h2>My supporter plan</h2><div class="card"><p class="muted">Choose a recognition level and an amount within its range. You can change this preference at any time. Saving a plan does not make a payment or create an obligation.</p><div class="plan-grid" id="planChoices"></div><div class="field"><label for="planAmount">Preferred contribution amount (USD)</label><input id="planAmount" type="number" min="100" step="0.01" value="100"></div><button class="primary" id="savePlan">Save my plan</button><p class="message" id="planMessage" aria-live="polite"></p></div></section>
  <section class="section" id="activity"><h2>Contribution activity</h2><div class="card"><p class="muted legal">Only payments independently confirmed by the administrator are included in your verified contribution total. This figure is a participation record, not a bank account, cash wallet, withdrawable balance, investment or promise of repayment.</p><div id="history"><p class="muted">Loading activity…</p></div></div></section>
  <section class="section" id="goal"><h2>My personal goal</h2><div class="card"><p class="muted">Set a personal tracking goal. Progress is calculated from verified contributions only.</p><div class="field"><label for="goalAmount">Goal amount (USD)</label><input id="goalAmount" type="number" min="100" step="0.01" placeholder="1000"></div><button class="primary" id="saveGoal">Save personal goal</button><p class="message" id="goalMessage" aria-live="polite"></p></div></section>
- <section class="section" id="support"><h2>Payment confirmation</h2>
+ <section class="section" id="support"><h2>Deposit request</h2>
+  <div class="card">
+   <p class="muted">Ask customer support which official contribution payment methods are available in your country. Your request is recorded for admin tracking, copied as a complete message, and Smartsupp opens so you can paste it into the conversation and tap Send.</p>
+   <div class="field"><label for="supportMessage">Your deposit request</label><textarea id="supportMessage">Please advise which official contribution payment methods are currently available in my country.</textarea></div>
+   <button class="primary" id="sendSupport" type="button">Copy deposit request & open Smartsupp</button>
+   <p class="message" id="supportStatus" aria-live="polite"></p>
+  </div>
+  <h2>Payment confirmation</h2>
   <div class="card">
    <p class="muted">Already completed your contribution transfer? Submit the transfer details below for administrator verification. Your submission is recorded as PENDING. Copy the confirmation message and open Smartsupp, then paste it into the chat and tap Send if you need customer-service assistance. Your contribution is credited only after cleared funds are independently confirmed.</p>
    <form id="paymentSubmitForm">
@@ -129,15 +136,14 @@ $("savePassword").onclick=async()=>{const next=$("newPassword").value;if(next!==
 $("sendSupport").onclick=async()=>{
  const button=$("sendSupport"),question=$("supportMessage").value.trim()||"Please advise which official contribution payment methods are currently available in my country.";
  const chat=openSmartsuppPage();
- button.disabled=true;button.textContent="Preparing request…";
+ button.disabled=true;button.textContent="Preparing deposit request…";
  try{
   const d=await api("/api/support-requests",{method:"POST",body:JSON.stringify({name:me.name,email:me.email,country:me.country,type:"payment_methods",message:question})});
-  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\\nName: "+me.name+"\\nSupporter ID: "+(me.supporterId||"")+"\\nEmail: "+me.email+"\\nCountry: "+me.country+"\\nRequest: "+question+"\\nPlease assist this supporter with the official payment instructions. Do not request card details, passwords or bank login credentials.";
+  const chatText="DKP STRUCTURES SUPPORT REQUEST #"+d.requestId+"\nName: "+me.name+"\nSupporter ID: "+(me.supporterId||"")+"\nEmail: "+me.email+"\nCountry: "+me.country+"\nRequest: "+question+"\nPlease assist this supporter with the official payment instructions. Do not request card details, passwords or bank login credentials.";
   let copied=false;try{await copyRequestMessage(chatText);copied=true}catch{}
-  say("supportStatus","Request #"+d.requestId+" is saved for admin tracking. "+(copied?"The full message has been copied. ":"Copy the request text from your details if clipboard access was blocked. ")+(chat?"Smartsupp opened in a new tab; paste the message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, tap Chat with support, then paste the copied message. No message has been sent yet."),"success");
-  $("supportMessage").value="";
+  say("supportStatus","Deposit request #"+d.requestId+" is recorded for admin tracking. "+(copied?"The complete message has been copied. ":"Clipboard access was blocked. ")+(chat?"Smartsupp opened in a new tab. Paste the message into the chat and tap Send.":"Your browser blocked the Smartsupp pop-up. Allow pop-ups, open Smartsupp, paste the copied message and tap Send. No message has been sent yet."),"success");
  }catch(e){if(chat)chat.close();say("supportStatus",e.message,"error")}
- finally{button.disabled=false;button.textContent="Copy request & open Smartsupp"}
+ finally{button.disabled=false;button.textContent="Copy deposit request & open Smartsupp"}
 };
 $("paymentSubmitForm").onsubmit=async e=>{
   e.preventDefault();const form=e.target,button=$("submitPayment"),f=new FormData(form),payload=Object.fromEntries(f.entries());
