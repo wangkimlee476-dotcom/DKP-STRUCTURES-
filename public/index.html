@@ -475,19 +475,15 @@ let smartsuppReady = false;
 let smartsuppLoadPromise = null;
 
 async function loadSmartsupp() {
-  if (smartsuppReady) return true;
+  if (smartsuppReady && typeof window.smartsupp === "function") return true;
   if (smartsuppLoadPromise) return smartsuppLoadPromise;
 
   smartsuppLoadPromise = (async () => {
     const config = await api("/api/config");
-    if (!config.smartsuppKey) {
-      throw new Error("Smartsupp website key is not configured.");
-    }
+    if (!config.smartsuppKey) throw new Error("Smartsupp website key is not configured.");
 
     window._smartsupp = window._smartsupp || {};
     window._smartsupp.key = config.smartsuppKey;
-
-    // Create Smartsupp's command queue before loading its hosted widget.
     if (typeof window.smartsupp !== "function") {
       const queue = function() { queue._.push(arguments); };
       queue._ = [];
@@ -495,37 +491,48 @@ async function loadSmartsupp() {
     }
 
     let script = document.getElementById("smartsupp-loader");
-    if (!script) {
-      script = document.createElement("script");
-      script.id = "smartsupp-loader";
-      script.type = "text/javascript";
-      script.charset = "utf-8";
-      script.async = true;
-      script.src = "https://www.smartsuppchat.com/loader.js?";
-      document.head.appendChild(script);
+    if (script?.dataset.loaded === "true" && typeof window.smartsupp === "function") {
+      smartsuppReady = true;
+      return true;
     }
-
-    await new Promise((resolve, reject) => {
-      if (script.dataset.loaded === "true") return resolve();
-      const timeout = setTimeout(() => reject(new Error("Smartsupp did not load. Check browser/VPN content blocking.")), 10000);
-      script.addEventListener("load", () => {
-        clearTimeout(timeout);
-        script.dataset.loaded = "true";
-        resolve();
-      }, { once: true });
-      script.addEventListener("error", () => {
-        clearTimeout(timeout);
-        reject(new Error("Smartsupp loader was blocked or could not be downloaded."));
-      }, { once: true });
-    });
-
+    if (script?.dataset.loading === "true") {
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Smartsupp did not load. Check browser/VPN content blocking.")), 15000);
+        script.addEventListener("load", () => { clearTimeout(timer); resolve(); }, { once: true });
+        script.addEventListener("error", () => { clearTimeout(timer); reject(new Error("Smartsupp loader was blocked or could not be downloaded.")); }, { once: true });
+      });
+    } else {
+      if (!script) {
+        script = document.createElement("script");
+        script.id = "smartsupp-loader";
+        script.type = "text/javascript";
+        script.charset = "utf-8";
+        script.async = true;
+        script.src = "https://www.smartsuppchat.com/loader.js?";
+      }
+      script.dataset.loading = "true";
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Smartsupp did not load. Check browser/VPN content blocking.")), 15000);
+        script.addEventListener("load", () => {
+          clearTimeout(timer);
+          script.dataset.loading = "false";
+          script.dataset.loaded = "true";
+          resolve();
+        }, { once: true });
+        script.addEventListener("error", () => {
+          clearTimeout(timer);
+          script.dataset.loading = "false";
+          reject(new Error("Smartsupp loader was blocked or could not be downloaded."));
+        }, { once: true });
+        if (!script.isConnected) document.head.appendChild(script);
+      });
+    }
     smartsuppReady = true;
     return true;
   })().catch(error => {
     smartsuppLoadPromise = null;
     throw error;
   });
-
   return smartsuppLoadPromise;
 }
 
