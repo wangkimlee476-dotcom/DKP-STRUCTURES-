@@ -115,19 +115,29 @@ window._smartsupp.key = "784368b32262fad3ade23c88b4e9972d8c1c85e9";
  c.async = true;
  c.dataset.dkpSmartsupp = "true";
  c.src = "https://www.smartsuppchat.com/loader.js?";
+ window.__dkpSmartsuppReady = new Promise(function(resolve, reject) {
+  window.__dkpSmartsuppResolve = resolve;
+  window.__dkpSmartsuppReject = reject;
+ });
+ c.onload = function() { window.__dkpSmartsuppResolve && window.__dkpSmartsuppResolve(); };
  c.onerror = function() {
+  const error = new Error("The Smartsupp loader could not be downloaded. Check the connection, content blockers and allowed domains.");
+  window.__dkpSmartsuppReject && window.__dkpSmartsuppReject(error);
   const status = ["supportMessage","authMessage","supportStatus","paymentSubmitStatus"].map(id => document.getElementById(id)).find(Boolean);
-  if (status) {
-   status.textContent = "Smartsupp could not load. Check your connection and allow this website's domain in Smartsupp settings.";
-   status.className = "message error";
-  }
+  if (status) { status.textContent = error.message; status.className = "message error"; }
  };
  if (s && s.parentNode) s.parentNode.insertBefore(c, s);
  else d.head.appendChild(c);
 })(document);
-function openSmartsuppPage() {
+async function openSmartsuppPage() {
  try {
-  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp's chat command is not initialized yet. Refresh the page and try again.");
+  if (!window.__dkpSmartsuppReady) throw new Error("The Smartsupp loader has not started. Refresh the page and try again.");
+  await Promise.race([
+   window.__dkpSmartsuppReady,
+   new Promise((_, reject) => setTimeout(() => reject(new Error("Smartsupp did not finish loading within 12 seconds. Check the network or allowed-domain settings.")), 12000))
+  ]);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  if (typeof window.smartsupp !== "function") throw new Error("Smartsupp loaded without exposing its chat command. Check the website key in Smartsupp.");
   window.smartsupp("chat:open");
   return true;
  } catch (error) {
