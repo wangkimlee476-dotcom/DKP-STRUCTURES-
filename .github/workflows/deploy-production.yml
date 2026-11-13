@@ -67,7 +67,7 @@ jobs:
           SITE_URL: https://dkp-structures.dkpstructures.workers.dev
         run: |
           set -eu
-          for path in / /dashboard.html /admin.html /forgot-password.html /reset-password.html; do
+          for path in / /dashboard.html /admin.html /admin-community.html /supporters-centre.html /ranking.html /ranking-privacy.html /complaints.html /forgot-password.html /reset-password.html; do
             code="$(curl --location --silent --show-error --output /dev/null --write-out '%{http_code}' "$SITE_URL$path")"
             case "$code" in 200) echo "$path -> $code" ;; *) echo "$path returned HTTP $code"; exit 1 ;; esac
           done
