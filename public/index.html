@@ -115,12 +115,10 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <div class="wrap nav">
 <div class="brand">DKP STRUCTURES</div>
 <nav class="links">
-<a href="#about">About</a>
-<a href="#campaign">Development</a>
-<a href="#levels">Supporter levels</a>
-<a href="#account">Account</a>
-<a href="#dashboard">Dashboard</a>
-<a href="#support">Customer support</a>
+<a href="#account">Login / Create Account</a>
+<a href="#recognition">Recognition</a>
+<a href="#about">About DKP</a>
+<a href="#campaign">Our Vision</a>
 </nav>
 </div>
 </header>
@@ -128,72 +126,20 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <main class="wrap">
 <section class="hero">
 <span style="color:#f0d58e;font-weight:800;letter-spacing:.18em">CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span>
-<h1>Building a vision. Creating opportunities.</h1>
-<p>DKP Structures is focused on developing a construction business grounded in responsible planning, quality workmanship and transparency.</p>
-<a href="#about"><button class="btn">Discover DKP Structures</button></a>
-</section>
+<h1>DKP STRUCTURES</h1><h2>Building Together, Growing Together</h2>
+<p>A construction and property development vision committed to creating homes, jobs and opportunities for people.</p>
+<div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
+<button class="btn" type="button" onclick="document.getElementById('account').scrollIntoView({behavior:'smooth'});document.getElementById('loginTab').click()">Login</button>
+<button class="ghost" type="button" onclick="document.getElementById('account').scrollIntoView({behavior:'smooth'});document.getElementById('registerTab').click()">Create Account</button>
+</div></section>
 
-<section id="about" class="section">
-<h2>About DKP Structures</h2>
-<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified.</p>
-</section>
 
-<section id="campaign" class="section">
-<h2>Development initiative</h2>
-<div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div>
-<div class="card" style="margin-top:16px">
-<h3>Interested in making a contribution?</h3>
-<p class="muted">Select the button below to request available payment methods from customer support. No deposit is taken on this website.</p>
-<button class="btn" id="depositOptionsBtn" type="button">Make a deposit · Request payment options</button>
-</div>
-<h3>Proposed planning target: USD $1,000,000</h3>
-<p class="muted">Planning figure only — not funds raised.</p>
-</section>
 
-<section id="levels" class="section">
-<h2>Supporter recognition levels</h2>
-<p class="muted">Based on cumulative verified contributions. Recognition only; no ownership or investment rights.</p>
-<div class="grid" id="levelCards"></div>
-</section>
 
-<section id="account" class="section">
-<h2>Supporter account</h2>
-<div class="auth-card card">
-<div class="auth-tabs" role="tablist" aria-label="Account access">
-<button class="auth-tab active" id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">Login</button>
-<button class="auth-tab" id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="registerPanel">Create account</button>
-</div>
-<div id="loginPanel" role="tabpanel" aria-labelledby="loginTab">
-<h3>Welcome back</h3>
-<p class="muted">Sign in to access your supporter dashboard.</p>
-<form id="loginForm">
-<label>Email</label>
-<input name="email" type="email" autocomplete="username" required>
-<label>Password</label>
-<div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" data-password-toggle="loginPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
-<p class="muted"><a href="/forgot-password.html">Forgot your password?</a></p><button class="btn auth-submit" type="submit">Login securely</button>
-</form>
-</div>
-<div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
-<h3>Create your supporter account</h3>
-<p class="muted">Register to track your supporter activity and verified contributions.</p>
-<form id="registerForm">
-<label>Full name</label>
-<input name="name" autocomplete="name" required maxlength="100">
-<label>Email</label>
-<input name="email" type="email" autocomplete="email" required>
-<label>Country</label>
-<input name="country" autocomplete="country-name" required maxlength="80">
-<label>Password (12+ characters)</label>
-<div class="password-field"><input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="12" required><button class="password-toggle" type="button" data-password-toggle="registerPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
-<label class="terms-label"><input type="checkbox" id="terms" required> I accept the current Terms & Conditions</label>
-<p class="muted">By registering, you acknowledge the privacy and fundraising disclosures. The current terms version and acceptance time are recorded.</p>
-<button class="btn auth-submit" type="submit">Create account</button>
-</form>
-</div>
-<p id="authMessage" aria-live="polite"></p>
-</div>
-</section>
+
+
+
+
 
 <section id="dashboard" class="section">
 <h2>My supporter dashboard</h2>
@@ -252,7 +198,62 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </div>
 </div>
 </section>
-</main>
+<section id="account" class="section">
+<h2>Login or Create Account</h2>
+<div class="auth-card card">
+<div class="auth-tabs" role="tablist" aria-label="Account access">
+<button class="auth-tab active" id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">Login</button>
+<button class="auth-tab" id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="registerPanel">Create account</button>
+</div>
+<div id="loginPanel" role="tabpanel" aria-labelledby="loginTab">
+<h3>Welcome back</h3>
+<p class="muted">Sign in to access your supporter dashboard.</p>
+<form id="loginForm">
+<label>Email</label>
+<input name="email" type="email" autocomplete="username" required>
+<label>Password</label>
+<div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" data-password-toggle="loginPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
+<p class="muted"><a href="/forgot-password.html">Forgot your password?</a></p><button class="btn auth-submit" type="submit">Login securely</button>
+</form>
+</div>
+<div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
+<h3>Create your supporter account</h3>
+<p class="muted">Register to track your supporter activity and verified contributions.</p>
+<form id="registerForm">
+<label>Full name</label>
+<input name="name" autocomplete="name" required maxlength="100">
+<label>Email</label>
+<input name="email" type="email" autocomplete="email" required>
+<label>Country</label>
+<input name="country" autocomplete="country-name" required maxlength="80">
+<label>Password (12+ characters)</label>
+<div class="password-field"><input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="12" required><button class="password-toggle" type="button" data-password-toggle="registerPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
+<label class="terms-label"><input type="checkbox" id="terms" required> I accept the current Terms & Conditions</label>
+<p class="muted">By registering, you acknowledge the privacy and fundraising disclosures. The current terms version and acceptance time are recorded.</p>
+<button class="btn auth-submit" type="submit">Create account</button>
+</form>
+</div>
+<p id="authMessage" aria-live="polite"></p>
+</div>
+</section><section id="recognition" class="section"><h2>🏆 Supporters Recognition</h2><p class="muted">Honouring supporters based only on verified contributions. Supporters can choose whether their display name appears publicly.</p><div class="grid" id="levelCards"></div><p><a href="/ranking.html">View Full Ranking</a></p></section><section id="about" class="section"><h2>About DKP STRUCTURES</h2><div class="card">
+<p><strong>🌍 JOIN DKP STRUCTURES — BUILDING THE FUTURE TOGETHER!</strong></p>
+<p>By joining DKP STRUCTURES, you become part of a vision to grow a construction and property company. We have set a fundraising target of <strong>US$1 million</strong>, which will be used to support development projects, the procurement of equipment and materials, and the expansion of our operational capabilities.</p>
+<p>Our aspirations go beyond simply building a company. Once DKP STRUCTURES is fully operational, we are committed to providing—for eligible supporters—construction labor at no cost to help them build their own private homes. Furthermore, we aim to create job opportunities for professionals and qualified individuals in civil engineering, structural engineering, architecture, project management, and other sectors within the construction industry.</p>
+<p>We also seek to build a supportive community, offering you the chance to stay updated on the company’s progress as we work together toward a better future.</p>
+<p>Every contribution received and verified will be acknowledged with an official payment confirmation or receipt. You will be able to view your contribution history via a dedicated supporter dashboard once that feature becomes available.</p>
+<p>Participation and contributions are entirely voluntary. Contributions are not investments and do not promise any financial returns. The planned benefits are future goals that depend on the company’s operational success, available resources, specific requirements, and overall capacity.</p>
+<p>❤️ Today, we are building this company together; one day, we hope to help you build your own home and achieve a brighter future.</p>
+<p><strong>DKP STRUCTURES — Building Together, Growing Together, Transforming Lives.</strong></p></div></section><section id="campaign" class="section">
+<h2>Development initiative</h2>
+<div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div>
+<div class="card" style="margin-top:16px">
+<h3>Interested in making a contribution?</h3>
+<p class="muted">Select the button below to request available payment methods from customer support. No deposit is taken on this website.</p>
+<button class="btn" id="depositOptionsBtn" type="button">Make a deposit · Request payment options</button>
+</div>
+<h3>Proposed planning target: USD $1,000,000</h3>
+<p class="muted">Planning figure only — not funds raised.</p>
+</section></main>
 
 <footer>
 DKP STRUCTURES · Informational company-development website · No online payments accepted<br>
