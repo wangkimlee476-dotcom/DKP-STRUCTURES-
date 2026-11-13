@@ -14,7 +14,7 @@ const packageJson = JSON.parse(read("package.json"));
 const deployGuide = read("CLOUDFLARE_DEPLOY.md");
 const readinessChecklist = read("DEPLOYMENT_CHECKLIST.md");
 const routes = [...server.matchAll(/app\.(?:get|post|patch|put|delete)\(["']([^"']+)["']/g)].map(match => match[1]);
-const requiredRoutes = ["/api/dashboard","/api/profile/plan","/api/profile/target","/api/profile/settings","/api/profile/email","/api/profile/password","/api/password/forgot","/api/password/reset","/api/support-requests","/api/contributions/submit","/api/admin/summary","/api/admin/users","/api/admin/contributions","/api/admin/contributions/:id/verify","/api/admin/contributions/:id/reject"];
+const requiredRoutes = ["/api/dashboard","/api/profile/plan","/api/profile/target","/api/profile/settings","/api/profile/email","/api/profile/password","/api/password/forgot","/api/password/reset","/api/support-requests","/api/contributions/submit","/api/admin/summary","/api/admin/users","/api/admin/contributions","/api/admin/contributions/:id/verify","/api/admin/contributions/:id/reject","/api/admin/referrals"];
 for (const route of requiredRoutes) if (!routes.includes(route)) throw new Error("Missing server route: " + route);
 const requiredUi = [
   [dashboard,'api("/api/dashboard"'],[dashboard,'api("/api/profile/plan"'],[dashboard,'api("/api/profile/target"'],
@@ -38,4 +38,7 @@ if (!wrangler.includes('"previews"') || !wrangler.includes('"hyperdrive"')) thro
 if (packageJson.scripts?.deploy !== "bunx wrangler@4.160.0 deploy" || packageJson.scripts?.preview !== "bunx wrangler@4.160.0 dev" || packageJson.scripts?.["deploy:check"] !== "bunx wrangler@4.160.0 deploy --dry-run") throw new Error("Deployment scripts must use wrangler deploy for production and wrangler dev for local preview.");
 if (deployGuide.includes("feature/cloudflare-workers") || !deployGuide.includes("rebuild/professional-functional") || !deployGuide.includes("npx wrangler@4.160.0 deploy")) throw new Error("Cloudflare deployment guide contains an outdated branch or deploy command.");
 if (!readinessChecklist.includes("does not automatically email a reset link") || !readinessChecklist.includes("Do not launch for real supporters")) throw new Error("Production checklist must disclose current password-recovery and launch-readiness limitations.");
+if (!server.includes("referral_code") || !server.includes("CREATE TABLE IF NOT EXISTS referrals") || !server.includes("idx_users_referral_code")) throw new Error("Supporter referral schema and unique codes are missing.");
+if (!dashboard.includes('id="referrals"') || !dashboard.includes('id="copyReferralLink"') || !dashboard.includes('id="shareReferralWhatsApp"') || !index.includes('referralCode: f.get("referralCode")')) throw new Error("Supporter referral invitation UI is incomplete.");
+if (!admin.includes("/api/admin/referrals") || !admin.includes('id="referrals"')) throw new Error("Admin referral reporting is missing.");
 console.log("Platform contract checks passed: Worker bridge, account routes, supporter dashboard, password recovery, admin board and Cloudflare bindings.");
