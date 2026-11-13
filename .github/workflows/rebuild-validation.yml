@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - rebuild/professional-functional
+      - rebuild/dkp-reference-design-fresh
   pull_request:
     branches:
       - rebuild/professional-functional
