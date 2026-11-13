@@ -172,6 +172,79 @@ app.post("/api/admin/users/:id/password-reset",admin,route(async(req,res)=>{
 
 app.get("/api/dashboard",auth,route(async(req,res)=>{const u=(await pool.query("SELECT * FROM users WHERE id=$1",[req.session.userId])).rows[0];if(!u)return res.status(401).json({error:"Please sign in again."});const total=await totalFor(u.id),history=(await pool.query('SELECT amount,currency,reference,payment_method,status,created_at AS date,verified_at AS "verifiedAt" FROM contributions WHERE user_id=$1 ORDER BY id DESC LIMIT 50',[u.id])).rows.map(x=>({...x,amount:Number(x.amount)}));res.json({user:publicUser(u),verifiedTotal:total,level:levelFor(total),progress:u.personal_target?Math.min(100,Math.round(total/Number(u.personal_target)*100)):0,history,balanceMeaning:"Verified contribution total only. It is not cash held for the supporter, a bank deposit, withdrawable balance or investment account."});}));
 app.patch("/api/profile/target",auth,route(async(req,res)=>{const t=Number(req.body.target);if(!Number.isFinite(t)||t<100||t>100000000)return res.status(400).json({error:"Enter a target of at least USD $100."});await pool.query("UPDATE users SET personal_target=$1 WHERE id=$2",[t,req.session.userId]);res.json({target:t});}));
+
+/* Supporter community: management announcements, private complaints and public recognition. */
+app.get("/api/rankings",route(async(req,res)=>{
+ const period=clean(req.query.period||"lifetime");
+ if(!["monthly","lifetime"].includes(period))return res.status(400).json({error:"Choose monthly or lifetime ranking."});
+ const dateFilter=period==="monthly"?"AND c.verified_at >= date_trunc('month',NOW())":"";
+ const rows=await pool.query(`
+  SELECT COALESCE(NULLIF(u.public_display_name,''),u.full_name) AS display_name,
+         u.supporter_id, SUM(c.amount)::numeric(14,2) AS verified_total
+  FROM contributions c JOIN users u ON u.id=c.user_id
+  WHERE c.status='verified' AND u.show_in_ranking=TRUE ${dateFilter}
+  GROUP BY u.id,u.public_display_name,u.full_name,u.supporter_id
+  ORDER BY SUM(c.amount) DESC,u.supporter_id ASC LIMIT 100
+ `);
+ res.json({period,rankings:rows.rows.map((r,i)=>({rank:i+1,name:r.display_name,supporterId:r.supporter_id,total:Number(r.verified_total),currency:"USD"}))});
+}));
+app.get("/api/announcements",auth,route(async(req,res)=>{
+ const rows=await pool.query("SELECT id,title,category,body,is_pinned,published_at FROM announcements WHERE is_published=TRUE ORDER BY is_pinned DESC,published_at DESC,id DESC LIMIT 100");
+ res.json({announcements:rows.rows});
+}));
+app.get("/api/profile/ranking-privacy",auth,route(async(req,res)=>{
+ const r=await pool.query("SELECT COALESCE(public_display_name,full_name) display_name,show_in_ranking FROM users WHERE id=$1",[req.session.userId]);
+ res.json(r.rows[0]||{});
+}));
+app.patch("/api/profile/ranking-privacy",auth,route(async(req,res)=>{
+ const show=req.body.showInRanking===true, name=clean(req.body.displayName).slice(0,80);
+ if(show&&name.length<2)return res.status(400).json({error:"Enter a public display name or turn off public ranking."});
+ await pool.query("UPDATE users SET show_in_ranking=$1,public_display_name=$2 WHERE id=$3",[show,name||null,req.session.userId]);
+ res.json({ok:true,showInRanking:show,displayName:name||null});
+}));
+app.post("/api/complaints",auth,rateLimit({windowMs:3600000,limit:5}),route(async(req,res)=>{
+ const category=clean(req.body.category),subject=clean(req.body.subject),details=clean(req.body.details);
+ if(!["payment","account","contribution_record","staff_conduct","other"].includes(category)||subject.length<4||subject.length>120||details.length<20||details.length>3000)return res.status(400).json({error:"Choose a complaint category and provide a subject and details (20–3000 characters)."});
+ const u=(await pool.query("SELECT full_name,email,country FROM users WHERE id=$1",[req.session.userId])).rows[0];
+ const r=await pool.query("INSERT INTO complaints(user_id,category,subject,details) VALUES($1,$2,$3,$4) RETURNING id,created_at",[req.session.userId,category,subject,details]);
+ res.status(201).json({ok:true,reference:"DKP-C-"+String(r.rows[0].id).padStart(6,"0"),status:"received",createdAt:r.rows[0].created_at,message:"Your complaint was submitted privately."});
+}));
+app.get("/api/complaints",auth,route(async(req,res)=>{
+ const r=await pool.query("SELECT id,category,subject,status,admin_response,created_at,updated_at FROM complaints WHERE user_id=$1 ORDER BY id DESC LIMIT 100",[req.session.userId]);
+ res.json({complaints:r.rows.map(x=>({...x,reference:"DKP-C-"+String(x.id).padStart(6,"0")}))});
+}));
+app.get("/api/admin/announcements",admin,route(async(req,res)=>{
+ const r=await pool.query("SELECT id,title,category,body,is_pinned,is_published,published_at,created_at FROM announcements ORDER BY created_at DESC LIMIT 200");
+ res.json({announcements:r.rows});
+}));
+app.post("/api/admin/announcements",admin,route(async(req,res)=>{
+ const title=clean(req.body.title),category=clean(req.body.category||"Announcement"),body=clean(req.body.body),pinned=req.body.pinned===true,published=req.body.published===true;
+ if(title.length<4||title.length>160||body.length<20||body.length>10000)return res.status(400).json({error:"Enter a title and update text (20–10,000 characters)."});
+ const r=await pool.query("INSERT INTO announcements(title,category,body,is_pinned,is_published,created_by,published_at) VALUES($1,$2,$3,$4,$5,$6,CASE WHEN $5 THEN NOW() ELSE NULL END) RETURNING id",[title,category.slice(0,50),body,pinned,published,req.session.userId]);
+ await pool.query("INSERT INTO audit_logs(admin_id,action,target_type,target_id,details) VALUES($1,'publish_announcement','announcement',$2,$3)",[req.session.userId,r.rows[0].id,title]);
+ res.status(201).json({ok:true,id:r.rows[0].id});
+}));
+app.patch("/api/admin/announcements/:id",admin,route(async(req,res)=>{
+ const id=Number(req.params.id),published=req.body.published===true,pinned=req.body.pinned===true;
+ if(!Number.isSafeInteger(id)||id<1)return res.status(400).json({error:"Invalid announcement."});
+ const r=await pool.query("UPDATE announcements SET is_published=$1,is_pinned=$2,published_at=CASE WHEN $1 AND published_at IS NULL THEN NOW() WHEN NOT $1 THEN NULL ELSE published_at END WHERE id=$3 RETURNING id",[published,pinned,id]);
+ if(!r.rowCount)return res.status(404).json({error:"Announcement not found."});
+ await pool.query("INSERT INTO audit_logs(admin_id,action,target_type,target_id,details) VALUES($1,'update_announcement','announcement',$2,$3)",[req.session.userId,id,JSON.stringify({published,pinned})]);
+ res.json({ok:true});
+}));
+app.get("/api/admin/complaints",admin,route(async(req,res)=>{
+ const r=await pool.query("SELECT c.*,u.supporter_id,u.full_name,u.email FROM complaints c JOIN users u ON u.id=c.user_id ORDER BY CASE c.status WHEN 'received' THEN 0 WHEN 'under_review' THEN 1 ELSE 2 END,c.id DESC LIMIT 500");
+ res.json({complaints:r.rows.map(x=>({...x,reference:"DKP-C-"+String(x.id).padStart(6,"0")}))});
+}));
+app.patch("/api/admin/complaints/:id",admin,route(async(req,res)=>{
+ const id=Number(req.params.id),status=clean(req.body.status),response=clean(req.body.response);
+ if(!Number.isSafeInteger(id)||id<1||!["received","under_review","resolved"].includes(status)||response.length>3000)return res.status(400).json({error:"Invalid complaint update."});
+ const r=await pool.query("UPDATE complaints SET status=$1,admin_response=$2,updated_at=NOW() WHERE id=$3 RETURNING id",[status,response,id]);
+ if(!r.rowCount)return res.status(404).json({error:"Complaint not found."});
+ await pool.query("INSERT INTO audit_logs(admin_id,action,target_type,target_id,details) VALUES($1,'update_complaint','complaint',$2,$3)",[req.session.userId,id,status]);
+ res.json({ok:true});
+}));
+
 app.post("/api/support-requests",rateLimit({windowMs:3600000,limit:10}),route(async(req,res)=>{const n=clean(req.body.name),e=clean(req.body.email).toLowerCase(),c=clean(req.body.country),t=clean(req.body.type),m=clean(req.body.message);if(n.length<2||!emailOk(e)||c.length<2||m.length<10||m.length>3000)return res.status(400).json({error:"Please provide your name, valid email, country and a message (10–3000 characters)."});if(!["payment_methods","general","account"].includes(t))return res.status(400).json({error:"Invalid support request type."});const r=await pool.query("INSERT INTO support_requests(user_id,name,email,country,request_type,message) VALUES($1,$2,$3,$4,$5,$6) RETURNING id",[req.session.userId||null,n,e,c,t,m]);res.status(201).json({ok:true,requestId:r.rows[0].id,message:"Your support request has been recorded. Please wait for the support team to reply using the contact details you supplied."});}));
 app.post("/api/contributions/submit",auth,rateLimit({windowMs:3600000,limit:5}),route(async(req,res)=>{const amount=Number(req.body.amount),reference=clean(req.body.reference),method=clean(req.body.paymentMethod),note=clean(req.body.note||"");if(!Number.isFinite(amount)||amount<100||amount>100000000||reference.length<4||reference.length>120||method.length<2||method.length>100||note.length>1000)return res.status(400).json({error:"Enter an amount of at least USD $100, your payment method, and a valid transfer reference."});const duplicate=await pool.query("SELECT id FROM contributions WHERE LOWER(reference)=LOWER($1) AND status<>'rejected' LIMIT 1",[reference]);if(duplicate.rowCount)return res.status(409).json({error:"That transfer reference has already been submitted. Please contact support if you believe this is an error."});const result=await pool.query("INSERT INTO contributions(user_id,amount,reference,payment_method,customer_service_note,status) VALUES($1,$2,$3,$4,$5,'pending') RETURNING id",[req.session.userId,amount,reference,method,note||"Submitted by supporter for independent payment verification."]);res.status(201).json({ok:true,id:result.rows[0].id,status:"pending",message:"Your payment confirmation has been submitted for admin verification. Your verified contribution total will update only after cleared funds are independently confirmed."});}));
 app.get("/api/admin/summary",admin,route(async(req,res)=>{const r=(await pool.query("SELECT (SELECT COUNT(*) FROM users WHERE role='supporter') users,(SELECT COUNT(*) FROM support_requests WHERE status='open') open,(SELECT COUNT(*) FROM contributions WHERE status='pending') pending,(SELECT COUNT(*) FROM contributions WHERE status='rejected') rejected,(SELECT COALESCE(SUM(amount),0) FROM contributions WHERE status='verified') total")).rows[0];res.json({users:Number(r.users),openSupportRequests:Number(r.open),pendingContributions:Number(r.pending),rejectedContributions:Number(r.rejected),verifiedTotal:Number(r.total)});}));
@@ -187,7 +260,7 @@ app.use("/api",(req,res)=>res.status(404).json({error:"API route not found."}));
 app.use((err,req,res,next)=>{console.error("Request failed:",{path:req.path,method:req.method,message:err?.message,code:err?.code});if(res.headersSent)return next(err);res.status(500).json({error:"An unexpected server error occurred.",diagnostic:{path:req.path,message:String(err?.message||"Unknown error").slice(0,240),code:err?.code||null}});});
 async function init(){
  if(cloudflareWorker){
-  const requiredTables=["users","contributions","support_requests","audit_logs","user_sessions","password_reset_tokens"];
+  const requiredTables=["users","contributions","support_requests","audit_logs","user_sessions","password_reset_tokens","announcements","complaints"];
   const tableRows=await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'");
   const available=new Set(tableRows.rows.map(row=>row.table_name));
   const missing=requiredTables.filter(name=>!available.has(name));
@@ -195,10 +268,12 @@ async function init(){
   const columnRows=await pool.query("SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='users'");
   const columns=new Set(columnRows.rows.map(row=>row.column_name));
   if(!columns.has("avatar_data"))throw new Error("Database migration required; missing users.avatar_data column.");
+  if(!columns.has("show_in_ranking")||!columns.has("public_display_name"))throw new Error("Database migration required; missing supporter ranking privacy columns.");
   const index=await pool.query("SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='idx_contributions_active_reference'");
   if(!index.rowCount)throw new Error("Database migration required; missing idx_contributions_active_reference index.");
   return;
  }
+ await pool.query("CREATE TABLE IF NOT EXISTS announcements(id SERIAL PRIMARY KEY,title VARCHAR(160) NOT NULL,category VARCHAR(50) NOT NULL DEFAULT 'Announcement',body TEXT NOT NULL,is_pinned BOOLEAN NOT NULL DEFAULT FALSE,is_published BOOLEAN NOT NULL DEFAULT FALSE,created_by INTEGER NOT NULL REFERENCES users(id),published_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE INDEX IF NOT EXISTS idx_announcements_published ON announcements(is_published,is_pinned,published_at DESC);CREATE TABLE IF NOT EXISTS complaints(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),category VARCHAR(40) NOT NULL CHECK(category IN ('payment','account','contribution_record','staff_conduct','other')),subject VARCHAR(120) NOT NULL,details VARCHAR(3000) NOT NULL,status VARCHAR(20) NOT NULL DEFAULT 'received' CHECK(status IN ('received','under_review','resolved')),admin_response VARCHAR(3000) NOT NULL DEFAULT '',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE INDEX IF NOT EXISTS idx_complaints_user ON complaints(user_id,id DESC);CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status,id DESC);ALTER TABLE users ADD COLUMN IF NOT EXISTS public_display_name VARCHAR(80);ALTER TABLE users ADD COLUMN IF NOT EXISTS show_in_ranking BOOLEAN NOT NULL DEFAULT TRUE;");
  await pool.query("CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,supporter_id VARCHAR(32) UNIQUE NOT NULL,full_name VARCHAR(100) NOT NULL,email VARCHAR(254) UNIQUE NOT NULL,country VARCHAR(80) NOT NULL,password_hash TEXT NOT NULL,role VARCHAR(20) NOT NULL DEFAULT 'supporter' CHECK(role IN ('supporter','admin')),personal_target DOUBLE PRECISION NOT NULL DEFAULT 0,terms_version VARCHAR(40) NOT NULL,terms_accepted_at TIMESTAMPTZ NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS contributions(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),amount NUMERIC(14,2) NOT NULL CHECK(amount>=100),currency VARCHAR(3) NOT NULL DEFAULT 'USD',reference VARCHAR(120) NOT NULL,payment_method VARCHAR(100) NOT NULL DEFAULT 'Customer service recorded',customer_service_note VARCHAR(1000) NOT NULL DEFAULT '',status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','verified','rejected')),verified_by INTEGER REFERENCES users(id),verified_at TIMESTAMPTZ,rejected_by INTEGER REFERENCES users(id),rejected_at TIMESTAMPTZ,admin_note VARCHAR(1000) NOT NULL DEFAULT '',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS support_requests(id SERIAL PRIMARY KEY,user_id INTEGER REFERENCES users(id),name VARCHAR(100) NOT NULL,email VARCHAR(254) NOT NULL,country VARCHAR(80) NOT NULL,request_type VARCHAR(30) NOT NULL,message VARCHAR(3000) NOT NULL,status VARCHAR(20) NOT NULL DEFAULT 'open',admin_note VARCHAR(2000),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS audit_logs(id SERIAL PRIMARY KEY,admin_id INTEGER NOT NULL REFERENCES users(id),action VARCHAR(100) NOT NULL,target_type VARCHAR(50) NOT NULL,target_id INTEGER,details TEXT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE TABLE IF NOT EXISTS user_sessions(sid VARCHAR NOT NULL PRIMARY KEY,sess JSON NOT NULL,expire TIMESTAMP(6) NOT NULL);CREATE INDEX IF NOT EXISTS idx_user_sessions_expire ON user_sessions(expire);ALTER TABLE users ADD COLUMN IF NOT EXISTS selected_plan VARCHAR(40) NOT NULL DEFAULT 'Basic';ALTER TABLE users ADD COLUMN IF NOT EXISTS selected_amount NUMERIC(14,2) NOT NULL DEFAULT 100;ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR(12) NOT NULL DEFAULT 'en';ALTER TABLE users ADD COLUMN IF NOT EXISTS theme VARCHAR(12) NOT NULL DEFAULT 'light';ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data TEXT;CREATE TABLE IF NOT EXISTS password_reset_tokens(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,token_hash VARCHAR(64) NOT NULL UNIQUE,expires_at TIMESTAMPTZ NOT NULL,used_at TIMESTAMPTZ,created_by INTEGER REFERENCES users(id),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens(user_id,expires_at DESC);CREATE INDEX IF NOT EXISTS idx_contributions_user_status ON contributions(user_id,status);CREATE INDEX IF NOT EXISTS idx_contributions_status_created ON contributions(status,created_at DESC);CREATE UNIQUE INDEX IF NOT EXISTS idx_contributions_active_reference ON contributions(LOWER(reference)) WHERE status<>'rejected';CREATE INDEX IF NOT EXISTS idx_support_requests_status_created ON support_requests(status,created_at DESC)");
 }
 if(!cloudflareWorker)init().then(()=>app.listen(PORT,()=>console.log("DKP Structures running on port "+PORT+" with PostgreSQL"))).catch(e=>{console.error("PostgreSQL initialisation failed:",e);process.exit(1);});
