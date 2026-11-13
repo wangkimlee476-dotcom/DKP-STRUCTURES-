@@ -114,13 +114,11 @@ footer{background:#14263d;color:white;text-align:center;padding:30px}
 <header class="top">
 <div class="wrap nav">
 <div class="brand">DKP STRUCTURES</div>
-<nav class="links">
-<a href="#about">About</a>
-<a href="#campaign">Development</a>
-<a href="#levels">Supporter levels</a>
-<a href="#account">Account</a>
-<a href="#dashboard">Dashboard</a>
-<a href="#support">Customer support</a>
+<nav class="links" aria-label="Main navigation">
+<a href="#account">Login / Create Account</a>
+<a href="#levels">Supporters Recognition</a>
+<a href="#about">About DKP STRUCTURES</a>
+<a href="#campaign">Our Vision</a>
 </nav>
 </div>
 </header>
@@ -131,8 +129,8 @@ footer{background:#14263d;color:white;text-align:center;padding:30px}
 <h1>DKP STRUCTURES</h1>
 <h2>Building Together, Growing Together</h2>
 <p>A construction and property development vision focused on creating opportunities, supporting communities and building a stronger future.</p>
-<a href="#account"><button class="btn" type="button" onclick="setAuthMode('login')">Login</button></a>
-<a href="#account"><button class="ghost" type="button" onclick="setAuthMode('register')">Create Account</button></a>
+<button class="btn" type="button" onclick="setAuthMode('login');document.getElementById('account').scrollIntoView({behavior:'smooth'})">Login</button>
+<button class="ghost" type="button" onclick="setAuthMode('register');document.getElementById('account').scrollIntoView({behavior:'smooth'})">Create Account</button>
 </section><section id="account" class="section">
 <h2>Supporter account</h2>
 <div class="auth-card card">
