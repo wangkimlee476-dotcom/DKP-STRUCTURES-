@@ -248,7 +248,7 @@ $("sendSupport").onclick=async()=>{
 $("paymentSubmitForm").onsubmit=async e=>{
   e.preventDefault();const form=e.target,button=$("submitPayment"),f=new FormData(form),payload=Object.fromEntries(f.entries());
   const currency=payload.currency,rate=depositRates[currency],transferredAmount=Number(payload.amount),usdAmount=transferredAmount/rate,plan=payload.plan;
-  const ranges={"Basic":[100,499],"Bronze":[500,1249],"Silver":[1250,2999],"Gold":[3000,6999],"Platinum":[7000,14999],"Diamond":[15000,29999],"Founding":[30000,100000000]};
+  const ranges={"Basic":[100,100],"Silver":[250,250],"Gold":[500,500],"Platinum":[1000,1000],"Diamond":[5000,5000],"Custom":[100,100000000]};
   if(!rate){say("paymentSubmitStatus","The exchange rate for "+currency+" is unavailable. Please choose USD or try again later.","error");return}
   if(!Number.isFinite(transferredAmount)||transferredAmount<=0){say("paymentSubmitStatus","Enter the amount that was actually transferred.","error");$("paymentAmount").focus();return}
   if(!plan){say("paymentSubmitStatus","Please select the supporter plan for this contribution.","error");$("paymentPlan").focus();return}
