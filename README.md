@@ -5,6 +5,7 @@ Node.js + Express application with a Cloudflare Workers adapter and PostgreSQL-b
 ## Features in the current code
 - Public company-development website and campaign information.
 - Supporter registration, login, logout and dashboard.
+- Unique supporter referral codes, shareable invitation links, referral registration attribution and admin referral reporting; referrals are attribution only and carry no commissions or rewards.
 - Personal targets and recognition levels based on independently verified contributions.
 - Supporter profile/settings and contribution submission for manual review.
 - Customer-support request submission and admin review.

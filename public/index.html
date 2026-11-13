@@ -149,6 +149,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <h3>Create your supporter account</h3>
 <p class="muted">Register to track your supporter activity and verified contributions.</p>
 <form id="registerForm">
+<input type="hidden" name="referralCode" id="registrationReferralCode">
 <label>Full name</label>
 <input name="name" autocomplete="name" required maxlength="100">
 <label>Email</label>
@@ -412,6 +413,7 @@ $("registerForm").addEventListener("submit", async e => {
   e.preventDefault();
 
   const f = new FormData(e.target);
+  f.set("referralCode", new URLSearchParams(location.search).get("ref") || $("registrationReferralCode").value || "");
 
   try {
     const config = await api("/api/config");
@@ -423,6 +425,7 @@ $("registerForm").addEventListener("submit", async e => {
         email: f.get("email"),
         country: f.get("country"),
         password: f.get("password"),
+        referralCode: f.get("referralCode"),
         acceptTerms: $("terms").checked,
         termsVersion: config.termsVersion
       })
