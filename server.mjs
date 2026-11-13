@@ -116,7 +116,7 @@ app.patch("/api/profile/settings",auth,route(async(req,res)=>{
 }));
 app.patch("/api/profile/plan",auth,route(async(req,res)=>{
  const plan=clean(req.body.plan),amount=Number(req.body.amount);
- const ranges={Basic:[100,499],Bronze:[500,1249],Silver:[1250,2999],Gold:[3000,6999],Platinum:[7000,14999],Diamond:[15000,29999],Founding:[30000,100000000]};
+ const ranges={Basic:[100,100],Silver:[250,250],Gold:[500,500],Platinum:[1000,1000],Diamond:[5000,5000],Custom:[100,100000000]};
  if(!ranges[plan]||!Number.isFinite(amount)||amount<ranges[plan][0]||amount>ranges[plan][1])return res.status(400).json({error:"Choose an amount within the selected recognition level."});
  await pool.query("UPDATE users SET selected_plan=$1,selected_amount=$2 WHERE id=$3",[plan,amount,req.session.userId]);
  res.json({ok:true,selectedPlan:plan,selectedAmount:amount,message:"Your preference has been saved. This does not make a payment or create an obligation."});
