@@ -186,11 +186,11 @@ async function main() {
     // Remove only the synthetic accounts and their dependent test records.
     await db.query("DELETE FROM referrals WHERE referrer_user_id IN (SELECT id FROM users WHERE email = ANY($1::text[])) OR referred_user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
     await db.query("DELETE FROM audit_logs WHERE admin_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
-    await db.query("DELETE FROM support_requests WHERE email = ANY($1::text[])", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM contributions WHERE user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM password_reset_tokens WHERE user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM user_sessions WHERE sess->>'userId' IN (SELECT id::text FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM users WHERE email = ANY($1::text[])", [[supporterEmail, adminEmail]]).catch(() => {});
+    await db.query("DELETE FROM support_requests WHERE email = ANY($1::text[])", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM contributions WHERE user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM password_reset_tokens WHERE user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM user_sessions WHERE sess->>'userId' IN (SELECT id::text FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM users WHERE email = ANY($1::text[])", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
     await db.end();
   }
 }
