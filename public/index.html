@@ -18,7 +18,7 @@ button{border:0;border-radius:30px;padding:12px 18px;font-weight:700;cursor:poin
 .brand{font-weight:900;letter-spacing:.07em}
 .links{display:flex;gap:18px;flex-wrap:wrap}
 .links a{color:white;text-decoration:none;font-size:14px}
-.hero{margin:20px auto;border-radius:24px;padding:70px 35px;color:white;background:linear-gradient(90deg,#061b14ed,#073b2b99),url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=80') center/cover}
+.hero{margin:20px auto;border-radius:24px;padding:70px 35px;color:white;background:linear-gradient(90deg,#071a35ed,#14263d99),url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=80') center/cover}
 .hero h1{font-size:clamp(38px,6vw,66px);line-height:1.08;max-width:750px}
 .hero p{max-width:700px;color:#e4eee8;font-size:18px}
 .section{padding:48px 0}
@@ -78,7 +78,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--g);box-shadow:0 0 0 3
 .dashboard-metric{background:#f7faf7;border:1px solid var(--line);border-radius:15px;padding:18px}
 .dashboard-metric .metric{font-size:clamp(24px,4vw,34px);overflow-wrap:anywhere}
 .progress-track{height:12px;background:#e8eee9;border-radius:20px;overflow:hidden;margin:10px 0 22px}
-.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#073b2b,#d6ad52);border-radius:20px;transition:width .35s ease}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#14263d,#c5a46d);border-radius:20px;transition:width .35s ease}
 .history-list{display:grid;gap:10px;margin:14px 0}
 .history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:#fff}
 .history-row strong{font-variant-numeric:tabular-nums}
@@ -104,7 +104,7 @@ footer{line-height:1.9}
  .dashboard-actions button{flex:1 1 100%}
  .chatfloat{right:12px;bottom:12px}
 }
-footer{background:#101c18;color:white;text-align:center;padding:30px}
+footer{background:#14263d;color:white;text-align:center;padding:30px}
 @media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}.hero{padding:45px 22px}}
 
 #dkpSupportFallback{position:fixed;inset:0;z-index:9999;background:#10182799;display:none;align-items:flex-end;justify-content:center;padding:16px}#dkpSupportFallback.open{display:flex}#dkpSupportFallback .dkp-fallback-card{width:min(100%,440px);background:#fff;color:#182333;border-radius:22px;padding:22px;box-shadow:0 18px 60px #0005;font:inherit}#dkpSupportFallback h3{margin:0 32px 8px 0;font-size:20px}#dkpSupportFallback p{color:#536171;line-height:1.5}#dkpSupportFallback .dkp-fallback-actions{display:grid;gap:10px;margin-top:16px}#dkpSupportFallback a{display:block;text-align:center;text-decoration:none;border-radius:13px;padding:13px 16px;font-weight:800;background:#176b4a;color:white}#dkpSupportFallback a.secondary-link{background:#edf2f6;color:#1b3449}#dkpSupportFallback button{float:right;border:0;background:transparent;font-size:24px;color:#536171}
@@ -128,35 +128,12 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <main class="wrap">
 <section class="hero">
 <span style="color:#f0d58e;font-weight:800;letter-spacing:.18em">CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span>
-<h1>Building a vision. Creating opportunities.</h1>
-<p>DKP Structures is focused on developing a construction business grounded in responsible planning, quality workmanship and transparency.</p>
-<a href="#about"><button class="btn">Discover DKP Structures</button></a>
-</section>
-
-<section id="about" class="section">
-<h2>About DKP Structures</h2>
-<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified.</p>
-</section>
-
-<section id="campaign" class="section">
-<h2>Development initiative</h2>
-<div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div>
-<div class="card" style="margin-top:16px">
-<h3>Interested in making a contribution?</h3>
-<p class="muted">Select the button below to request available payment methods from customer support. No deposit is taken on this website.</p>
-<button class="btn" id="depositOptionsBtn" type="button">Make a deposit · Request payment options</button>
-</div>
-<h3>Proposed planning target: USD $1,000,000</h3>
-<p class="muted">Planning figure only — not funds raised.</p>
-</section>
-
-<section id="levels" class="section">
-<h2>Supporter recognition levels</h2>
-<p class="muted">Based on cumulative verified contributions. Recognition only; no ownership or investment rights.</p>
-<div class="grid" id="levelCards"></div>
-</section>
-
-<section id="account" class="section">
+<h1>DKP STRUCTURES</h1>
+<h2>Building Together, Growing Together</h2>
+<p>A construction and property development vision focused on creating opportunities, supporting communities and building a stronger future.</p>
+<a href="#account"><button class="btn" type="button" onclick="setAuthMode('login')">Login</button></a>
+<a href="#account"><button class="ghost" type="button" onclick="setAuthMode('register')">Create Account</button></a>
+</section><section id="account" class="section">
 <h2>Supporter account</h2>
 <div class="auth-card card">
 <div class="auth-tabs" role="tablist" aria-label="Account access">
@@ -195,64 +172,27 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </div>
 </section>
 
-<section id="dashboard" class="section">
-<h2>My supporter dashboard</h2>
-<div id="signedOut" class="notice">Sign in to view your private supporter dashboard and contribution history.</div>
-<div id="dash" class="hidden">
-<div class="card dashboard-card">
-<div class="dashboard-top"><div><h3 id="welcome">Welcome</h3><p id="supporterId" class="muted"></p></div><span class="status">Account overview</span></div>
-<div class="grid dashboard-metrics">
-<div class="dashboard-metric"><div class="muted">Verified contribution total</div><div class="metric" id="total">$0</div></div>
-<div class="dashboard-metric"><div class="muted">Recognition level</div><div class="metric" id="level">Basic</div></div>
-<div class="dashboard-metric"><div class="muted">Progress to personal target</div><div class="metric" id="progress">0%</div></div>
-</div>
-<div class="muted">Personal target progress</div><div class="progress-track" role="progressbar" aria-label="Progress to personal target" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
-<form id="targetForm"><label>Personal target (USD)</label><input name="target" type="number" min="100" max="100000000" step="0.01" placeholder="Set your target" required><button class="ghost" type="submit">Save personal target</button></form>
-<h3>Contribution history</h3>
-<p class="muted">This is a record of contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p>
-<div id="history" class="history-list"><p class="muted">No contributions recorded.</p></div>
-<p class="muted">To ask about available payment methods in your country, contact customer support first. No payments are processed on this website.</p>
-<div class="dashboard-actions"><button id="dashboardDepositBtn" class="btn" type="button">Request payment options</button><button id="logout" class="ghost" type="button">Log out</button></div>
-</div>
-</div>
-</section>
-
-<section id="support" class="section">
-<h2>Customer support</h2>
-<p class="muted">Ask about payment methods available in your country before making any contribution. Do not send card details, passwords or bank login information.</p>
-<div class="grid">
+<section id="levels" class="section">
+<h2>🏆 Supporters Recognition</h2>
+<p class="muted">Celebrating the people who support our vision. Recognition is based on cumulative verified contributions. Supporters may choose a public display name or keep their recognition private.</p>
+<div class="grid" id="levelCards"></div>
+<p><a href="/ranking.html">View full supporters ranking</a></p>
+</section><section id="about" class="section">
+<h2>About DKP STRUCTURES</h2>
 <div class="card">
-<h3>Request payment-method information</h3>
-<form id="supportForm">
-<label>Your name</label>
-<input name="name" required>
-<label>Email</label>
-<input name="email" type="email" required>
-<label>Country</label>
-<input name="country" required>
-<label>Request type</label>
-<select name="type">
-<option value="payment_methods">Available payment methods</option>
-<option value="account">Account help</option>
-<option value="general">General question</option>
-</select>
-<label>Message</label>
-<textarea name="message" required minlength="10" maxlength="3000"></textarea>
-<button class="btn" type="submit">Copy request & open Smartsupp</button>
-</form>
-<p id="supportMessage" aria-live="polite"></p>
+<p>🌍 <strong>JOIN DKP STRUCTURES — BUILDING THE FUTURE TOGETHER!</strong></p>
+<p>By joining DKP STRUCTURES, you become part of a vision to grow a construction and property company. We have set a fundraising target of <strong>US$1 million</strong>, which will be used to support development projects, the procurement of equipment and materials, and the expansion of our operational capabilities.</p>
+<p>Our aspirations go beyond simply building a company. Once DKP STRUCTURES is fully operational, we are committed to providing—for eligible supporters—construction labor at no cost to help them build their own private homes. Furthermore, we aim to create job opportunities for professionals and qualified individuals in civil engineering, structural engineering, architecture, project management, and other sectors within the construction industry.</p>
+<p>We also seek to build a supportive community, offering you the chance to stay updated on the company’s progress as we work together toward a better future.</p>
+<p>Every contribution received and verified will be acknowledged with an official payment confirmation or receipt. You will be able to view your contribution history via a dedicated supporter dashboard once that feature becomes available.</p>
+<p>Participation and contributions are entirely voluntary. Contributions are not investments and do not promise any financial returns. The planned benefits are future goals that depend on the company’s operational success, available resources, specific requirements, and overall capacity.</p>
+<p>❤️ Today, we are building this company together; one day, we hope to help you build your own home and achieve a brighter future.</p>
+<p><strong>DKP STRUCTURES — Building Together, Growing Together, Transforming Lives.</strong></p>
 </div>
-
-<div class="card">
-<h3>Live chat with Smartsupp</h3>
-<p>Tap the chat button to open the Smartsupp conversation directly on this page.</p>
-<p class="muted">Support hours and response times should be published once staffed.</p>
-<p><strong>Email customer support:</strong> <a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20enquiry">dkpstructures@gmail.com</a></p>
-<p><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20payment%20options%20request">Email us to request available payment options</a></p>
-</div>
-</div>
-</section>
-</main>
+</section><section id="campaign" class="section">
+<h2>Our development vision</h2>
+<div class="notice">Fundraising target: <strong>US$1,000,000</strong>. Contributions are entirely voluntary, are not investments, and do not promise financial returns. No payment is taken through this website unless an explicitly approved secure payment process is introduced and tested.</div>
+</section></main>
 
 <footer>
 DKP STRUCTURES · Informational company-development website · No online payments accepted<br>
