@@ -132,72 +132,6 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <button class="btn" type="button" onclick="document.getElementById('account').scrollIntoView({behavior:'smooth'});document.getElementById('loginTab').click()">Login</button>
 <button class="ghost" type="button" onclick="document.getElementById('account').scrollIntoView({behavior:'smooth'});document.getElementById('registerTab').click()">Create Account</button>
 </div></section>
-
-
-
-
-
-
-
-
-
-<section id="dashboard" class="section">
-<h2>My supporter dashboard</h2>
-<div id="signedOut" class="notice">Sign in to view your private supporter dashboard and contribution history.</div>
-<div id="dash" class="hidden">
-<div class="card dashboard-card">
-<div class="dashboard-top"><div><h3 id="welcome">Welcome</h3><p id="supporterId" class="muted"></p></div><span class="status">Account overview</span></div>
-<div class="grid dashboard-metrics">
-<div class="dashboard-metric"><div class="muted">Verified contribution total</div><div class="metric" id="total">$0</div></div>
-<div class="dashboard-metric"><div class="muted">Recognition level</div><div class="metric" id="level">Basic</div></div>
-<div class="dashboard-metric"><div class="muted">Progress to personal target</div><div class="metric" id="progress">0%</div></div>
-</div>
-<div class="muted">Personal target progress</div><div class="progress-track" role="progressbar" aria-label="Progress to personal target" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
-<form id="targetForm"><label>Personal target (USD)</label><input name="target" type="number" min="100" max="100000000" step="0.01" placeholder="Set your target" required><button class="ghost" type="submit">Save personal target</button></form>
-<h3>Contribution history</h3>
-<p class="muted">This is a record of contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p>
-<div id="history" class="history-list"><p class="muted">No contributions recorded.</p></div>
-<p class="muted">To ask about available payment methods in your country, contact customer support first. No payments are processed on this website.</p>
-<div class="dashboard-actions"><button id="dashboardDepositBtn" class="btn" type="button">Request payment options</button><button id="logout" class="ghost" type="button">Log out</button></div>
-</div>
-</div>
-</section>
-
-<section id="support" class="section">
-<h2>Customer support</h2>
-<p class="muted">Ask about payment methods available in your country before making any contribution. Do not send card details, passwords or bank login information.</p>
-<div class="grid">
-<div class="card">
-<h3>Request payment-method information</h3>
-<form id="supportForm">
-<label>Your name</label>
-<input name="name" required>
-<label>Email</label>
-<input name="email" type="email" required>
-<label>Country</label>
-<input name="country" required>
-<label>Request type</label>
-<select name="type">
-<option value="payment_methods">Available payment methods</option>
-<option value="account">Account help</option>
-<option value="general">General question</option>
-</select>
-<label>Message</label>
-<textarea name="message" required minlength="10" maxlength="3000"></textarea>
-<button class="btn" type="submit">Copy request & open Smartsupp</button>
-</form>
-<p id="supportMessage" aria-live="polite"></p>
-</div>
-
-<div class="card">
-<h3>Live chat with Smartsupp</h3>
-<p>Tap the chat button to open the Smartsupp conversation directly on this page.</p>
-<p class="muted">Support hours and response times should be published once staffed.</p>
-<p><strong>Email customer support:</strong> <a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20enquiry">dkpstructures@gmail.com</a></p>
-<p><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20payment%20options%20request">Email us to request available payment options</a></p>
-</div>
-</div>
-</section>
 <section id="account" class="section">
 <h2>Login or Create Account</h2>
 <div class="auth-card card">
@@ -235,7 +169,9 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </div>
 <p id="authMessage" aria-live="polite"></p>
 </div>
-</section><section id="recognition" class="section"><h2>🏆 Supporters Recognition</h2><p class="muted">Honouring supporters based only on verified contributions. Supporters can choose whether their display name appears publicly.</p><div class="grid" id="levelCards"></div><p><a href="/ranking.html">View Full Ranking</a></p></section><section id="about" class="section"><h2>About DKP STRUCTURES</h2><div class="card">
+</section>
+<section id="recognition" class="section"><h2>🏆 Supporters Recognition</h2><p class="muted">Honouring supporters based only on verified contributions. Supporters can choose whether their display name appears publicly.</p><div class="grid" id="levelCards"></div><p><a href="/ranking.html">View Full Ranking</a></p></section>
+<section id="about" class="section"><h2>About DKP STRUCTURES</h2><div class="card">
 <p><strong>🌍 JOIN DKP STRUCTURES — BUILDING THE FUTURE TOGETHER!</strong></p>
 <p>By joining DKP STRUCTURES, you become part of a vision to grow a construction and property company. We have set a fundraising target of <strong>US$1 million</strong>, which will be used to support development projects, the procurement of equipment and materials, and the expansion of our operational capabilities.</p>
 <p>Our aspirations go beyond simply building a company. Once DKP STRUCTURES is fully operational, we are committed to providing—for eligible supporters—construction labor at no cost to help them build their own private homes. Furthermore, we aim to create job opportunities for professionals and qualified individuals in civil engineering, structural engineering, architecture, project management, and other sectors within the construction industry.</p>
@@ -243,7 +179,8 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <p>Every contribution received and verified will be acknowledged with an official payment confirmation or receipt. You will be able to view your contribution history via a dedicated supporter dashboard once that feature becomes available.</p>
 <p>Participation and contributions are entirely voluntary. Contributions are not investments and do not promise any financial returns. The planned benefits are future goals that depend on the company’s operational success, available resources, specific requirements, and overall capacity.</p>
 <p>❤️ Today, we are building this company together; one day, we hope to help you build your own home and achieve a brighter future.</p>
-<p><strong>DKP STRUCTURES — Building Together, Growing Together, Transforming Lives.</strong></p></div></section><section id="campaign" class="section">
+<p><strong>DKP STRUCTURES — Building Together, Growing Together, Transforming Lives.</strong></p></div></section>
+<section id="campaign" class="section">
 <h2>Development initiative</h2>
 <div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div>
 <div class="card" style="margin-top:16px">
@@ -253,7 +190,77 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </div>
 <h3>Proposed planning target: USD $1,000,000</h3>
 <p class="muted">Planning figure only — not funds raised.</p>
-</section></main>
+</section>
+<section id="dashboard" class="section">
+<h2>My supporter dashboard</h2>
+<div id="signedOut" class="notice">Sign in to view your private supporter dashboard and contribution history.</div>
+<div id="dash" class="hidden">
+<div class="card dashboard-card">
+<div class="dashboard-top"><div><h3 id="welcome">Welcome</h3><p id="supporterId" class="muted"></p></div><span class="status">Account overview</span></div>
+<div class="grid dashboard-metrics">
+<div class="dashboard-metric"><div class="muted">Verified contribution total</div><div class="metric" id="total">$0</div></div>
+<div class="dashboard-metric"><div class="muted">Recognition level</div><div class="metric" id="level">Basic</div></div>
+<div class="dashboard-metric"><div class="muted">Progress to personal target</div><div class="metric" id="progress">0%</div></div>
+</div>
+<div class="muted">Personal target progress</div><div class="progress-track" role="progressbar" aria-label="Progress to personal target" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+<form id="targetForm"><label>Personal target (USD)</label><input name="target" type="number" min="100" max="100000000" step="0.01" placeholder="Set your target" required><button class="ghost" type="submit">Save personal target</button></form>
+<h3>Contribution history</h3>
+<p class="muted">This is a record of contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p>
+<div id="history" class="history-list"><p class="muted">No contributions recorded.</p></div>
+<p class="muted">To ask about available payment methods in your country, contact customer support first. No payments are processed on this website.</p>
+<div class="dashboard-actions"><button id="dashboardDepositBtn" class="btn" type="button">Request payment options</button><button id="logout" class="ghost" type="button">Log out</button></div>
+</div>
+</div>
+</section>
+<section id="support" class="section">
+<h2>Customer support</h2>
+<p class="muted">Ask about payment methods available in your country before making any contribution. Do not send card details, passwords or bank login information.</p>
+<div class="grid">
+<div class="card">
+<h3>Request payment-method information</h3>
+<form id="supportForm">
+<label>Your name</label>
+<input name="name" required>
+<label>Email</label>
+<input name="email" type="email" required>
+<label>Country</label>
+<input name="country" required>
+<label>Request type</label>
+<select name="type">
+<option value="payment_methods">Available payment methods</option>
+<option value="account">Account help</option>
+<option value="general">General question</option>
+</select>
+<label>Message</label>
+<textarea name="message" required minlength="10" maxlength="3000"></textarea>
+<button class="btn" type="submit">Copy request & open Smartsupp</button>
+</form>
+<p id="supportMessage" aria-live="polite"></p>
+</div>
+
+<div class="card">
+<h3>Live chat with Smartsupp</h3>
+<p>Tap the chat button to open the Smartsupp conversation directly on this page.</p>
+<p class="muted">Support hours and response times should be published once staffed.</p>
+<p><strong>Email customer support:</strong> <a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20support%20enquiry">dkpstructures@gmail.com</a></p>
+<p><a href="mailto:dkpstructures@gmail.com?subject=DKP%20Structures%20payment%20options%20request">Email us to request available payment options</a></p>
+</div>
+</div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</main>
 
 <footer>
 DKP STRUCTURES · Informational company-development website · No online payments accepted<br>
