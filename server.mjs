@@ -186,7 +186,7 @@ app.get("/api/rankings",route(async(req,res)=>{
   GROUP BY u.id,u.public_display_name,u.full_name,u.supporter_id
   ORDER BY SUM(c.amount) DESC,u.supporter_id ASC LIMIT 100
  `);
- res.json({period,rankings:rows.rows.map((r,i)=>({rank:i+1,name:r.display_name,supporterId:r.supporter_id,total:Number(r.verified_total),currency:"USD"}))});
+ res.json({period,rankings:rows.rows.map((r,i)=>({rank:i+1,name:r.display_name,total:Number(r.verified_total),currency:"USD"}))});
 }));
 app.get("/api/announcements",auth,route(async(req,res)=>{
  const rows=await pool.query("SELECT id,title,category,body,is_pinned,published_at FROM announcements WHERE is_published=TRUE ORDER BY is_pinned DESC,published_at DESC,id DESC LIMIT 100");
