@@ -1,4 +1,4 @@
--- DKP STRUCTURES referral tracking (no rewards or commissions).
+-- DKP STRUCTURES referral attribution. The separate referral-points migration adds recognition awards.
 -- Additive only: existing supporter and contribution rows are preserved.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(24);
 UPDATE users
