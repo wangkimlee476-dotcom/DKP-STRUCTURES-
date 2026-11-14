@@ -187,7 +187,7 @@ app.get("/api/dashboard",auth,route(async(req,res)=>{
  const total=await totalFor(u.id);
  const history=(await pool.query('SELECT amount,currency,reference,payment_method,status,created_at AS date,verified_at AS "verifiedAt" FROM contributions WHERE user_id=$1 ORDER BY id DESC LIMIT 50',[u.id])).rows.map(x=>({...x,amount:Number(x.amount)}));
  const referrals=(await pool.query("SELECT referred.full_name AS name,referred.supporter_id AS supporter_id,r.created_at,r.points_awarded FROM referrals r JOIN users referred ON referred.id=r.referred_user_id WHERE r.referrer_user_id=$1 ORDER BY r.created_at DESC LIMIT 200",[u.id])).rows;
- const referralCount=referrals.length;
+ const referralCount=Number((await pool.query("SELECT COUNT(*)::int AS count FROM referrals WHERE referrer_user_id=$1",[u.id])).rows[0].count);
  const referralPoints=Number((await pool.query("SELECT COALESCE(SUM(points_awarded),0)::int AS total FROM referrals WHERE referrer_user_id=$1",[u.id])).rows[0].total);
  res.json({user:publicUser(u),verifiedTotal:total,level:levelFor(total),progress:u.personal_target?Math.min(100,Math.round(total/Number(u.personal_target)*100)):0,history,referral:{code:u.referral_code,count:referralCount,points:referralPoints,pointsPerRegistration:20,history:referrals},balanceMeaning:"Verified contribution total only. It is not cash held for the supporter, a bank deposit, withdrawable balance or investment account."});
 }));
