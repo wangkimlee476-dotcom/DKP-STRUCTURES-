@@ -181,7 +181,16 @@ app.post("/api/admin/users/:id/password-reset",admin,route(async(req,res)=>{
  res.status(201).json({email:u.email,resetUrl:origin+"/reset-password.html?token="+encodeURIComponent(token),expiresInMinutes:30,message:"Send this one-time link only to the verified account email. It expires in 30 minutes and can be used once."});
 }));
 
-app.get("/api/dashboard",auth,route(async(req,res)=>{const u=(await pool.query("SELECT * FROM users WHERE id=$1",[req.session.userId])).rows[0];if(!u)return res.status(401).json({error:"Please sign in again."});const total=await totalFor(u.id),history=(await pool.query('SELECT amount,currency,reference,payment_method,status,created_at AS date,verified_at AS "verifiedAt" FROM contributions WHERE user_id=$1 ORDER BY id DESC LIMIT 50',[u.id])).rows.map(x=>({...x,amount:Number(x.amount)}));const referralCount=Number((await pool.query("SELECT COUNT(*)::int AS count FROM referrals WHERE referrer_user_id=$1",[u.id])).rows[0].count);res.json({user:publicUser(u),verifiedTotal:total,level:levelFor(total),progress:u.personal_target?Math.min(100,Math.round(total/Number(u.personal_target)*100)):0,history,referral:{code:u.referral_code,count:referralCount},balanceMeaning:"Verified contribution total only. It is not cash held for the supporter, a bank deposit, withdrawable balance or investment account."});}));
+app.get("/api/dashboard",auth,route(async(req,res)=>{
+ const u=(await pool.query("SELECT * FROM users WHERE id=$1",[req.session.userId])).rows[0];
+ if(!u)return res.status(401).json({error:"Please sign in again."});
+ const total=await totalFor(u.id);
+ const history=(await pool.query('SELECT amount,currency,reference,payment_method,status,created_at AS date,verified_at AS "verifiedAt" FROM contributions WHERE user_id=$1 ORDER BY id DESC LIMIT 50',[u.id])).rows.map(x=>({...x,amount:Number(x.amount)}));
+ const referralCount=Number((await pool.query("SELECT COUNT(*)::int AS count FROM referrals WHERE referrer_user_id=$1",[u.id])).rows[0].count);
+ const referralPoints=Number((await pool.query("SELECT COALESCE(SUM(points_awarded),0)::int AS total FROM referrals WHERE referrer_user_id=$1",[u.id])).rows[0].total);
+ const referralHistory=(await pool.query("SELECT referred.full_name AS name,referred.supporter_id,r.created_at,r.points_awarded FROM referrals r JOIN users referred ON referred.id=r.referred_user_id WHERE r.referrer_user_id=$1 ORDER BY r.created_at DESC LIMIT 200",[u.id])).rows;
+ res.json({user:publicUser(u),verifiedTotal:total,level:levelFor(total),progress:u.personal_target?Math.min(100,Math.round(total/Number(u.personal_target)*100)):0,history,referral:{code:u.referral_code,count:referralCount,points:referralPoints,pointsPerRegistration:20,history:referralHistory},balanceMeaning:"Verified contribution total only. It is not cash held for the supporter, a bank deposit, withdrawable balance or investment account."});
+}));
 app.patch("/api/profile/target",auth,route(async(req,res)=>{const t=Number(req.body.target);if(!Number.isFinite(t)||t<100||t>100000000)return res.status(400).json({error:"Enter a target of at least USD $100."});await pool.query("UPDATE users SET personal_target=$1 WHERE id=$2",[t,req.session.userId]);res.json({target:t});}));
 
 /* Supporter community: management announcements, private complaints and public recognition. */
