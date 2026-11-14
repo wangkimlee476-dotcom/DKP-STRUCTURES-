@@ -75,6 +75,8 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <a href="#account">Account</a>
 <a href="#dashboard">Dashboard</a>
 <a href="#support">Customer support</a>
+<a class="btn" href="#account" onclick="document.getElementById('loginTab').click()">Login</a>
+<a class="btn" href="#account" onclick="document.getElementById('registerTab').click()">Create account</a>
 </nav>
 </div>
 </header>
@@ -84,7 +86,11 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <span style="color:#f0d58e;font-weight:800;letter-spacing:.18em">CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span>
 <h1>Building a vision. Creating opportunities.</h1>
 <p>DKP Structures is focused on developing a construction business grounded in responsible planning, quality workmanship and transparency.</p>
-<a href="#about"><button class="btn">Discover DKP Structures</button></a>
+<div class="hero-actions" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+<a class="btn" href="#account" onclick="document.getElementById('loginTab').click()">Login to My Account</a>
+<a class="btn" href="#account" onclick="document.getElementById('registerTab').click()">Create New Account</a>
+<a href="#about"><button class="ghost" type="button">Discover DKP Structures</button></a>
+</div>
 </section>
 
 <section id="about" class="section">
