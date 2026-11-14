@@ -312,6 +312,7 @@ async function init(){
  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)");
  await pool.query("CREATE TABLE IF NOT EXISTS referrals(id BIGSERIAL PRIMARY KEY,referrer_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,referred_user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE RESTRICT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),CONSTRAINT referrals_no_self_referral CHECK(referrer_user_id<>referred_user_id))");
  await pool.query("CREATE INDEX IF NOT EXISTS idx_referrals_referrer_created ON referrals(referrer_user_id,created_at DESC)");
+ await pool.query("ALTER TABLE referrals ADD COLUMN IF NOT EXISTS points_awarded INTEGER NOT NULL DEFAULT 20 CHECK(points_awarded>=0)");
 }
 if(!cloudflareWorker)init().then(()=>app.listen(PORT,()=>console.log("DKP Structures running on port "+PORT+" with PostgreSQL"))).catch(e=>{console.error("PostgreSQL initialisation failed:",e);process.exit(1);});
 if(!cloudflareWorker)process.on("SIGTERM",async()=>{await pool.end();process.exit(0);});
