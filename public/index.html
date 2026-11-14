@@ -111,6 +111,55 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 
 /* Company vision and project gallery */
 .vision-intro{max-width:820px}.photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:22px 0}.photo-card{overflow:hidden;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 28px #102b1b08}.photo-card img{display:block;width:100%;height:220px;object-fit:cover}.photo-card div{padding:16px 18px}.photo-card h3{margin:0 0 6px}.photo-card p{margin:0;color:var(--muted)}.vision-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}.vision-grid .card{height:100%}.promise-note{background:#fff8e8;border:1px solid #ead9ae;padding:17px;border-radius:14px;color:#665222}.principle-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.principle{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.principle strong{display:block;color:var(--g);margin-bottom:5px}@media(max-width:650px){.photo-grid{grid-template-columns:1fr}.photo-card img{height:205px}}
+
+/* DKP premium identity refresh — presentation only; existing app behaviour retained */
+:root{--g:#101f33;--ink:#182536;--gold:#c9a66b;--paper:#f4f1eb;--muted:#667487;--line:#e6e0d5}
+body{background:#f5f2ec;color:#182536;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.018em}
+.top{background:rgba(12,27,45,.97);backdrop-filter:blur(16px);border-bottom:1px solid #c9a66b55;box-shadow:0 12px 34px #08162624}
+.wrap{max-width:1220px}
+.nav{min-height:82px}
+.brand{font-size:17px;letter-spacing:.15em;color:#f4e6c8}
+.brand:before{content:"◆";color:var(--gold);font-size:12px;margin-right:10px;vertical-align:2px}
+.links{gap:7px}
+.links a{font-weight:650;letter-spacing:.01em;padding:10px 12px}
+.links a:first-of-type{background:linear-gradient(135deg,#d9bd88,#b78e4f);color:#142238;border-radius:999px;padding:10px 18px}
+.links a:hover{background:#ffffff18;color:#f5d99f}
+.hero{position:relative;isolation:isolate;overflow:hidden;min-height:490px;margin:28px auto 34px;padding:clamp(38px,7vw,82px);border:1px solid #d4b47b66;border-radius:28px;background:linear-gradient(105deg,rgba(8,24,39,.94) 0%,rgba(12,42,47,.78) 56%,rgba(12,31,42,.25) 100%),url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2000&q=90') center/cover;box-shadow:0 28px 70px #15263824}
+.hero:after{content:"";position:absolute;z-index:-1;right:-100px;bottom:-210px;width:480px;height:480px;border:1px solid #d6b77b55;border-radius:50%;box-shadow:0 0 0 35px #d6b77b0b,0 0 0 75px #d6b77b08}
+.hero h1{font-size:clamp(48px,8vw,86px);font-weight:850;letter-spacing:-.065em;margin:18px 0 8px;text-shadow:0 4px 28px #0005}
+.hero h2{font-size:clamp(22px,3vw,34px);font-weight:550;letter-spacing:-.035em;color:#ead7b4}
+.hero p{font-size:clamp(16px,2vw,19px);line-height:1.8;color:#f0eee8;max-width:660px}
+.btn{background:linear-gradient(135deg,#e0c28b,#bb965c);color:#17263a;box-shadow:0 8px 22px #080f1d30}
+.ghost{background:#fff;color:#17263a;border:1px solid #d9c8a8}
+.hero .ghost{background:#ffffffeb}
+.section{padding:58px 0}
+.section h2{color:#14263d;font-weight:780}
+.section>p{line-height:1.8}
+.card,.photo-card{border:1px solid #e5ded1;border-radius:20px;box-shadow:0 12px 34px #1c2b3b0b}
+.card{padding:clamp(21px,3vw,30px)}
+.photo-card{overflow:hidden}
+.photo-card img{height:250px;transition:transform .45s}
+.photo-card:hover img{transform:scale(1.035)}
+.photo-card h3,.card h3{color:#14263d;letter-spacing:-.025em}
+.auth-card{max-width:610px;border:1px solid #d9c9a9;box-shadow:0 24px 65px #13243a15}
+.auth-tabs{background:#f1eee7}
+.auth-tab.active{background:#14263d}
+.auth-submit{background:linear-gradient(135deg,#182f49,#0c1c30);color:#f7e6c2}
+input,select,textarea{border-color:#ddd5c7;border-radius:12px}
+.dashboard-card{background:linear-gradient(145deg,#fff,#faf8f3)}
+.dashboard-metric{background:linear-gradient(145deg,#fff,#f4f0e7);border-color:#e5dac6}
+.dashboard-metric .metric{color:#14263d}
+.progress-fill{background:linear-gradient(90deg,#173b46,#d0ad70)}
+.status{background:#e9f0eb;color:#285b43}
+.notice,.promise-note{background:#fbf5e8;border-color:#e8d6b1;color:#65502d}
+.vision-grid .card{background:linear-gradient(145deg,#fff,#faf8f3)}
+.principle{border-color:#e5ded1}
+footer{background:linear-gradient(120deg,#0b192a,#172f3b);border-top:2px solid #c9a66b;color:#e8e3d9}
+footer a{color:#e2c38d!important}
+.chatfloat{border:1px solid #ffffff55;box-shadow:0 12px 32px #06172955}
+button{letter-spacing:.005em}
+@media(max-width:700px){.nav{gap:7px}.brand{font-size:15px}.hero{min-height:400px;border-radius:21px;margin-top:16px}.hero h1{font-size:clamp(42px,13vw,66px)}.section{padding:40px 0}.photo-card img{height:215px}.links a:first-of-type{padding:8px 12px}}
+
 </style>
 <style id="dkp-language-style">.dkp-language-select{max-width:190px;min-width:132px;padding:8px 10px;border:1px solid #c5a46d;border-radius:9px;background:#fff;color:#14263d;font:600 13px system-ui;z-index:10001}.goog-te-banner-frame,.goog-te-balloon-frame{display:none!important}body{top:0!important}#google_translate_element{display:none!important}@media(max-width:700px){.dkp-language-select{max-width:150px;min-width:120px;margin:6px 0}}</style></head>
 <body>
