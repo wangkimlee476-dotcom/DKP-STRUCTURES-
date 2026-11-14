@@ -295,6 +295,8 @@ async function init(){
   if(!columns.has("avatar_data"))throw new Error("Database migration required; missing users.avatar_data column.");
   if(!columns.has("show_in_ranking")||!columns.has("public_display_name"))throw new Error("Database migration required; missing supporter ranking privacy columns.");
   if(!columns.has("referral_code"))throw new Error("Database migration required; missing users.referral_code column.");
+  const referralColumns=await pool.query("SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='referrals'");
+  if(!new Set(referralColumns.rows.map(row=>row.column_name)).has("points_awarded"))throw new Error("Database migration required; missing referrals.points_awarded column.");
   const referralIndex=await pool.query("SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='idx_users_referral_code'");
   if(!referralIndex.rowCount)throw new Error("Database migration required; missing idx_users_referral_code index.");
   const index=await pool.query("SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='idx_contributions_active_reference'");
