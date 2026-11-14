@@ -29,7 +29,7 @@ const pool=cloudflareWorker?{
  on(){return this}
 }:new Pool({connectionString:runtimeEnv.DATABASE_URL,ssl:ssl?{rejectUnauthorized:false}:false,max:10,connectionTimeoutMillis:10000});
 if(!cloudflareWorker)pool.on("error",e=>console.error("PostgreSQL pool error:",e.message));
-const termsVersion=runtimeEnv.TERMS_VERSION||"2026-11-10";
+const termsVersion=runtimeEnv.TERMS_VERSION||"2026-11-15";
 const clean=v=>String(v||"").trim(),emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
 const route=fn=>(req,res,next)=>Promise.resolve(fn(req,res,next)).catch(next);
 const levels=[["Basic",100,499],["Bronze",500,1249],["Silver",1250,2999],["Gold",3000,6999],["Platinum",7000,14999],["Diamond",15000,29999],["Founding",30000,Number.MAX_SAFE_INTEGER]];
