@@ -68,6 +68,41 @@ async function main() {
     assert.ok(registration.data.user?.supporterId);
     supporterCookie = registration.cookie;
     assert.ok(supporterCookie, "Registration must establish an authenticated session.");
+    assert.match(registration.data.user?.supporterId || "", /^DKP-/);
+
+    const referralCode = (await request("/api/dashboard", { cookie: supporterCookie })).data.referral?.code;
+    assert.match(referralCode || "", /^DKP-[A-F0-9]{12}$/);
+
+    const referredEmail = `referred-${suffix}@example.test`;
+    const referredRegistration = await request("/api/register", {
+      method: "POST",
+      body: {
+        name: "DKP Referred Supporter",
+        email: referredEmail,
+        country: "Test Country",
+        password,
+        acceptTerms: true,
+        termsVersion: "2026-11-10",
+        referralCode
+      }
+    });
+    assert.equal(referredRegistration.response.status, 201, JSON.stringify(referredRegistration.data));
+    const referralDashboard = await request("/api/dashboard", { cookie: supporterCookie });
+    assert.equal(referralDashboard.data.referral?.count, 1, "The referring supporter must see one successful registration.");
+
+    const invalidReferral = await request("/api/register", {
+      method: "POST",
+      body: {
+        name: "Invalid Referral",
+        email: `invalid-referral-${suffix}@example.test`,
+        country: "Test Country",
+        password,
+        acceptTerms: true,
+        termsVersion: "2026-11-10",
+        referralCode: "DKP-INVALID"
+      }
+    });
+    assert.equal(invalidReferral.response.status, 400, "Invalid referral codes must not be accepted.");
 
     const forbidden = await request("/api/admin/summary", { cookie: supporterCookie });
     assert.equal(forbidden.response.status, 403, "A supporter must not access admin endpoints.");
@@ -108,6 +143,9 @@ async function main() {
 
     const adminSummary = await request("/api/admin/summary", { cookie: adminCookie });
     assert.equal(adminSummary.response.status, 200, JSON.stringify(adminSummary.data));
+    const referralReport = await request("/api/admin/referrals", { cookie: adminCookie });
+    assert.equal(referralReport.response.status, 200, JSON.stringify(referralReport.data));
+    assert.ok(referralReport.data.referrals.some(item => item.referred_email === referredEmail), "Admin must see the referred registration.");
     const verified = await request(`/api/admin/contributions/${contributionId}/verify`, {
       method: "PATCH",
       cookie: adminCookie,
@@ -146,12 +184,13 @@ async function main() {
     console.log("DKP HTTP integration tests passed: registration, duplicate protection, supporter/admin authorization, pending-to-verified contribution lifecycle, one-time credit, support queue, audit log and logout.");
   } finally {
     // Remove only the synthetic accounts and their dependent test records.
-    await db.query("DELETE FROM audit_logs WHERE admin_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM support_requests WHERE email = ANY($1::text[])", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM contributions WHERE user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM password_reset_tokens WHERE user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM user_sessions WHERE sess->>'userId' IN (SELECT id::text FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail]]).catch(() => {});
-    await db.query("DELETE FROM users WHERE email = ANY($1::text[])", [[supporterEmail, adminEmail]]).catch(() => {});
+    await db.query("DELETE FROM referrals WHERE referrer_user_id IN (SELECT id FROM users WHERE email = ANY($1::text[])) OR referred_user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM audit_logs WHERE admin_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM support_requests WHERE email = ANY($1::text[])", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM contributions WHERE user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM password_reset_tokens WHERE user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM user_sessions WHERE sess->>'userId' IN (SELECT id::text FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
+    await db.query("DELETE FROM users WHERE email = ANY($1::text[])", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
     await db.end();
   }
 }

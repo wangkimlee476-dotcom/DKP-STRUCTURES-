@@ -4,9 +4,12 @@ on:
   push:
     branches:
       - rebuild/professional-functional
+      - rebuild/dkp-reference-design-fresh
+      - feature/dkp-referrals
   pull_request:
     branches:
       - rebuild/professional-functional
+      - rebuild/dkp-reference-design-fresh
   workflow_dispatch:
 
 permissions:

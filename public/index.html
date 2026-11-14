@@ -114,50 +114,21 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <header class="top">
 <div class="wrap nav">
 <div class="brand">DKP STRUCTURES</div>
-<nav class="links">
-<a href="#about">About</a>
-<a href="#campaign">Development</a>
-<a href="#levels">Supporter levels</a>
-<a href="#account">Account</a>
-<a href="#dashboard">Dashboard</a>
-<a href="#support">Customer support</a>
-</nav>
+<nav class="links" aria-label="Main navigation"><a href="#account">Login / Create Account</a><a href="#levels">Supporters Recognition</a><a href="#about">About DKP STRUCTURES</a></nav>
 </div>
 </header>
 
 <main class="wrap">
 <section class="hero">
 <span style="color:#f0d58e;font-weight:800;letter-spacing:.18em">CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span>
-<h1>Building a vision. Creating opportunities.</h1>
-<p>DKP Structures is focused on developing a construction business grounded in responsible planning, quality workmanship and transparency.</p>
-<a href="#about"><button class="btn">Discover DKP Structures</button></a>
-</section>
-
-<section id="about" class="section">
-<h2>About DKP Structures</h2>
-<p class="muted">Our ambition is to establish and grow a construction company with a practical development roadmap, strong professional standards and a commitment to openness. Company credentials and milestones will be published only when verified.</p>
-</section>
-
-<section id="campaign" class="section">
-<h2>Development initiative</h2>
-<div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div>
-<div class="card" style="margin-top:16px">
-<h3>Interested in making a contribution?</h3>
-<p class="muted">Select the button below to request available payment methods from customer support. No deposit is taken on this website.</p>
-<button class="btn" id="depositOptionsBtn" type="button">Make a deposit · Request payment options</button>
-</div>
-<h3>Proposed planning target: USD $1,000,000</h3>
-<p class="muted">Planning figure only — not funds raised.</p>
-</section>
-
-<section id="levels" class="section">
-<h2>Supporter recognition levels</h2>
-<p class="muted">Based on cumulative verified contributions. Recognition only; no ownership or investment rights.</p>
-<div class="grid" id="levelCards"></div>
-</section>
-
+<h1>DKP STRUCTURES</h1><h2>Building Together, Growing Together</h2>
+<p>A construction and property development vision committed to creating homes, jobs and opportunities for people.</p>
+<div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
+<button class="btn" type="button" onclick="document.getElementById('account').scrollIntoView({behavior:'smooth'});document.getElementById('loginTab').click()">Login</button>
+<button class="ghost" type="button" onclick="document.getElementById('account').scrollIntoView({behavior:'smooth'});document.getElementById('registerTab').click()">Create Account</button>
+</div></section>
 <section id="account" class="section">
-<h2>Supporter account</h2>
+<h2>Login or Create Account</h2>
 <div class="auth-card card">
 <div class="auth-tabs" role="tablist" aria-label="Account access">
 <button class="auth-tab active" id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">Login</button>
@@ -178,6 +149,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <h3>Create your supporter account</h3>
 <p class="muted">Register to track your supporter activity and verified contributions.</p>
 <form id="registerForm">
+<input type="hidden" name="referralCode" id="registrationReferralCode">
 <label>Full name</label>
 <input name="name" autocomplete="name" required maxlength="100">
 <label>Email</label>
@@ -194,7 +166,27 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <p id="authMessage" aria-live="polite"></p>
 </div>
 </section>
-
+<section id="recognition" class="section"><h2>🏆 Supporters Recognition</h2><p class="muted">Honouring supporters based only on verified contributions. Supporters can choose whether their display name appears publicly.</p><div class="grid" id="levelCards"></div><p><a href="/ranking.html">View Full Ranking</a></p></section>
+<section id="about" class="section"><h2>About DKP STRUCTURES</h2><div class="card">
+<p><strong>🌍 JOIN DKP STRUCTURES — BUILDING THE FUTURE TOGETHER!</strong></p>
+<p>By joining DKP STRUCTURES, you become part of a vision to grow a construction and property company. We have set a fundraising target of <strong>US$1 million</strong>, which will be used to support development projects, the procurement of equipment and materials, and the expansion of our operational capabilities.</p>
+<p>Our aspirations go beyond simply building a company. Once DKP STRUCTURES is fully operational, we aim to provide eligible supporters with construction labor at no charge to help them build their own private homes, subject to published programme terms, project scope and available resources. We also aim to create work opportunities for qualified professionals in civil engineering, structural engineering, architecture, project management and other construction-related fields.</p>
+<p>We are committed to building a supportive community and keeping supporters informed about the company’s progress. As DKP STRUCTURES grows into a fully operational and profitable company, we may also explore legally approved ways for supporters to share in its future success, including potential dividend arrangements where permitted.</p>
+<p>Every contribution received and verified will be acknowledged with an official payment confirmation or receipt, and supporters can review their contribution history in their dashboard.</p>
+<p>Participation and contributions are entirely voluntary. Contributions are not investments and do not currently provide ownership, guaranteed dividends, financial returns, employment or entitlement to free construction services. Any future housing, employment or dividend programme would be subject to separate eligibility criteria, available resources, operational capacity and, where applicable, a separate legally approved arrangement with clearly defined terms.</p>
+<p>❤️ Today, we are building this company together; one day, we hope to help you build your own home and achieve a brighter future.</p>
+<p><strong>DKP STRUCTURES — Building Together, Growing Together, Transforming Lives.</strong></p></div></section>
+<section id="campaign" class="section">
+<h2>Development initiative</h2>
+<div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div>
+<div class="card" style="margin-top:16px">
+<h3>Interested in making a contribution?</h3>
+<p class="muted">Select the button below to request available payment methods from customer support. No deposit is taken on this website.</p>
+<button class="btn" id="depositOptionsBtn" type="button">Make a deposit · Request payment options</button>
+</div>
+<h3>Proposed planning target: USD $1,000,000</h3>
+<p class="muted">Planning figure only — not funds raised.</p>
+</section>
 <section id="dashboard" class="section">
 <h2>My supporter dashboard</h2>
 <div id="signedOut" class="notice">Sign in to view your private supporter dashboard and contribution history.</div>
@@ -216,7 +208,6 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </div>
 </div>
 </section>
-
 <section id="support" class="section">
 <h2>Customer support</h2>
 <p class="muted">Ask about payment methods available in your country before making any contribution. Do not send card details, passwords or bank login information.</p>
@@ -252,6 +243,19 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </div>
 </div>
 </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
 </main>
 
 <footer>
@@ -409,6 +413,7 @@ $("registerForm").addEventListener("submit", async e => {
   e.preventDefault();
 
   const f = new FormData(e.target);
+  f.set("referralCode", new URLSearchParams(location.search).get("ref") || $("registrationReferralCode").value || "");
 
   try {
     const config = await api("/api/config");
@@ -420,6 +425,7 @@ $("registerForm").addEventListener("submit", async e => {
         email: f.get("email"),
         country: f.get("country"),
         password: f.get("password"),
+        referralCode: f.get("referralCode"),
         acceptTerms: $("terms").checked,
         termsVersion: config.termsVersion
       })
