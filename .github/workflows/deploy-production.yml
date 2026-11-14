@@ -1,6 +1,9 @@
 name: DKP production deployment and smoke test
 
 on:
+  push:
+    branches:
+      - rebuild/professional-functional
   workflow_dispatch:
     inputs:
       confirm_production_deploy:
@@ -17,7 +20,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/rebuild/professional-functional' && inputs.confirm_production_deploy == 'DEPLOY-DKP-PRODUCTION'
+    if: github.ref == 'refs/heads/rebuild/professional-functional' && (github.event_name == 'push' || inputs.confirm_production_deploy == 'DEPLOY-DKP-PRODUCTION')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
