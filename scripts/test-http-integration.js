@@ -89,6 +89,9 @@ async function main() {
     assert.equal(referredRegistration.response.status, 201, JSON.stringify(referredRegistration.data));
     const referralDashboard = await request("/api/dashboard", { cookie: supporterCookie });
     assert.equal(referralDashboard.data.referral?.count, 1, "The referring supporter must see one successful registration.");
+    assert.equal(referralDashboard.data.referral?.points, 20, "A successful referral must award exactly 20 points.");
+    assert.equal(referralDashboard.data.referral?.pointsPerRegistration, 20, "The referral points rate must be 20.");
+    assert.equal(referralDashboard.data.referral?.history?.[0]?.points_awarded, 20, "Referral history must show the points awarded for this registration.");
 
     const invalidReferral = await request("/api/register", {
       method: "POST",
@@ -145,7 +148,10 @@ async function main() {
     assert.equal(adminSummary.response.status, 200, JSON.stringify(adminSummary.data));
     const referralReport = await request("/api/admin/referrals", { cookie: adminCookie });
     assert.equal(referralReport.response.status, 200, JSON.stringify(referralReport.data));
-    assert.ok(referralReport.data.referrals.some(item => item.referred_email === referredEmail), "Admin must see the referred registration.");
+    const adminReferral = referralReport.data.referrals.find(item => item.referred_email === referredEmail);
+    assert.ok(adminReferral, "Admin must see the referred registration.");
+    assert.equal(Number(adminReferral.points_awarded), 20, "Admin referral activity must show 20 points awarded.");
+    assert.equal(Number(adminReferral.referrer_points_total), 20, "Admin referral activity must show the referrer's points total.");
     const verified = await request(`/api/admin/contributions/${contributionId}/verify`, {
       method: "PATCH",
       cookie: adminCookie,
@@ -181,7 +187,7 @@ async function main() {
     const afterLogout = await request("/api/admin/summary", { cookie: adminCookie });
     assert.equal(afterLogout.response.status, 401, "Logout must invalidate the authenticated session.");
 
-    console.log("DKP HTTP integration tests passed: registration, duplicate protection, supporter/admin authorization, pending-to-verified contribution lifecycle, one-time credit, support queue, audit log and logout.");
+    console.log("DKP HTTP integration tests passed: registration, 20-point referral awards and history, admin referral totals, duplicate protection, supporter/admin authorization, pending-to-verified contribution lifecycle, one-time credit, support queue, audit log and logout.");
   } finally {
     // Remove only the synthetic accounts and their dependent test records.
     await db.query("DELETE FROM referrals WHERE referrer_user_id IN (SELECT id FROM users WHERE email = ANY($1::text[])) OR referred_user_id IN (SELECT id FROM users WHERE email = ANY($1::text[]))", [[supporterEmail, adminEmail, `referred-${suffix}@example.test`]]).catch(() => {});
