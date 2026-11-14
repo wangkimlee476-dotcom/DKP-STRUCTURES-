@@ -108,13 +108,16 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 @media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}.hero{padding:45px 22px}}
 
 #dkpSupportFallback{position:fixed;inset:0;z-index:9999;background:#10182799;display:none;align-items:flex-end;justify-content:center;padding:16px}#dkpSupportFallback.open{display:flex}#dkpSupportFallback .dkp-fallback-card{width:min(100%,440px);background:#fff;color:#182333;border-radius:22px;padding:22px;box-shadow:0 18px 60px #0005;font:inherit}#dkpSupportFallback h3{margin:0 32px 8px 0;font-size:20px}#dkpSupportFallback p{color:#536171;line-height:1.5}#dkpSupportFallback .dkp-fallback-actions{display:grid;gap:10px;margin-top:16px}#dkpSupportFallback a{display:block;text-align:center;text-decoration:none;border-radius:13px;padding:13px 16px;font-weight:800;background:#176b4a;color:white}#dkpSupportFallback a.secondary-link{background:#edf2f6;color:#1b3449}#dkpSupportFallback button{float:right;border:0;background:transparent;font-size:24px;color:#536171}
+
+/* Company vision and project gallery */
+.vision-intro{max-width:820px}.photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:22px 0}.photo-card{overflow:hidden;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 28px #102b1b08}.photo-card img{display:block;width:100%;height:220px;object-fit:cover}.photo-card div{padding:16px 18px}.photo-card h3{margin:0 0 6px}.photo-card p{margin:0;color:var(--muted)}.vision-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}.vision-grid .card{height:100%}.promise-note{background:#fff8e8;border:1px solid #ead9ae;padding:17px;border-radius:14px;color:#665222}.principle-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.principle{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.principle strong{display:block;color:var(--g);margin-bottom:5px}@media(max-width:650px){.photo-grid{grid-template-columns:1fr}.photo-card img{height:205px}}
 </style>
 </head>
 <body>
 <header class="top">
 <div class="wrap nav">
 <div class="brand">DKP STRUCTURES</div>
-<nav class="links" aria-label="Main navigation"><a href="#account">Login / Create Account</a><a href="#levels">Supporters Recognition</a><a href="#about">About DKP STRUCTURES</a></nav>
+<nav class="links" aria-label="Main navigation"><a href="#account">Login / Create Account</a><a href="#levels">Supporters Recognition</a><a href="#about">About DKP STRUCTURES</a><a href="#future-promises">Supporter Promises</a></nav>
 </div>
 </header>
 
@@ -167,15 +170,74 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 </div>
 </section>
 <section id="recognition" class="section"><h2>🏆 Supporters Recognition</h2><p class="muted">Honouring supporters based only on verified contributions. Supporters can choose whether their display name appears publicly.</p><div class="grid" id="levelCards"></div><p><a href="/ranking.html">View Full Ranking</a></p></section>
-<section id="about" class="section"><h2>About DKP STRUCTURES</h2><div class="card">
-<p><strong>🌍 JOIN DKP STRUCTURES — BUILDING THE FUTURE TOGETHER!</strong></p>
-<p>By joining DKP STRUCTURES, you become part of a vision to grow a construction and property company. We have set a fundraising target of <strong>US$1 million</strong>, which will be used to support development projects, the procurement of equipment and materials, and the expansion of our operational capabilities.</p>
-<p>Our aspirations go beyond simply building a company. Once DKP STRUCTURES is fully operational, we aim to provide eligible supporters with construction labor at no charge to help them build their own private homes, subject to published programme terms, project scope and available resources. We also aim to create work opportunities for qualified professionals in civil engineering, structural engineering, architecture, project management and other construction-related fields.</p>
-<p>We are committed to building a supportive community and keeping supporters informed about the company’s progress. As DKP STRUCTURES grows into a fully operational and profitable company, we may also explore legally approved ways for supporters to share in its future success, including potential dividend arrangements where permitted.</p>
-<p>Every contribution received and verified will be acknowledged with an official payment confirmation or receipt, and supporters can review their contribution history in their dashboard.</p>
-<p>Participation and contributions are entirely voluntary. Contributions are not investments and do not currently provide ownership, guaranteed dividends, financial returns, employment or entitlement to free construction services. Any future housing, employment or dividend programme would be subject to separate eligibility criteria, available resources, operational capacity and, where applicable, a separate legally approved arrangement with clearly defined terms.</p>
-<p>❤️ Today, we are building this company together; one day, we hope to help you build your own home and achieve a brighter future.</p>
-<p><strong>DKP STRUCTURES — Building Together, Growing Together, Transforming Lives.</strong></p></div></section>
+<section id="about" class="section">
+<h2>About DKP STRUCTURES</h2>
+<div class="vision-intro">
+<p><strong>Building a responsible construction and engineering company — together.</strong></p>
+<p>DKP STRUCTURES is being developed with the long-term ambition of becoming a professionally managed construction, engineering and property-development business. Its proposed work includes residential and commercial building, structural and civil engineering, project delivery, and community-focused housing initiatives. The company’s progress will depend on sound governance, qualified people, responsible funding and the successful delivery of real projects.</p>
+</div>
+<div class="photo-grid" aria-label="Illustrative construction and engineering photography">
+<article class="photo-card"><img src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1100&q=85" alt="Construction professionals working on a building site" loading="lazy"><div><h3>Construction and development</h3><p>Work towards quality residential and commercial building projects, delivered safely and professionally.</p></div></article>
+<article class="photo-card"><img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1100&q=85" alt="Modern commercial buildings representing future development" loading="lazy"><div><h3>Buildings and infrastructure</h3><p>Build the capability to pursue suitable building, structural and infrastructure projects.</p></div></article>
+<article class="photo-card"><img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1100&q=85" alt="Active construction site with cranes and building work" loading="lazy"><div><h3>Engineering and project delivery</h3><p>Work with qualified engineers, architects, tradespeople and project managers as the business grows.</p></div></article>
+<article class="photo-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1100&q=85" alt="Professionals collaborating as a team" loading="lazy"><div><h3>People and opportunity</h3><p>Create genuine opportunities for qualified professionals when real projects and vacancies are available.</p></div></article>
+</div>
+<h2>Our vision</h2>
+<p>To establish a trusted construction and engineering company known for quality workmanship, transparent management, responsible development and positive community impact.</p>
+<div class="vision-grid">
+<article class="card"><h3>🏠 Housing and property</h3><p>Develop the capacity to deliver quality homes and property projects, and explore carefully governed housing-support initiatives for eligible households.</p></article>
+<article class="card"><h3>🏗️ Engineering and infrastructure</h3><p>Build the experience, equipment, partnerships and professional capability needed to undertake appropriate construction and infrastructure contracts.</p></article>
+<article class="card"><h3>👷 Employment and skills</h3><p>Create genuine job opportunities for qualified engineers, architects, technicians, project managers and construction professionals when funded roles become available.</p></article>
+<article class="card"><h3>🤝 Community development</h3><p>Explore practical community programmes that are affordable, properly approved, fairly administered and reported transparently.</p></article>
+</div>
+<h2 style="margin-top:34px">Our goals and expectations</h2>
+<div class="card">
+<ul>
+<li>Establish strong company governance, competent leadership and clear financial controls.</li>
+<li>Develop realistic project plans, budgets, procurement processes and health-and-safety standards.</li>
+<li>Build relationships with qualified contractors, suppliers, clients and appropriate institutional partners.</li>
+<li>Use funds only for the purposes publicly disclosed and maintain records that can be reviewed.</li>
+<li>Share meaningful progress updates, including setbacks, delays and changes to plans.</li>
+<li>Grow at a pace supported by actual resources, lawful approvals and proven delivery capacity.</li>
+</ul>
+<p><strong>Fundraising ambition:</strong> the current campaign planning target is US$1,000,000. This is a target, not a statement that the funds have been raised or secured. A detailed, approved use-of-funds budget should be published before substantial fundraising begins.</p>
+</div>
+<h2 style="margin-top:34px">What supporters can expect</h2>
+<div class="vision-grid">
+<article class="card"><h3>Clear information</h3><p>Understand the purpose of the campaign, the proposed use of funds, the risks and the current stage of company development.</p></article>
+<article class="card"><h3>Contribution records</h3><p>For contributions actually received and independently verified, supporters should be able to obtain an accurate confirmation and view the record in their account. A website record is not proof of bank settlement by itself.</p></article>
+<article class="card"><h3>Respect and choice</h3><p>Participation is voluntary. Supporters should never be pressured, and public recognition should respect each person’s privacy choices.</p></article>
+<article class="card"><h3>Honest updates</h3><p>Receive factual updates about progress, use of funds, project milestones and any material changes to plans.</p></article>
+</div>
+<h2 style="margin-top:34px">Our future ambitions — not guaranteed benefits</h2>
+<div class="card">
+<p>When DKP STRUCTURES is fully established, financially capable and operating within the law, the company hopes to explore the following initiatives:</p>
+<ul>
+<li><strong>Home-building support:</strong> a possible programme offering eligible households construction labour or other assistance under separately published rules, capacity limits and project agreements.</li>
+<li><strong>Employment opportunities:</strong> recruitment for genuine vacancies, based on qualifications, experience, fair selection and available funded positions.</li>
+<li><strong>Community projects:</strong> possible housing, skills-development or local infrastructure initiatives where funding and approvals permit.</li>
+<li><strong>Future profit-sharing or dividends:</strong> any such arrangement would require a separate lawful corporate and financial structure, independent legal review and clear terms. Current voluntary contributions do not create any right to dividends or profits.</li>
+</ul>
+<div class="promise-note"><strong>Important promise to the public:</strong> DKP STRUCTURES will not present these future ambitions as guaranteed rewards for contributing. No contributor is currently promised free construction, a job, company ownership, repayment, interest, dividends or financial returns. Any future programme must be separately approved, funded, legally reviewed and explained before people apply or participate.</div>
+</div>
+<h2 style="margin-top:34px">What a contribution means</h2>
+<div class="card">
+<p>Contributions to this campaign are intended as voluntary public support for the company-development initiative. They are not investments, shares, loans, deposits or savings. They do not create ownership, voting rights, guaranteed repayment, interest, profit participation or any other financial return.</p>
+<p>Supporter levels and rankings are recognition features only; they do not represent investment tiers or entitlements. The website does not process payments. Supporters must request official payment instructions from customer support and should verify the recipient and details independently before sending money.</p>
+<p><strong>DKP STRUCTURES — Building Together, Growing Together, Transforming Lives.</strong></p>
+</div>
+</section>
+<section id="future-promises" class="section">
+<h2>Our Proposed Future Promises to Supporters</h2>
+<p class="muted">We want every person who believes in DKP STRUCTURES to feel valued. These are proposed future programmes that may be considered as the company develops, subject to available resources, proper approvals and applicable law.</p>
+<div class="vision-grid">
+<article class="card"><h3>🏡 Home-building support</h3><p>Eligible supporters may be considered for help with building their private homes, including construction labour support, under separately published programme terms and subject to resources, eligibility and operational capacity.</p></article>
+<article class="card"><h3>🤝 Proposed five-times benefit</h3><p>We propose exploring a future benefit equivalent to up to five times a supporter's total verified contributions. This could only be considered after DKP STRUCTURES earns money from completed work, where available company finances allow it, and following independent legal and financial review and formal approval.</p></article>
+<article class="card"><h3>👷 Work opportunities</h3><p>As the company grows, we aim to create genuine opportunities for suitably qualified supporters and other professionals across engineering, architecture, project management and construction, based on real vacancies and fair selection.</p></article>
+<article class="card"><h3>❤️ Recognition and community</h3><p>We intend to recognise our early supporters, keep them informed about company progress and create meaningful ways for the community to participate in future programmes.</p></article>
+</div>
+<div class="promise-note" style="margin-top:16px"><strong>Important — proposal only:</strong> These are aspirations under consideration, not a current offer, guaranteed return, debt, investment, dividend or contractual entitlement. No five-times benefit is presently payable or promised as a certainty. Any programme would require independent legal and financial review, formal approval, clearly published terms, sufficient available funds and compliance with applicable laws. Contributions do not currently guarantee repayment, profit, employment or home-building services. Please contribute only if you understand the current terms and can comfortably afford to do so.</div>
+</section>
 <section id="campaign" class="section">
 <h2>Development initiative</h2>
 <div class="notice">The proposed minimum contribution is <b>USD $100 per transaction</b>. No payments are accepted through this website. Contact customer support first to ask which payment methods are available in your country and receive official instructions. Contributions do not represent shares, loans, deposits, ownership or guaranteed financial returns.</div>
