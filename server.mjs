@@ -151,10 +151,30 @@ app.patch("/api/profile/password",auth,route(async(req,res)=>{
 }));
 app.post("/api/password/forgot",rateLimit({windowMs:3600000,limit:5}),route(async(req,res)=>{
  const email=clean(req.body.email).toLowerCase();
- if(!emailOk(email))return res.status(400).json({error:"Enter the email address on your account."});
- const u=(await pool.query("SELECT id,full_name,country FROM users WHERE email=$1",[email])).rows[0];
- if(u)await pool.query("INSERT INTO support_requests(user_id,name,email,country,request_type,message) VALUES($1,$2,$3,$4,'account',$5)",[u.id,u.full_name,email,u.country,"Password reset requested. Please verify the requester's control of the registered email before issuing a one-time reset link."]);
- res.json({ok:true,message:"If the address belongs to an account, a password-recovery request has been sent to the support team. The team must verify ownership before issuing a reset link."});
+ if(!emailOk(email)||email.length>254)return res.status(400).json({error:"Enter a valid account email address."});
+ const genericMessage="If that email address is registered, a password-reset link will be sent to it shortly. Check your inbox and spam folder.";
+ if(!runtimeEnv.RESEND_API_KEY||!runtimeEnv.EMAIL_FROM)return res.status(503).json({error:"Password recovery is temporarily unavailable. Please try again later."});
+ const u=(await pool.query("SELECT id,full_name,email FROM users WHERE email=$1 AND role='supporter'",[email])).rows[0];
+ if(!u)return res.json({ok:true,message:genericMessage});
+ let appOrigin=String(runtimeEnv.APP_BASE_URL||"https://dkp-structures.dkpstructures.workers.dev");
+ if(appOrigin.endsWith("/"))appOrigin=appOrigin.slice(0,-1);
+ let origin;
+ try{const parsedOrigin=new URL(appOrigin);if(parsedOrigin.protocol!=="https:")throw new Error("HTTPS required");origin=parsedOrigin.origin;}catch{return res.status(503).json({error:"Password recovery is temporarily unavailable. Please try again later."});}
+ const token=crypto.randomBytes(32).toString("base64url");
+ const tokenHash=crypto.createHash("sha256").update(token).digest("hex");
+ const resetUrl=origin+"/reset-password.html?token="+encodeURIComponent(token);
+ const safeName=String(u.full_name||"supporter").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+ const subject="Reset your DKP Structures password";
+ const textBody="Hello "+(u.full_name||"supporter")+",\\n\\nWe received a request to reset your DKP Structures password. Use this private one-time link within 30 minutes:\\n"+resetUrl+"\\n\\nIf you did not request this, ignore this email. Your password will not change unless the link is used. Never share your password or this link.\\n\\nDKP Structures Account Security";
+ const htmlBody="<div style='font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#17251e;line-height:1.6'><h2 style='color:#0b3024'>Reset your DKP Structures password</h2><p>Hello "+safeName+",</p><p>We received a request to reset the password for your supporter account.</p><p><a href='"+resetUrl+"' style='display:inline-block;background:#0b3024;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px'>Reset password</a></p><p>This private link expires in <strong>30 minutes</strong> and can only be used once.</p><p>If you did not request this, ignore this email. Never share this link or your password.</p><p style='color:#718078'>DKP Structures Account Security</p></div>";
+ const c=await pool.connect();
+ try{await c.query("BEGIN");await c.query("UPDATE password_reset_tokens SET used_at=NOW() WHERE user_id=$1 AND used_at IS NULL",[u.id]);await c.query("INSERT INTO password_reset_tokens(user_id,token_hash,expires_at,created_by) VALUES($1,$2,NOW()+INTERVAL '30 minutes',NULL)",[u.id,tokenHash]);await c.query("COMMIT");}
+ catch(error){await c.query("ROLLBACK").catch(()=>{});throw error;}finally{c.release();}
+ try{
+  const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+runtimeEnv.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"dkp-password-reset-"+tokenHash},body:JSON.stringify({from:runtimeEnv.EMAIL_FROM,to:[u.email],subject,text:textBody,html:htmlBody})});
+  if(!response.ok){const providerError=await response.text().catch(()=>"");console.error("DKP password-reset email delivery failed:",{status:response.status,detail:providerError.slice(0,500)});throw new Error("Email provider rejected the reset email.");}
+ }catch(error){await pool.query("UPDATE password_reset_tokens SET used_at=NOW() WHERE token_hash=$1 AND used_at IS NULL",[tokenHash]).catch(()=>{});console.error("DKP password-reset email delivery failed:",error?.message||error);return res.status(503).json({error:"Password recovery is temporarily unavailable. Please try again later."});}
+ res.json({ok:true,message:genericMessage});
 }));
 app.post("/api/password/reset",rateLimit({windowMs:900000,limit:8}),route(async(req,res)=>{
  const token=String(req.body.token||""),password=String(req.body.newPassword||"");
