@@ -137,7 +137,7 @@ function userPublic(u) {
   return {
     id: u.id,
     supporterId: u.supporter_id,
-    referralCode: u.referral_code || "",
+    referralCode: u.role === "supporter" ? (u.referral_code || "") : "",
     name: u.full_name,
     email: u.email,
     country: u.country,
