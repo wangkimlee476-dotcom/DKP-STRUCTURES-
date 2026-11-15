@@ -7,6 +7,7 @@ This is the full Node.js + Express platform, not the static Netlify page.
 - Supporter registration and login.
 - Server-backed supporter dashboard and personal target.
 - Supporter recognition levels based on verified contribution totals.
+- Privacy-conscious referral links, registration attribution and aggregate admin counts; no referral commissions, cash rewards or payment changes.
 - Support request form saved to the application database.
 - Deposit/payment-options buttons that direct visitors to the customer-support request form.
 - Admin board at `/admin.html`.
