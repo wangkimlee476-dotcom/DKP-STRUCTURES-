@@ -15,7 +15,9 @@ This is the dedicated rebuild branch. The original branch is left untouched.
 
 ## Cloudflare bindings and secrets
 
-The repository's `wrangler.jsonc` currently declares the Hyperdrive binding `HYPERDRIVE` and its preview binding, using the configured ID `455fb135411f45ed814b43b0f74ce930`. This is a real configured ID in source, not a placeholder. Before production, confirm in the Cloudflare account that this ID exists in the correct account and points to the intended Neon production database. Do not replace it with a guessed ID.
+The `wrangler.jsonc` production Hyperdrive binding `HYPERDRIVE` uses ID `455fb135411f45ed814b43b0f74ce930`. The preview-only `previews.hyperdrive` binding uses ID `fe8002f18dd840709c22a0af9905be91`, which Wrangler explicitly requested in the November 15 preview-build error. Keep these IDs in their respective scopes: do not replace the production ID with the preview ID or point preview configuration at production unless that is explicitly intended and verified in Cloudflare.
+
+Before relying on either binding, confirm in Cloudflare that each ID exists in the correct account and points to the intended database/environment. The preview binding should target a non-production database whenever possible.
 
 The Worker requires these runtime values:
 
