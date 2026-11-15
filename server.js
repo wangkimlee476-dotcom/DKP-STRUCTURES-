@@ -9,6 +9,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
 const crypto = require("crypto");
+const { generateReferralCode, normalizeReferralCode } = require("./referrals");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -33,6 +34,12 @@ const pool = new Pool({
 async function initializeDatabase() {
   await pool.query("SELECT 1");
   await pool.query("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, supporter_id VARCHAR(80) UNIQUE NOT NULL, full_name VARCHAR(120) NOT NULL, email VARCHAR(320) UNIQUE NOT NULL, country VARCHAR(80) NOT NULL, password_hash TEXT NOT NULL, role VARCHAR(20) NOT NULL DEFAULT 'supporter' CHECK (role IN ('supporter','admin')), personal_target DOUBLE PRECISION NOT NULL DEFAULT 0, terms_version VARCHAR(80) NOT NULL, terms_accepted_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), selected_plan VARCHAR(80) NOT NULL DEFAULT 'Basic', selected_amount NUMERIC NOT NULL DEFAULT 100, language VARCHAR(12) NOT NULL DEFAULT 'en', theme VARCHAR(12) NOT NULL DEFAULT 'light', avatar_data TEXT)");
+  await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(24)");
+  await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL");
+  await pool.query("UPDATE users SET referral_code = 'DKP-' || upper(substr(md5(id::text || random()::text || clock_timestamp()::text), 1, 12)) WHERE referral_code IS NULL OR btrim(referral_code) = ''");
+  await pool.query("ALTER TABLE users ALTER COLUMN referral_code SET NOT NULL");
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)");
+  await pool.query("CREATE INDEX IF NOT EXISTS idx_users_referred_by_user ON users(referred_by_user_id)");
   await pool.query("CREATE TABLE IF NOT EXISTS contributions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), amount NUMERIC NOT NULL CHECK (amount >= 100), currency VARCHAR(12) NOT NULL DEFAULT 'USD', reference VARCHAR(120) NOT NULL, payment_method VARCHAR(100) NOT NULL DEFAULT 'Customer service recorded', customer_service_note VARCHAR(1000) NOT NULL DEFAULT '', status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','verified','rejected')), verified_by INTEGER REFERENCES users(id), verified_at TIMESTAMPTZ, rejected_by INTEGER REFERENCES users(id), rejected_at TIMESTAMPTZ, admin_note VARCHAR(2000) NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id), name VARCHAR(120) NOT NULL, email VARCHAR(320) NOT NULL, country VARCHAR(80) NOT NULL, request_type VARCHAR(40) NOT NULL, message TEXT NOT NULL, status VARCHAR(30) NOT NULL DEFAULT 'open', admin_note TEXT, admin_reply TEXT, replied_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("ALTER TABLE support_requests ADD COLUMN IF NOT EXISTS admin_reply TEXT");
@@ -130,6 +137,7 @@ function userPublic(u) {
   return {
     id: u.id,
     supporterId: u.supporter_id,
+    referralCode: u.role === "supporter" ? (u.referral_code || "") : "",
     name: u.full_name,
     email: u.email,
     country: u.country,
@@ -170,11 +178,19 @@ app.post("/api/register", rateLimit({ windowMs: 60 * 60 * 1000, limit: 8 }), asy
     const email = clean(req.body.email).toLowerCase();
     const country = clean(req.body.country);
     const password = String(req.body.password || "");
+    const referralCode = normalizeReferralCode(req.body.referralCode);
+    if (referralCode === null) return res.status(400).json({ error: "The referral link is invalid." });
     if (name.length < 2 || name.length > 100 || !emailOk(email) || country.length < 2 || country.length > 80 || password.length < 12) {
       return res.status(400).json({ error: "Enter your name, valid email, country and a password of at least 12 characters." });
     }
     if (req.body.acceptTerms !== true || req.body.termsVersion !== termsVersion) {
       return res.status(400).json({ error: "Please accept the current Terms & Conditions." });
+    }
+    let referrerId = null;
+    if (referralCode) {
+      const referrerResult = await pool.query("SELECT id FROM users WHERE referral_code=$1 AND role='supporter'", [referralCode]);
+      if (!referrerResult.rows[0]) return res.status(400).json({ error: "This referral link is no longer valid." });
+      referrerId = referrerResult.rows[0].id;
     }
     const existing = await pool.query("SELECT id FROM users WHERE lower(email)=lower($1)", [email]);
     if (existing.rowCount) return res.status(409).json({ error: "An account with this email already exists." });
@@ -182,8 +198,8 @@ app.post("/api/register", rateLimit({ windowMs: 60 * 60 * 1000, limit: 8 }), asy
     const supporterId = "DKP-" + crypto.randomBytes(4).toString("hex").toUpperCase();
     // Public registration must never grant administrator privileges.
     const inserted = await pool.query(
-      "INSERT INTO users(supporter_id,full_name,email,country,password_hash,role,terms_version,terms_accepted_at) VALUES($1,$2,$3,$4,$5,'supporter',$6,$7) RETURNING id",
-      [supporterId, name, email, country, hash, termsVersion, new Date().toISOString()]
+      "INSERT INTO users(supporter_id,full_name,email,country,password_hash,role,terms_version,terms_accepted_at,referral_code,referred_by_user_id) VALUES($1,$2,$3,$4,$5,'supporter',$6,$7,$8,$9) RETURNING id",
+      [supporterId, name, email, country, hash, termsVersion, new Date().toISOString(), generateReferralCode(), referrerId]
     );
     const userId = inserted.rows[0].id;
     const userResult = await pool.query("SELECT * FROM users WHERE id=$1", [userId]);
@@ -234,12 +250,14 @@ app.get("/api/dashboard", requireAuth, async (req, res, next) => {
       "SELECT amount,currency,reference,payment_method,status,created_at AS date,verified_at AS \"verifiedAt\" FROM contributions WHERE user_id=$1 ORDER BY id DESC LIMIT 50",
       [u.id]
     );
+    const referralCountResult = await pool.query("SELECT COUNT(*)::int AS count FROM users WHERE referred_by_user_id=$1", [u.id]);
     res.json({
       user: userPublic(u),
       verifiedTotal: total,
       level: levelFor(total),
       progress: u.personal_target ? Math.min(100, Math.round(total / Number(u.personal_target) * 100)) : 0,
       history: historyResult.rows,
+      referralCount: referralCountResult.rows[0].count,
       balanceMeaning: "Verified contribution total only. It is not cash held for the supporter, a bank deposit, withdrawable balance or investment account."
     });
   } catch (err) { next(err); }
@@ -325,19 +343,21 @@ app.get("/api/support-requests/mine", requireAuth, async (req, res, next) => {
 
 app.get("/api/admin/summary", requireAdmin, async (req, res, next) => {
   try {
-    const [users, support, pending, rejected, verified] = await Promise.all([
+    const [users, support, pending, rejected, verified, referrals] = await Promise.all([
       pool.query("SELECT COUNT(*)::int AS n FROM users WHERE role='supporter'"),
       pool.query("SELECT COUNT(*)::int AS n FROM support_requests WHERE status='open'"),
       pool.query("SELECT COUNT(*)::int AS n FROM contributions WHERE status='pending'"),
       pool.query("SELECT COUNT(*)::int AS n FROM contributions WHERE status='rejected'"),
-      pool.query("SELECT COALESCE(SUM(amount),0) AS n FROM contributions WHERE status='verified'")
+      pool.query("SELECT COALESCE(SUM(amount),0) AS n FROM contributions WHERE status='verified'"),
+      pool.query("SELECT COUNT(*)::int AS n FROM users WHERE referred_by_user_id IS NOT NULL")
     ]);
     res.json({
       users: users.rows[0].n,
       openSupportRequests: support.rows[0].n,
       pendingContributions: pending.rows[0].n,
       rejectedContributions: rejected.rows[0].n,
-      verifiedTotal: Number(verified.rows[0].n || 0)
+      verifiedTotal: Number(verified.rows[0].n || 0),
+      referralRegistrations: referrals.rows[0].n
     });
   } catch (err) { next(err); }
 });
@@ -346,6 +366,15 @@ app.get("/api/admin/users", requireAdmin, async (req, res, next) => {
   try {
     const result = await pool.query("SELECT id,supporter_id,full_name,email,country,role,created_at FROM users ORDER BY id DESC LIMIT 500");
     res.json({ users: result.rows });
+  } catch (err) { next(err); }
+});
+
+app.get("/api/admin/referrals", requireAdmin, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT referrer.id,referrer.supporter_id,referrer.full_name,COUNT(referred.id)::int AS referral_count FROM users AS referrer LEFT JOIN users AS referred ON referred.referred_by_user_id=referrer.id WHERE referrer.role='supporter' GROUP BY referrer.id,referrer.supporter_id,referrer.full_name HAVING COUNT(referred.id)>0 ORDER BY referral_count DESC,referrer.id DESC LIMIT 500"
+    );
+    res.json({ referrals: result.rows });
   } catch (err) { next(err); }
 });
 

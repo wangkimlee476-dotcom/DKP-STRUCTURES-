@@ -138,6 +138,8 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <h3>Create your supporter account</h3>
 <p class="muted">Register to track your supporter activity and verified contributions.</p>
 <form id="registerForm">
+<input type="hidden" name="referralCode" id="registerReferralCode">
+<p id="referralNotice" class="notice hidden">You arrived through a DKP STRUCTURES invitation link. Your invitation will be recorded when you create your account.</p>
 <label>Full name</label>
 <input name="name" autocomplete="name" required maxlength="100">
 <label>Email</label>
@@ -162,6 +164,18 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <div class="card">
 <h3 id="welcome"></h3>
 <p id="supporterId" class="muted"></p>
+<section class="card" id="referralPanel" style="margin:18px 0">
+  <h3>Refer a Friend</h3>
+  <p class="muted">Share your personal invitation link. We count registrations made through it; referrals are for attribution only and do not provide commissions, cash rewards or payments.</p>
+  <label for="referralLink">Your personal invitation link</label>
+  <input id="referralLink" type="url" readonly aria-label="Your personal referral link">
+  <div class="grid">
+    <div><button class="btn" id="copyReferralLink" type="button">Copy invitation link</button></div>
+    <div><a class="btn" id="shareReferralWhatsApp" href="#" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none">Share on WhatsApp</a></div>
+  </div>
+  <p><strong id="referralCount">0</strong> registrations through your link</p>
+  <p id="referralMessage" aria-live="polite"></p>
+</section>
 <section class="card" id="profilePanel" style="margin:18px 0">
   <h3>Profile information</h3>
   <form id="profileForm">
@@ -290,6 +304,14 @@ function setAuthMode(mode) {
 $("loginTab").addEventListener("click", () => setAuthMode("login"));
 $("registerTab").addEventListener("click", () => setAuthMode("register"));
 
+const incomingReferralCode = new URLSearchParams(window.location.search).get("ref");
+if (incomingReferralCode) {
+  $("registerReferralCode").value = incomingReferralCode.trim();
+  $("referralNotice").classList.remove("hidden");
+  setAuthMode("register");
+  if (window.location.hash !== "#account") window.location.hash = "account";
+}
+
 document.querySelectorAll("[data-password-toggle]").forEach(button => {
   button.addEventListener("click", () => {
     const field = $(button.dataset.passwordToggle);
@@ -326,6 +348,24 @@ function message(id, text, ok = false) {
   $(id).className = ok ? "success" : "error";
 }
 
+$("copyReferralLink").addEventListener("click", async () => {
+  const field = $("referralLink");
+  if (!field.value) {
+    message("referralMessage", "Your referral link is not ready yet.");
+    return;
+  }
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error("Clipboard access is unavailable.");
+    await navigator.clipboard.writeText(field.value);
+    message("referralMessage", "Your invitation link has been copied.", true);
+  } catch (error) {
+    field.focus();
+    field.select();
+    const copied = document.execCommand("copy");
+    message("referralMessage", copied ? "Your invitation link has been copied." : "Select the link above and copy it manually.", copied);
+  }
+});
+
 let selectedAvatarData = null;
 
 function applyTheme(theme) {
@@ -353,6 +393,20 @@ async function loadDashboard() {
     applyTheme(d.user.theme || "light");
     $("supporterId").textContent =
       "Supporter ID: " + d.user.supporterId + " · " + d.user.country;
+
+    const referralCode = d.user.referralCode || "";
+    if (referralCode) {
+      const invitationUrl = new URL("/", window.location.origin);
+      invitationUrl.searchParams.set("ref", referralCode);
+      invitationUrl.hash = "account";
+      $("referralLink").value = invitationUrl.toString();
+      $("referralCount").textContent = Number(d.referralCount || 0).toLocaleString();
+      const invitationMessage = "Join DKP STRUCTURES and learn about our company-development vision: " + invitationUrl.toString();
+      $("shareReferralWhatsApp").href = "https://wa.me/?text=" + encodeURIComponent(invitationMessage);
+      $("referralPanel").classList.remove("hidden");
+    } else {
+      $("referralPanel").classList.add("hidden");
+    }
 
     $("total").textContent =
       "$" + Number(d.verifiedTotal).toLocaleString();
@@ -410,6 +464,7 @@ $("registerForm").addEventListener("submit", async e => {
         email: f.get("email"),
         country: f.get("country"),
         password: f.get("password"),
+        referralCode: f.get("referralCode"),
         acceptTerms: $("terms").checked,
         termsVersion: config.termsVersion
       })

@@ -1,0 +1,51 @@
+name: Referral safety checks
+
+on:
+  push:
+    branches:
+      - feature/referral-tracking-safe
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  referral-checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dkp
+          POSTGRES_PASSWORD: dkp_test_password
+          POSTGRES_DB: dkp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dkp -d dkp_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://dkp:dkp_test_password@localhost:5432/dkp_test
+      SESSION_SECRET: dkp-ci-session-secret-long-enough-for-tests-only
+      NODE_ENV: test
+      TERMS_VERSION: referral-ci-terms
+      PORT: 3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install application dependencies
+        run: npm install --no-audit --no-fund
+      - name: Test referral helper
+        run: npm test
+      - name: Check server and helper syntax
+        run: node --check server.js && node --check referrals.js
+      - name: Check inline browser scripts
+        run: node scripts/check-inline-js.js
+      - name: Test referral registration against isolated PostgreSQL
+        run: npm run test:integration
