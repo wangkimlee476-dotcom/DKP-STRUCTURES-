@@ -62,6 +62,47 @@ body.dark-theme .notice{background:#332d1d;color:#f4e6bd;border-color:#66552e}
 [hidden]{display:none!important}
 footer{background:#101c18;color:white;text-align:center;padding:30px}
 @media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}.hero{padding:45px 22px}.links{gap:10px}}
+
+/* DKP STRUCTURES dashboard refresh */
+:root{--g:#082b50;--ink:#10233a;--gold:#d8b45b;--paper:#f3f6fa;--muted:#65758a;--line:#dce4ed}
+body{background:var(--paper);color:var(--ink)}
+.top{background:#071b33;border-bottom:1px solid #c9a34b}
+.brand{font-size:20px;color:#fff;letter-spacing:.09em}
+.links a{font-weight:650}
+.links a:hover{color:#f0d58b}
+.hero{position:relative;overflow:hidden;margin:24px auto;border:1px solid #c9a34b;box-shadow:0 18px 45px #0a234022;background:linear-gradient(105deg,#061a32f5 0%,#0b3158e8 54%,#0b315888 100%),url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1800&q=85') center/cover}
+.hero h1{max-width:760px;font-size:clamp(36px,5vw,60px);letter-spacing:-.035em}
+.hero p{max-width:640px}
+.hero .btn{display:inline-flex;text-decoration:none;align-items:center;justify-content:center;min-height:46px;padding:12px 22px;border-radius:999px}
+.section h2{color:#0a2c50;font-size:clamp(26px,3vw,36px)}
+.card{box-shadow:0 8px 24px #102b4810;border-color:#d8e1eb}
+.btn{background:linear-gradient(135deg,#f3d88d,#c99a37);color:#13253a}
+.ghost{background:#eaf0f7;color:#12385f}
+.metric{color:#0b3158}
+.status{background:#fff4d8;color:#775515;border:1px solid #ead49b}
+.notice{background:#fff8e8;border-color:#e6cf92}
+#levelCards .card{border-top:4px solid #caa34d;min-height:150px}
+#levelCards .card:nth-child(4){border-top-color:#2877c9}
+#levelCards .card h3{margin-top:0;color:#0a2c50}
+#dashboard .card{border-radius:18px}
+#dashboard .grid{gap:14px}
+#dashboard .grid>div{background:#f4f7fb;border:1px solid #e0e7ef;padding:16px;border-radius:14px}
+#history p{padding:10px 12px;margin:6px 0;border-radius:10px;background:#f4f7fb}
+.future-share-panel{margin:18px 0;padding:22px;border:1px solid #d4ae58;border-radius:18px;background:linear-gradient(135deg,#071d36,#123e68);color:white}
+.future-share-panel h3{color:#f4d98e;margin-top:0}
+.future-share-panel .muted{color:#d6e1ed}
+.future-share-math{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:16px 0}
+.future-share-math>div{background:#ffffff12;border:1px solid #ffffff28;border-radius:12px;padding:13px}
+.future-share-math strong{display:block;color:#f4d98e;font-size:18px}
+.future-share-panel .notice{background:#fff8e8;color:#665222}
+#support .card{border-top:3px solid #d6ad52}
+footer{background:#071b33;border-top:2px solid #c9a34b}
+.chatfloat{background:#0b477b;border:1px solid #e0bf6b}
+body.dark-theme .section h2{color:#e9d28f}
+body.dark-theme #dashboard .grid>div,body.dark-theme #history p{background:#26352d;border-color:#405347}
+@media(min-width:900px){.wrap{max-width:1280px}.hero{padding:76px 48px}.section{padding:40px 0}}
+@media(max-width:700px){.links{display:grid;grid-template-columns:repeat(3,1fr);width:100%}.links a{font-size:12px}.hero{padding:38px 20px}.future-share-math{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -72,6 +113,7 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <a href="#about">About</a>
 <a href="#campaign">Development</a>
 <a href="#levels">Supporter levels</a>
+<a href="#future-shares">Future shares</a>
 <a href="#account">Account</a>
 <a href="#dashboard">Dashboard</a>
 <a href="#support">Customer support</a>
@@ -84,12 +126,12 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <main class="wrap">
 <section class="hero">
 <span style="color:#f0d58e;font-weight:800;letter-spacing:.18em">CONSTRUCTION · DEVELOPMENT · OPPORTUNITY</span>
-<h1>Building a vision. Creating opportunities.</h1>
-<p>DKP Structures is focused on developing a construction business grounded in responsible planning, quality workmanship and transparency.</p>
+<h1>Building a vision.<br>Creating opportunities.</h1>
+<p>Join the DKP STRUCTURES community and follow our progress as we develop a construction and property-development business built on responsible planning, transparency and opportunity.</p>
 <div class="hero-actions" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-<a class="btn" href="#account" onclick="document.getElementById('loginTab').click()">Login to My Account</a>
-<a class="btn" href="#account" onclick="document.getElementById('registerTab').click()">Create New Account</a>
-<a href="#about"><button class="ghost" type="button">Discover DKP Structures</button></a>
+<a class="btn" href="#account" onclick="document.getElementById('registerTab').click()">Join as a Supporter</a>
+<a class="btn" href="#campaign">Explore the Development Plan</a>
+<a href="#about"><button class="ghost" type="button">Discover DKP STRUCTURES</button></a>
 </div>
 </section>
 
@@ -120,6 +162,33 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
   <p><strong>Important — this programme is not yet open and no shares are currently being offered or issued.</strong> Reaching or being recognised at Silver level or above does not by itself grant shares or create an automatic entitlement. Only contributions expressly accepted and recorded under definitive written programme terms, after the required company approvals and South Korean legal and regulatory review, may qualify.</p>
   <p>The final documents must explain the eligibility rules, share class, company valuation and conversion formula, calculation date, allocation timing, shareholder rights, applicable fees or taxes, transfer restrictions and what happens if shares cannot lawfully be issued. Any allocation remains subject to applicable South Korean laws, required corporate approvals and any cross-border offering restrictions.</p>
   <p class="muted">Until the programme is formally approved and opened, all existing contributions remain under the current voluntary supporter arrangement. They do not create shares, ownership, voting rights, dividends, repayment rights or guaranteed returns. Basic and Bronze contributions are outside this proposed share-allocation programme unless future definitive terms expressly provide otherwise.</p>
+</div>
+</section>
+
+<section id="future-shares" class="section">
+<h2>Proposed future share programme</h2>
+<p class="muted">A separate, future programme is being explored for Silver level and above. It is not open and is not an offer to sell securities.</p>
+<div class="future-share-panel">
+<h3>How a potential allocation could be calculated</h3>
+<p class="muted">Illustrative example only. Actual valuation, share price, eligibility and issuance would require formal company decisions and legal review.</p>
+<div class="future-share-math">
+<div><span>Example pre-money valuation</span><strong>₩5,000,000,000</strong></div>
+<div><span>Shares before issuance</span><strong>1,000,000</strong></div>
+<div><span>Illustrative price per share</span><strong>₩5,000</strong></div>
+<div><span>Example qualifying amount</span><strong>₩7,000,000</strong></div>
+</div>
+<div class="notice"><strong>Example calculation:</strong> ₩7,000,000 ÷ ₩5,000 = 1,400 indicative shares. This is a mathematical illustration, not a valuation of DKP STRUCTURES, a promise, an entitlement or an actual allocation.</div>
+</div>
+<div class="card">
+<h3>Safeguards before any share issue</h3>
+<ul>
+<li>Confirm the company’s legal incorporation and existing share capital.</li>
+<li>Prepare and document a defensible company valuation and fully diluted share count.</li>
+<li>Approve the share class, price, eligibility rules and maximum dilution.</li>
+<li>Obtain required corporate approvals and South Korean securities-law advice, including cross-border review.</li>
+<li>Issue shares only through formal subscription documents and official corporate records.</li>
+</ul>
+<p class="muted">Existing voluntary contributions do not automatically convert into shares. No shares, dividends, repayment or financial returns are currently promised.</p>
 </div>
 </section>
 
@@ -207,11 +276,20 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <div class="metric" id="progress">0%</div>
 </div>
 </div>
+<div class="future-share-panel" id="myFutureShareStatus">
+<h3>My future share programme status</h3>
+<p><strong>Programme status:</strong> Proposed · Not yet open</p>
+<p class="muted">Your supporter level is displayed for recognition only. No share allocation is currently recorded for your account. If a legally approved programme opens, qualifying supporters will receive separate written terms and an individual statement.</p>
+</div>
 <form id="targetForm">
 <label>Personal target (USD)</label>
 <input name="target" type="number" min="100" required>
 <button class="ghost" type="submit">Save target</button>
 </form>
+<div class="card" style="margin-top:18px">
+<h3>Programme information</h3>
+<p class="muted">This dashboard does not calculate or record actual share entitlements. The example above is for explanation only. Any future allocation requires an approved valuation model, eligibility confirmation, corporate approvals and compliance review.</p>
+</div>
 <h3>Contribution history</h3>
 <p class="muted">This total records contributions independently confirmed as received. It is not a cash wallet, bank deposit, withdrawable balance, savings account or investment account.</p>
 <div id="history" class="muted">No contributions recorded.</div><h3>My support requests & replies</h3><div id="mySupportRequests" class="muted">Sign in to view your support requests and replies.</div>
