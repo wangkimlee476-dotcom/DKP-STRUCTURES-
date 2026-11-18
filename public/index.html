@@ -115,11 +115,11 @@ footer{background:#101c18;color:white;text-align:center;padding:30px}
 <p class="muted">Based on cumulative verified contributions. Recognition only; no ownership or investment rights.</p>
 <div class="grid" id="levelCards"></div>
 <div class="card" style="margin-top:18px;border:1px solid #d6ad52">
-  <h3>Diamond Plan — proposed future share programme</h3>
-  <p>DKP STRUCTURES intends to develop a separate Diamond Plan under which contributions specifically accepted and recorded under that programme may be considered for future share allocation when the company becomes operational.</p>
-  <p><strong>Important — this programme is not yet open and no shares are currently being offered or issued.</strong> A contribution will qualify for any future share allocation only if it is expressly accepted and recorded as a Diamond Plan contribution under definitive written terms approved by the company and its South Korean legal and regulatory advisers.</p>
-  <p>Any future allocation will be subject to the company's legal ability to issue shares, required corporate approvals and applicable securities laws in South Korea. The final terms must specify the share class, valuation or conversion formula, eligibility, timing, shareholder rights and treatment if shares cannot lawfully be issued.</p>
-  <p class="muted">Until those definitive terms are approved and the programme formally opens, all contributions made through the existing supporter programme remain voluntary contributions for company development. They do not create shares, ownership, voting rights, dividends, repayment rights or guaranteed returns.</p>
+  <h3>Silver Plan and above — proposed future share-allocation programme</h3>
+  <p>DKP STRUCTURES intends to develop a proposed future share-allocation programme beginning with the <strong>Silver Plan</strong> and extending to <strong>Gold, Platinum, Diamond and Founding</strong> levels. Contributions specifically accepted and recorded under the approved programme may be considered for future share allocation when the company becomes operational.</p>
+  <p><strong>Important — this programme is not yet open and no shares are currently being offered or issued.</strong> Reaching or being recognised at Silver level or above does not by itself grant shares or create an automatic entitlement. Only contributions expressly accepted and recorded under definitive written programme terms, after the required company approvals and South Korean legal and regulatory review, may qualify.</p>
+  <p>The final documents must explain the eligibility rules, share class, company valuation and conversion formula, calculation date, allocation timing, shareholder rights, applicable fees or taxes, transfer restrictions and what happens if shares cannot lawfully be issued. Any allocation remains subject to applicable South Korean laws, required corporate approvals and any cross-border offering restrictions.</p>
+  <p class="muted">Until the programme is formally approved and opened, all existing contributions remain under the current voluntary supporter arrangement. They do not create shares, ownership, voting rights, dividends, repayment rights or guaranteed returns. Basic and Bronze contributions are outside this proposed share-allocation programme unless future definitive terms expressly provide otherwise.</p>
 </div>
 </section>
 
@@ -280,7 +280,7 @@ const levels = [
 ];
 
 $("levelCards").innerHTML = levels.map(x =>
-`<article class="card"><h3>${x[0]}</h3><b>${x[1]}</b></article>`
+`<article class="card"><h3>${x[0]}</h3><b>${x[1]}</b>${["Silver","Gold","Platinum","Diamond","Founding"].includes(x[0]) ? '<p class="status">Proposed future share programme · subject to approval</p>' : ''}</article>`
 ).join("");
 
 function setAuthMode(mode) {
