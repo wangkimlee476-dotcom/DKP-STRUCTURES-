@@ -160,13 +160,27 @@ footer a{color:#e2c38d!important}
 button{letter-spacing:.005em}
 @media(max-width:700px){.nav{gap:7px}.brand{font-size:15px}.hero{min-height:400px;border-radius:21px;margin-top:16px}.hero h1{font-size:clamp(42px,13vw,66px)}.section{padding:40px 0}.photo-card img{height:215px}.links a:first-of-type{padding:8px 12px}}
 
+
+/* Proposed future share programme — disclosure-only, not an active offer */
+.future-share-panel{margin:18px 0;padding:22px;border:1px solid #c9a66b;border-radius:18px;background:linear-gradient(135deg,#101f33,#1b3547);color:#f7f2e8}
+.future-share-panel h3{color:#f0d58e;margin-top:0}
+.future-share-panel .muted{color:#d9e1e9}
+.future-share-math{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:16px 0}
+.future-share-math>div{background:#ffffff12;border:1px solid #ffffff28;border-radius:12px;padding:13px}
+.future-share-math strong{display:block;color:#f0d58e;font-size:18px}
+.future-share-notice{background:#fff8e8;color:#665222;border:1px solid #ead9ae;padding:15px;border-radius:12px}
+.future-share-status{margin:18px 0;padding:18px;border:1px solid #c9a66b;border-radius:15px;background:linear-gradient(135deg,#101f33,#1b3547);color:#f7f2e8}
+.future-share-status h3{margin:0 0 8px;color:#f0d58e}
+.future-share-status p{margin:6px 0}
+@media(max-width:700px){.future-share-math{grid-template-columns:1fr 1fr}}
+
 </style>
 <style id="dkp-language-style">.dkp-language-select{max-width:190px;min-width:132px;padding:8px 10px;border:1px solid #c5a46d;border-radius:9px;background:#fff;color:#14263d;font:600 13px system-ui;z-index:10001}.goog-te-banner-frame,.goog-te-balloon-frame{display:none!important}body{top:0!important}#google_translate_element{display:none!important}@media(max-width:700px){.dkp-language-select{max-width:150px;min-width:120px;margin:6px 0}}</style></head>
 <body>
 <header class="top">
 <div class="wrap nav">
 <div class="brand">DKP STRUCTURES</div>
-<nav class="links" aria-label="Main navigation"><select id="companyLanguageSelect" class="dkp-language-select" aria-label="Choose company language"><option value="en">English</option></select><a href="#account">Login / Create Account</a><a href="#levels">Supporters Recognition</a><a href="#about">About DKP STRUCTURES</a><a href="#future-promises">Supporter Promises</a></nav>
+<nav class="links" aria-label="Main navigation"><select id="companyLanguageSelect" class="dkp-language-select" aria-label="Choose company language"><option value="en">English</option></select><a href="#account">Login / Create Account</a><a href="#levels">Supporters Recognition</a><a href="#about">About DKP STRUCTURES</a><a href="#future-promises">Supporter Promises</a><a href="#future-shares">Future Shares</a></nav>
 </div>
 </header>
 
@@ -308,6 +322,33 @@ button{letter-spacing:.005em}
 <article class="card"><h3>❤️ Recognition and community</h3><p>We intend to recognise our early supporters, keep them informed about company progress and create meaningful ways for the community to participate in future programmes.</p></article>
 </div>
 <div class="promise-note" style="margin-top:16px"><strong>Important — proposal only:</strong> These are aspirations under consideration, not a current offer, guaranteed return, debt, investment, dividend or contractual entitlement. No five-times benefit is presently payable or promised as a certainty. Any programme would require independent legal and financial review, formal approval, clearly published terms, sufficient available funds and compliance with applicable laws. Contributions do not currently guarantee repayment, profit, employment or home-building services. Please contribute only if you understand the current terms and can comfortably afford to do so.</div>
+
+</section>
+<section id="future-shares" class="section">
+<h2>Proposed Future Share Programme</h2>
+<p class="muted">DKP STRUCTURES is exploring a separate future share programme for eligible supporters at Silver level and above. This programme is proposed only, is not open, and is not an offer or invitation to subscribe for securities.</p>
+<div class="future-share-panel">
+<h3>Illustrative share-allocation example</h3>
+<p class="muted">The figures below are hypothetical arithmetic only. They are not DKP STRUCTURES' valuation, share price, issued share capital or an allocation promise.</p>
+<div class="future-share-math">
+<div><span>Example company valuation</span><strong>₩5,000,000,000</strong></div>
+<div><span>Example shares before issue</span><strong>1,000,000</strong></div>
+<div><span>Hypothetical price per share</span><strong>₩5,000</strong></div>
+<div><span>Example amount for calculation</span><strong>₩7,000,000</strong></div>
+</div>
+<div class="future-share-notice"><strong>Arithmetic illustration:</strong> ₩7,000,000 ÷ ₩5,000 = 1,400 hypothetical shares. This is not a valuation of the company, an offer, a subscription, an entitlement or an actual allocation.</div>
+</div>
+<div class="card">
+<h3>What must happen before any share programme can open</h3>
+<ul>
+<li>Confirm the company's legal structure, incorporation status and authorised/issued share capital.</li>
+<li>Obtain an independently supportable valuation and approve the share class, price and eligibility rules.</li>
+<li>Set the allocation formula, timing, dilution limits, shareholder rights, taxes and transfer restrictions in definitive written documents.</li>
+<li>Obtain all required South Korean corporate approvals and securities-law advice, including cross-border offering review.</li>
+<li>Accept applications and issue shares only after the programme is formally approved and legally opened, with entries in the official corporate records.</li>
+</ul>
+<p class="muted">Existing voluntary contributions are not automatically converted into shares. Supporter recognition levels do not create ownership, voting rights, dividends, repayment rights or guaranteed returns. No shares are currently being offered, accepted, issued or recorded.</p>
+</div>
 </section>
 <section id="campaign" class="section">
 <h2>Development initiative</h2>
@@ -326,6 +367,11 @@ button{letter-spacing:.005em}
 <div id="dash" class="hidden">
 <div class="card dashboard-card">
 <div class="dashboard-top"><div><h3 id="welcome">Welcome</h3><p id="supporterId" class="muted"></p></div><span class="status">Account overview</span></div>
+<div class="future-share-status" id="myFutureShareStatus">
+<h3>My Future Share Programme Status</h3>
+<p><strong>Programme status:</strong> Proposed · Not yet open</p>
+<p>Your supporter level is currently for recognition only. No share allocation is recorded for your account. If a legally approved programme opens in the future, eligibility and any allocation will be governed by separate written terms and formal company approvals.</p>
+</div>
 <div class="grid dashboard-metrics">
 <div class="dashboard-metric"><div class="muted">Verified contribution total</div><div class="metric" id="total">$0</div></div>
 <div class="dashboard-metric"><div class="muted">Recognition level</div><div class="metric" id="level">Basic</div></div>
