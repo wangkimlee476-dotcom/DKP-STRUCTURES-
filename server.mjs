@@ -305,7 +305,7 @@ app.use("/api",(req,res)=>res.status(404).json({error:"API route not found."}));
 app.use((err,req,res,next)=>{console.error("Request failed:",{path:req.path,method:req.method,message:err?.message,code:err?.code});if(res.headersSent)return next(err);res.status(500).json({error:"An unexpected server error occurred.",diagnostic:{path:req.path,message:String(err?.message||"Unknown error").slice(0,240),code:err?.code||null}});});
 async function init(){
  if(cloudflareWorker){
-  const requiredTables=["users","contributions","support_requests","audit_logs","user_sessions","password_reset_tokens","announcements","complaints","referrals"];
+  const requiredTables=["users","contributions","support_requests","audit_logs","user_sessions","password_reset_tokens","announcements","announcement_comments","complaints","referrals"];
   const tableRows=await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'");
   const available=new Set(tableRows.rows.map(row=>row.table_name));
   const missing=requiredTables.filter(name=>!available.has(name));
