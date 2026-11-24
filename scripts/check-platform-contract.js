@@ -26,6 +26,7 @@ const requiredUi = [
 for (const [source,needle] of requiredUi) if (!source.includes(needle)) throw new Error("Missing UI/API contract: " + needle);
 if (admin.includes("$('create').onsubmit") || admin.includes('$("create").onsubmit')) throw new Error("Admin board must not bind a removed payment-creation form.");
 if (!worker.includes("await initializeDatabase(init)") || !worker.includes('schema: "ready"')) throw new Error("Worker must initialize PostgreSQL schema before serving API requests and report schema readiness.");
+if (!worker.includes('"announcement_comments"')) throw new Error("Worker readiness must require the announcement_comments table used by community discussion routes.");
 if (!admin.includes('id="manualCreditForm"') || !admin.includes("api('/api/admin/contributions'") || !server.includes('app.post("/api/admin/contributions"')) throw new Error("Admin must support User ID-based pending payment entry.");
 if (!dashboard.includes('class="sidebar"') || !admin.includes('class="sidebar"')) throw new Error("Supporter and admin portals must include the approved sidebar navigation.");
 if (!index.includes("--g:#14263d") || !dashboard.includes("--green:#14263d") || !admin.includes("--green:#14263d")) throw new Error("Corporate navy and champagne-gold identity is missing from one or more portals.");
